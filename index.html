@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#4f46e5" id="theme-color-meta">
     
-    <link rel="manifest" href="manifest.json?v=11.0">
+    <link rel="manifest" href="manifest.json?v=12.0">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2083/2083214.png">
     
     <title>Enterprise Time Tracker</title>
@@ -81,16 +81,11 @@
         h2, h3 { margin-top: 0; color: var(--primary); }
         .hidden { display: none !important; }
 
-        /* Robust iOS Flex/Grid layout fixes to prevent overflow blowout */
-        .form-row { 
-            display: flex; gap: 10px; margin-bottom: 12px; width: 100%; 
-        }
+        .form-row { display: flex; gap: 10px; margin-bottom: 12px; width: 100%; }
         @media (max-width: 480px) {
             .form-row { flex-direction: column; gap: 12px; }
         }
-        .form-group { 
-            display: flex; flex-direction: column; flex: 1; min-width: 0; width: 100%;
-        }
+        .form-group { display: flex; flex-direction: column; flex: 1; min-width: 0; width: 100%; }
         
         label { margin-bottom: 4px; font-size: 11px; font-weight: 700; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.5px; }
         
@@ -101,9 +96,7 @@
         }
         input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15); }
         
-        input[type="date"], input[type="time"] {
-            min-height: 46px;
-        }
+        input[type="date"], input[type="time"] { min-height: 46px; }
 
         .btn-submit { 
             background: var(--primary); color: white; border: none; padding: 16px; border-radius: 10px; 
@@ -137,12 +130,14 @@
         .bg-gray { background: var(--accent-gray); }
         .bg-blue { background: #0284c7; }
 
+        /* Table & History layout fixes */
         .table-container { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; margin-top: 10px; width: 100%; }
         table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; min-width: 450px; }
         th { background: var(--secondary); padding: 12px; font-weight: 700; color: var(--text-light); border-bottom: 1px solid var(--border); }
-        td { padding: 12px; border-bottom: 1px solid var(--border); color: var(--text-dark); }
+        td { padding: 12px; border-bottom: 1px solid var(--border); color: var(--text-dark); white-space: nowrap; } /* Forces single-row layout */
         .action-btn { background: var(--secondary); color: var(--primary); border: 1px solid var(--border); padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
 
+        /* Insights blocks */
         .quarter-block {
             background: var(--secondary); border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin-bottom: 20px; width: 100%;
         }
@@ -150,9 +145,9 @@
         .quarter-title { font-size: 14px; font-weight: 800; color: var(--primary); text-transform: uppercase; }
         .quarter-stats { font-size: 12px; font-weight: 600; color: var(--text-light); }
         
-        .months-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .months-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
         .month-circle-card {
-            background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 4px; text-align: center;
+            background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 4px; text-align: center; display: flex; flex-direction: column; align-items: center;
         }
         .month-name { font-size: 10px; font-weight: 700; color: var(--text-light); margin-bottom: 6px; text-transform: uppercase; }
         .circle-progress {
@@ -163,6 +158,7 @@
             content: ""; position: absolute; width: 38px; height: 38px; border-radius: 50%; background: var(--surface);
         }
         .circle-value { position: relative; font-size: 10px; font-weight: 800; color: var(--text-dark); }
+        .month-avg-hours { font-size: 10px; font-weight: 700; color: var(--text-light); margin-top: 6px; }
 
         .status-msg { margin-top: 10px; text-align: center; font-weight: 600; font-size: 14px; min-height: 20px; }
 
@@ -319,7 +315,7 @@
             <!-- Tab 3: Insights -->
             <div id="tab-insights" class="hidden">
                 <h3 style="margin-bottom: 5px;">Financial Year Analytics</h3>
-                <p style="font-size: 11px; color: var(--text-light); margin-top: 0; margin-bottom: 15px;">*Attendance % = (Present + Leave + Exception) / Working Days (No Shows count as missed). Avg Hours = (Present + No Show divisor).</p>
+                <p style="font-size: 11px; color: var(--text-light); margin-top: 0; margin-bottom: 15px;">*Attendance % calculated over net working days (excluding weekends & holidays).</p>
                 <div id="insights-container"></div>
             </div>
 
@@ -831,6 +827,7 @@
                     });
 
                     let pct = validWorkDays > 0 ? Math.round((attendedDays / validWorkDays) * 100) : 0;
+                    let monthAvgHrs = monthHoursDivisor > 0 ? (monthHours / monthHoursDivisor).toFixed(1) : "0";
                     
                     if (logsInMonth.length > 0) hasDataInQuarter = true;
 
@@ -842,6 +839,7 @@
                     qMonthsData.push({
                         name: monthNames[mIdx],
                         pct: pct,
+                        avgHrs: monthAvgHrs,
                         hasData: logsInMonth.length > 0
                     });
                 });
@@ -865,6 +863,7 @@
                                 <div class="circle-progress" style="--pct: ${m.hasData ? m.pct : 0};">
                                     <div class="circle-value">${m.hasData ? m.pct + '%' : 'N/A'}</div>
                                 </div>
+                                <div class="month-avg-hours">${m.hasData ? m.avgHrs + ' hrs' : '-'}</div>
                             </div>
                         `).join('')}
                     </div>
