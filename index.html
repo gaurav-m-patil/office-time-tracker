@@ -7,13 +7,11 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#4f46e5" id="theme-color-meta">
     
-    <!-- App Manifest and Icons with Fresh Cache Version -->
-    <link rel="manifest" href="manifest.json?v=3.0">
+    <link rel="manifest" href="manifest.json?v=4.0">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2083/2083214.png">
     
     <title>Enterprise Time Tracker</title>
     
-    <!-- Google Material Icons -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     
     <style>
@@ -71,9 +69,7 @@
         }
         .icon-btn:hover { background: var(--border); }
 
-        .main-content {
-            flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 90px;
-        }
+        .main-content { flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 90px; }
         
         .container {
             background: var(--surface); padding: 20px; border-radius: 16px;
@@ -108,26 +104,48 @@
         .quick-actions-title { font-size: 12px; font-weight: 700; color: var(--text-light); text-transform: uppercase; }
         .quick-actions-date { font-size: 12px; font-weight: 600; color: var(--primary); }
         
-        .quick-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .quick-buttons { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
         .btn-quick {
-            border: none; padding: 14px; border-radius: 10px; color: white; 
-            font-weight: 700; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
+            border: none; padding: 12px 8px; border-radius: 10px; color: white; 
+            font-weight: 700; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;
             box-shadow: 0 2px 6px rgba(0,0,0,0.08); transition: transform 0.1s;
         }
         .btn-quick:active { transform: scale(0.97); }
-        .btn-quick.full-width { grid-column: span 2; }
-        .bg-green { background: var(--accent-green); } .bg-red { background: var(--accent-red); }
-        .bg-amber { background: var(--accent-amber); } .bg-purple { background: var(--accent-purple); } .bg-gray { background: var(--accent-gray); }
+        .bg-green { background: var(--accent-green); } 
+        .bg-red { background: var(--accent-red); }
+        .bg-amber { background: var(--accent-amber); } 
+        .bg-purple { background: var(--accent-purple); } 
+        .bg-gray { background: var(--accent-gray); }
+        .bg-blue { background: #0284c7; }
 
+        /* Tables & Cards */
         .table-container { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; margin-top: 10px; }
         table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; min-width: 500px; }
         th { background: var(--secondary); padding: 12px; font-weight: 700; color: var(--text-light); border-bottom: 1px solid var(--border); }
         td { padding: 12px; border-bottom: 1px solid var(--border); color: var(--text-dark); }
         .action-btn { background: var(--secondary); color: var(--primary); border: 1px solid var(--border); padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
 
-        .insights-grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 15px; }
-        .insight-card { border: 1px solid var(--border); padding: 18px; border-radius: 12px; text-align: center; background: var(--secondary); }
-        .insight-value { font-size: 26px; font-weight: 800; color: var(--primary); margin-top: 4px; }
+        /* Insights Cards & Monthly Percentage Circles */
+        .quarter-block {
+            background: var(--secondary); border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin-bottom: 20px;
+        }
+        .quarter-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+        .quarter-title { font-size: 14px; font-weight: 800; color: var(--primary); text-transform: uppercase; }
+        .quarter-stats { font-size: 12px; font-weight: 600; color: var(--text-light); }
+        
+        .months-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .month-circle-card {
+            background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px; text-align: center;
+        }
+        .month-name { font-size: 11px; font-weight: 700; color: var(--text-light); margin-bottom: 6px; text-transform: uppercase; }
+        .circle-progress {
+            width: 55px; height: 55px; border-radius: 50%; background: conic-gradient(var(--primary) calc(var(--pct, 0) * 1%), var(--border) 0);
+            display: flex; align-items: center; justify-content: center; margin: 0 auto; position: relative;
+        }
+        .circle-progress::before {
+            content: ""; position: absolute; width: 43px; height: 43px; border-radius: 50%; background: var(--surface);
+        }
+        .circle-value { position: relative; font-size: 11px; font-weight: 800; color: var(--text-dark); }
 
         .status-msg { margin-top: 10px; text-align: center; font-weight: 600; font-size: 14px; min-height: 20px; }
 
@@ -165,6 +183,7 @@
 
     <div class="main-content">
         
+        <!-- Auth Section -->
         <div id="auth-section" class="container" style="max-width: 400px; margin-top: 5vh;">
             <div id="login-form-div">
                 <h2 style="text-align: center; margin-bottom: 20px;">Welcome Back</h2>
@@ -182,8 +201,8 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Password</label>
-                    <input type="password" id="login-password" placeholder="••••••••">
+                    <label>4-Digit PIN</label>
+                    <input type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="4" id="login-password" placeholder="••••" style="letter-spacing: 4px; font-size: 18px; text-align: center;">
                 </div>
                 
                 <button class="btn-submit" id="btn-login" onclick="login()">Sign In</button>
@@ -201,21 +220,22 @@
                     <div class="form-group"><label>Last Name</label><input type="text" id="reg-lname" placeholder="Doe"></div>
                 </div>
                 <div class="form-group"><label>Username</label><input type="text" id="reg-username" placeholder="johndoe"></div>
-                <div class="form-group"><label>Password</label><input type="password" id="reg-password" placeholder="••••••••"></div>
+                <div class="form-group"><label>4-Digit PIN</label><input type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="4" id="reg-password" placeholder="••••" style="letter-spacing: 4px; font-size: 18px; text-align: center;"></div>
                 <button class="btn-submit" id="btn-register" onclick="register()">Register</button>
                 <div class="auth-toggle">Already registered? <span onclick="toggleAuthForm('login')">Sign In</span></div>
             </div>
             <div id="auth-msg" class="status-msg"></div>
         </div>
 
+        <!-- Dashboard Section -->
         <div id="dashboard-section" class="container hidden">
             
+            <!-- Tab 1: Record Entry -->
             <div id="tab-log">
                 <h3 id="form-title" style="margin-bottom: 12px; font-size:16px;">Record Attendance</h3>
                 <input type="hidden" id="entry-id">
                 <input type="hidden" id="entry-username">
                 
-                <!-- Date Range Pickers -->
                 <div class="form-row">
                     <div class="form-group"><label>From Date</label><input type="date" id="entry-from-date"></div>
                     <div class="form-group"><label>To Date (Optional Range)</label><input type="date" id="entry-to-date"></div>
@@ -229,6 +249,8 @@
                             <option value="Leave">Leave</option>
                             <option value="Exception">Exception</option>
                             <option value="No Show">No Show</option>
+                            <option value="Weekend">Weekend</option>
+                            <option value="Holiday">Holiday</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -249,11 +271,13 @@
                         <span class="quick-actions-date" id="quick-date-display">--</span>
                     </div>
                     <div class="quick-buttons">
-                        <button class="btn-quick bg-green" onclick="quickAction('in')"><i class="material-icons-round" style="font-size:16px;">login</i> Punch In</button>
-                        <button class="btn-quick bg-red" onclick="quickAction('out')"><i class="material-icons-round" style="font-size:16px;">logout</i> Punch Out</button>
-                        <button class="btn-quick bg-amber" onclick="quickAction('leave')">Mark Leave</button>
+                        <button class="btn-quick bg-green" onclick="quickAction('in')"><i class="material-icons-round" style="font-size:14px;">login</i> In</button>
+                        <button class="btn-quick bg-red" onclick="quickAction('out')"><i class="material-icons-round" style="font-size:14px;">logout</i> Out</button>
+                        <button class="btn-quick bg-amber" onclick="quickAction('leave')">Leave</button>
                         <button class="btn-quick bg-purple" onclick="quickAction('exception')">Exception</button>
-                        <button class="btn-quick bg-gray full-width" onclick="quickAction('noshow')">No Show</button>
+                        <button class="btn-quick bg-gray" onclick="quickAction('noshow')">No Show</button>
+                        <button class="btn-quick bg-blue" onclick="quickAction('weekend')">Weekend</button>
+                        <button class="btn-quick bg-blue" onclick="quickAction('holiday')">Holiday</button>
                     </div>
                 </div>
 
@@ -261,6 +285,7 @@
                 <div id="log-msg" class="status-msg"></div>
             </div>
 
+            <!-- Tab 2: User History -->
             <div id="tab-history" class="hidden">
                 <h3 style="margin-bottom: 5px;">My History</h3>
                 <div class="table-container">
@@ -273,25 +298,16 @@
                 </div>
             </div>
 
+            <!-- Tab 3: Insights -->
             <div id="tab-insights" class="hidden">
-                <h3 style="margin-bottom: 5px;">Analytics Dashboard</h3>
-                <p style="font-size: 11px; color: var(--text-light); margin-top: 0;">*Excludes Leaves/Exceptions. No Shows count as 0 hrs.</p>
-                <div class="insights-grid">
-                    <div class="insight-card">
-                        <div style="font-size: 11px; font-weight: 700; color: var(--text-light);">AVG HRS / DAY (CURRENT MONTH)</div>
-                        <div class="insight-value" id="insight-month">--</div>
-                    </div>
-                    <div class="insight-card">
-                        <div style="font-size: 11px; font-weight: 700; color: var(--text-light);">AVG HRS / DAY (CURRENT QUARTER)</div>
-                        <div class="insight-value" id="insight-quarter">--</div>
-                    </div>
-                    <div class="insight-card">
-                        <div style="font-size: 11px; font-weight: 700; color: var(--text-light);">AVG HRS / DAY (FINANCIAL YEAR)</div>
-                        <div class="insight-value" id="insight-fy">--</div>
-                    </div>
+                <h3 style="margin-bottom: 5px;">Financial Year Analytics</h3>
+                <p style="font-size: 11px; color: var(--text-light); margin-top: 0; margin-bottom: 15px;">*Attendance % calculated over net working days (excluding weekends & holidays).</p>
+                <div id="insights-container">
+                    <!-- Populated dynamically by FY quarters -->
                 </div>
             </div>
 
+            <!-- Tab 4: Admin Panel -->
             <div id="tab-admin" class="hidden">
                 <h3 style="margin-bottom: 5px;">Organization Records</h3>
                 <div class="table-container">
@@ -534,6 +550,8 @@
             else if (type === 'leave') { document.getElementById("entry-status").value = "Leave"; }
             else if (type === 'exception') { document.getElementById("entry-status").value = "Exception"; }
             else if (type === 'noshow') { document.getElementById("entry-status").value = "No Show"; }
+            else if (type === 'weekend') { document.getElementById("entry-status").value = "Weekend"; }
+            else if (type === 'holiday') { document.getElementById("entry-status").value = "Holiday"; }
             handleStatusChange();
         }
 
@@ -642,36 +660,105 @@
         }
 
         function calculateInsights() {
+            const container = document.getElementById("insights-container");
+            container.innerHTML = "";
+
             const now = new Date();
             const currentYear = now.getFullYear();
             const currentMonth = now.getMonth();
-            
-            let fyStartYear = currentMonth >= 3 ? currentYear : currentYear - 1;
-            let fyStartDate = new Date(fyStartYear, 3, 1);
-            let fyEndDate = new Date(fyStartYear + 1, 2, 31);
+            const currentFYStartYear = currentMonth >= 3 ? currentYear : currentYear - 1;
 
-            let mHrs = 0, mDays = 0, qHrs = 0, qDays = 0, fyHrs = 0, fyDays = 0;
-            const currentQuarter = Math.floor(currentMonth / 3);
-
+            // Map data by 'YYYY-MM'
+            let monthlyMap = {};
             logsData.forEach(log => {
-                if (log.status === "Leave" || log.status === "Exception") return;
-                const d = new Date(log.date);
-                const hrs = parseFloat(log.hours) || 0; 
-                
-                if (d.getFullYear() === currentYear && d.getMonth() === currentMonth) {
-                    mHrs += hrs; mDays++;
-                }
-                if (d.getFullYear() === currentYear && Math.floor(d.getMonth() / 3) === currentQuarter) {
-                    qHrs += hrs; qDays++;
-                }
-                if (d >= fyStartDate && d <= fyEndDate) {
-                    fyHrs += hrs; fyDays++;
-                }
+                const ym = log.date.substring(0, 7); // "YYYY-MM"
+                if (!monthlyMap[ym]) monthlyMap[ym] = [];
+                monthlyMap[ym].push(log);
             });
 
-            document.getElementById("insight-month").innerText = mDays ? (mHrs/mDays).toFixed(1) : "0";
-            document.getElementById("insight-quarter").innerText = qDays ? (qHrs/qDays).toFixed(1) : "0";
-            document.getElementById("insight-fy").innerText = fyDays ? (fyHrs/fyDays).toFixed(1) : "0";
+            // Financial Year Quarters configuration
+            const fyQuarters = [
+                { name: "Q1: Apr – Jun", months: [3, 4, 5], yearOffset: 0 },
+                { name: "Q2: Jul – Sep", months: [6, 7, 8], yearOffset: 0 },
+                { name: "Q3: Oct – Dec", months: [9, 10, 11], yearOffset: 0 },
+                { name: "Q4: Jan – Mar", months: [0, 1, 2], yearOffset: 1 }
+            ];
+
+            const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+            fyQuarters.forEach(q => {
+                let qYear = currentFYStartYear + q.yearOffset;
+                let qMonthsData = [];
+                let qPresent = 0, qNetWorkDays = 0, qTotalHours = 0, qPresentHoursCount = 0;
+                let hasDataInQuarter = false;
+
+                q.months.forEach(mIdx => {
+                    let mYear = (mIdx < 3 && q.name.includes("Q4")) ? currentFYStartYear + 1 : currentFYStartYear;
+                    let ymKey = `${mYear}-${String(mIdx + 1).padStart(2, '0')}`;
+                    
+                    // Don't show future months
+                    if (new Date(mYear, mIdx, 1) > now) return;
+
+                    let logsInMonth = monthlyMap[ymKey] || [];
+                    
+                    // Calculate net working days (exclude Weekends, Holidays, Leaves, Exceptions)
+                    let presentCount = 0;
+                    let netWorkDays = 0;
+                    let monthHours = 0;
+                    let monthPresentHrsCount = 0;
+
+                    logsInMonth.forEach(l => {
+                        if (l.status !== "Weekend" && l.status !== "Holiday" && l.status !== "Leave" && l.status !== "Exception") {
+                            netWorkDays++;
+                            if (l.status === "Present") {
+                                presentCount++;
+                                monthHours += parseFloat(l.hours) || 0;
+                                monthPresentHrsCount++;
+                            }
+                        }
+                    });
+
+                    let pct = netWorkDays > 0 ? Math.round((presentCount / netWorkDays) * 100) : 0;
+                    
+                    if (logsInMonth.length > 0) hasDataInQuarter = true;
+
+                    qPresent += presentCount;
+                    qNetWorkDays += netWorkDays;
+                    qTotalHours += monthHours;
+                    qPresentHoursCount += monthPresentHrsCount;
+
+                    qMonthsData.push({
+                        name: monthNames[mIdx],
+                        pct: pct,
+                        hasData: logsInMonth.length > 0
+                    });
+                });
+
+                if (!hasDataInQuarter && qMonthsData.length === 0) return;
+
+                let quarterPct = qNetWorkDays > 0 ? Math.round((qPresent / qNetWorkDays) * 100) : 0;
+                let quarterAvgHrs = qPresentHoursCount > 0 ? (qTotalHours / qPresentHoursCount).toFixed(1) : "0";
+
+                let block = document.createElement("div");
+                block.className = "quarter-block";
+                block.innerHTML = `
+                    <div class="quarter-header">
+                        <span class="quarter-title">${q.name} (${currentFYStartYear}-${String(currentFYStartYear+1).substring(2)})</span>
+                        <span class="quarter-stats">Attendance: <strong>${quarterPct}%</strong> | Avg: <strong>${quarterAvgHrs} hrs</strong></span>
+                    </div>
+                    <div class="months-grid">
+                        ${qMonthsData.map(m => `
+                            <div class="month-circle-card">
+                                <div class="month-name">${m.name}</div>
+                                <div class="circle-progress" style="--pct: ${m.hasData ? m.pct : 0};">
+                                    <div class="circle-value">${m.hasData ? m.pct + '%' : 'N/A'}</div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                container.appendChild(block);
+            });
         }
     </script>
 </body>
