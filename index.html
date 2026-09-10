@@ -7,8 +7,8 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#4f46e5" id="theme-color-meta">
     
-    <!-- App Manifest and Icons with Cache-Busting Version -->
-    <link rel="manifest" href="manifest.json?v=2.0">
+    <!-- App Manifest and Icons with Fresh Cache Version -->
+    <link rel="manifest" href="manifest.json?v=3.0">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2083/2083214.png">
     
     <title>Enterprise Time Tracker</title>
@@ -17,7 +17,6 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     
     <style>
-        /* Material Design Theme (Indigo & Slate Palette) */
         :root {
             --primary: #4f46e5;
             --primary-hover: #4338ca;
@@ -58,7 +57,6 @@
             overflow: hidden;
         }
 
-        /* Topbar */
         .topbar {
             background: var(--surface); color: var(--text-dark);
             padding: 12px 20px; display: flex; justify-content: space-between; align-items: center;
@@ -69,11 +67,10 @@
         .user-greeting { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
         .icon-btn { 
             background: var(--secondary); border: 1px solid var(--border); color: var(--text-dark); 
-            cursor: pointer; display: flex; align-items: center; justify-content: width; width: 36px; height: 36px; border-radius: 50%;
+            cursor: pointer; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%;
         }
         .icon-btn:hover { background: var(--border); }
 
-        /* Main Content Area */
         .main-content {
             flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 90px;
         }
@@ -87,7 +84,6 @@
         h2, h3 { margin-top: 0; color: var(--primary); }
         .hidden { display: none !important; }
 
-        /* Forms */
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
         .form-group { display: flex; flex-direction: column; margin-bottom: 12px; }
         label { margin-bottom: 4px; font-size: 11px; font-weight: 700; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.5px; }
@@ -105,7 +101,6 @@
         }
         .btn-submit:hover { background: var(--primary-hover); }
 
-        /* Thumb-Optimized Quick Actions Card */
         .quick-actions-card {
             background: var(--secondary); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin: 15px 0;
         }
@@ -124,7 +119,6 @@
         .bg-green { background: var(--accent-green); } .bg-red { background: var(--accent-red); }
         .bg-amber { background: var(--accent-amber); } .bg-purple { background: var(--accent-purple); } .bg-gray { background: var(--accent-gray); }
 
-        /* Tables & Cards */
         .table-container { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; margin-top: 10px; }
         table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; min-width: 500px; }
         th { background: var(--secondary); padding: 12px; font-weight: 700; color: var(--text-light); border-bottom: 1px solid var(--border); }
@@ -137,7 +131,6 @@
 
         .status-msg { margin-top: 10px; text-align: center; font-weight: 600; font-size: 14px; min-height: 20px; }
 
-        /* Bottom Navigation */
         .bottom-nav {
             position: fixed; bottom: 0; left: 0; width: 100%;
             background: var(--surface); border-top: 1px solid var(--border);
@@ -159,7 +152,6 @@
 </head>
 <body>
 
-    <!-- Top Navbar -->
     <div class="topbar">
         <h1>TimeTracker</h1>
         <div class="topbar-right">
@@ -171,10 +163,8 @@
         </div>
     </div>
 
-    <!-- Main Content Area -->
     <div class="main-content">
         
-        <!-- Auth Section -->
         <div id="auth-section" class="container" style="max-width: 400px; margin-top: 5vh;">
             <div id="login-form-div">
                 <h2 style="text-align: center; margin-bottom: 20px;">Welcome Back</h2>
@@ -218,16 +208,14 @@
             <div id="auth-msg" class="status-msg"></div>
         </div>
 
-        <!-- Dashboard Section -->
         <div id="dashboard-section" class="container hidden">
             
-            <!-- Tab 1: Record Entry -->
             <div id="tab-log">
                 <h3 id="form-title" style="margin-bottom: 12px; font-size:16px;">Record Attendance</h3>
                 <input type="hidden" id="entry-id">
                 <input type="hidden" id="entry-username">
                 
-                <!-- Date Range Support -->
+                <!-- Date Range Pickers -->
                 <div class="form-row">
                     <div class="form-group"><label>From Date</label><input type="date" id="entry-from-date"></div>
                     <div class="form-group"><label>To Date (Optional Range)</label><input type="date" id="entry-to-date"></div>
@@ -246,9 +234,7 @@
                     <div class="form-group">
                         <label>Office Location</label>
                         <input type="text" id="entry-location" list="location-suggestions" placeholder="e.g., Mumbai Office">
-                        <datalist id="location-suggestions">
-                            <!-- Populated dynamically -->
-                        </datalist>
+                        <datalist id="location-suggestions"></datalist>
                     </div>
                 </div>
                 
@@ -257,7 +243,6 @@
                     <div class="form-group"><label>Out Time</label><input type="time" id="entry-out"></div>
                 </div>
 
-                <!-- Thumb-Friendly Quick Action Buttons -->
                 <div id="quick-actions-panel" class="quick-actions-card">
                     <div class="quick-actions-header">
                         <span class="quick-actions-title">⚡ Quick Shortcuts</span>
@@ -276,7 +261,6 @@
                 <div id="log-msg" class="status-msg"></div>
             </div>
 
-            <!-- Tab 2: User History -->
             <div id="tab-history" class="hidden">
                 <h3 style="margin-bottom: 5px;">My History</h3>
                 <div class="table-container">
@@ -289,7 +273,6 @@
                 </div>
             </div>
 
-            <!-- Tab 3: Insights -->
             <div id="tab-insights" class="hidden">
                 <h3 style="margin-bottom: 5px;">Analytics Dashboard</h3>
                 <p style="font-size: 11px; color: var(--text-light); margin-top: 0;">*Excludes Leaves/Exceptions. No Shows count as 0 hrs.</p>
@@ -309,7 +292,6 @@
                 </div>
             </div>
 
-            <!-- Tab 4: Admin Panel -->
             <div id="tab-admin" class="hidden">
                 <h3 style="margin-bottom: 5px;">Organization Records</h3>
                 <div class="table-container">
@@ -324,7 +306,6 @@
         </div>
     </div>
 
-    <!-- Bottom Navigation Bar -->
     <nav class="bottom-nav hidden" id="app-bottom-nav">
         <button class="nav-item active" id="nav-log" onclick="switchTab('log')">
             <i class="material-icons-round">edit_square</i><span>Record</span>
@@ -341,9 +322,6 @@
     </nav>
 
     <script>
-        // =================================================================
-        // CRITICAL: REPLACE THIS URL WITH YOUR GOOGLE WEB APP URL
-        // =================================================================
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwT77gaKXuTfG6sqef61rgXtZaDqUagDfRX9w4c6Hx-y7ldEKmveTZrwpVAtBXIS60vfw/exec";
         
         let currentUser = "";
@@ -544,7 +522,6 @@
 
         function populateLocationDatalist() {
             const datalist = document.getElementById("location-suggestions");
-            // Extract unique locations from logsData
             const uniqueLocs = [...new Set(logsData.map(l => l.location).filter(l => l && l !== "NA"))];
             datalist.innerHTML = uniqueLocs.map(loc => `<option value="${loc}">`).join('');
         }
@@ -589,13 +566,10 @@
 
             let payload;
             if (logId) {
-                // Single update
                 payload = { action: "updateLog", logId, username: recordUser, date: fromDate, status, inTime, outTime, location: loc, hours };
             } else if (toDate && toDate !== fromDate) {
-                // Range batch log
                 payload = { action: "logTimeRange", username: recordUser, fromDate, toDate, status, inTime, outTime, location: loc, hours };
             } else {
-                // Single new log
                 payload = { action: "logTime", username: recordUser, date: fromDate, status, inTime, outTime, location: loc, hours };
             }
 
@@ -659,7 +633,7 @@
             document.getElementById("entry-id").value = log.logId;
             document.getElementById("entry-username").value = log.username;
             document.getElementById("entry-from-date").value = log.date.substring(0, 10);
-            document.getElementById("entry-to-date").value = ""; // Range disabled when editing single log
+            document.getElementById("entry-to-date").value = "";
             document.getElementById("entry-status").value = log.status;
             document.getElementById("entry-in").value = log.inTime;
             document.getElementById("entry-out").value = log.outTime;
@@ -672,7 +646,6 @@
             const currentYear = now.getFullYear();
             const currentMonth = now.getMonth();
             
-            // Indian Financial Year calculation (April 1 to March 31)
             let fyStartYear = currentMonth >= 3 ? currentYear : currentYear - 1;
             let fyStartDate = new Date(fyStartYear, 3, 1);
             let fyEndDate = new Date(fyStartYear + 1, 2, 31);
@@ -685,15 +658,12 @@
                 const d = new Date(log.date);
                 const hrs = parseFloat(log.hours) || 0; 
                 
-                // Month Check
                 if (d.getFullYear() === currentYear && d.getMonth() === currentMonth) {
                     mHrs += hrs; mDays++;
                 }
-                // Quarter Check
                 if (d.getFullYear() === currentYear && Math.floor(d.getMonth() / 3) === currentQuarter) {
                     qHrs += hrs; qDays++;
                 }
-                // Financial Year Check
                 if (d >= fyStartDate && d <= fyEndDate) {
                     fyHrs += hrs; fyDays++;
                 }
