@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#4f46e5" id="theme-color-meta">
     
-    <link rel="manifest" href="manifest.json?v=9.0">
+    <link rel="manifest" href="manifest.json?v=10.0">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2083/2083214.png">
     
     <title>Enterprise Time Tracker</title>
@@ -349,11 +349,27 @@
         let currentRole = "";
         let logsData = [];
         let cachedUsersList = null;
-        let dataFetched = false;
         let isAdminLoginMode = false;
 
         window.onload = () => {
+            // Load cached user list instantly if available in localStorage
+            const localUsers = localStorage.getItem("tt_users");
+            if (localUsers) {
+                try {
+                    cachedUsersList = JSON.parse(localUsers);
+                    renderUserDropdown(cachedUsersList);
+                } catch(e) {}
+            }
             fetchUserListForDropdown();
+
+            // Load cached logs instantly for lightning-fast first paint
+            const localLogs = localStorage.getItem("tt_logs");
+            if (localLogs) {
+                try {
+                    logsData = JSON.parse(localLogs);
+                } catch(e) {}
+            }
+
             if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
                 toggleDarkMode(true);
             }
@@ -407,7 +423,6 @@
             return formatDateDDMonYY(getLocalDateStr());
         }
 
-        // DIRECT STRING SLICING: Completely bypasses JS Date timezone-shift bugs
         function formatDateDDMonYY(dateString) {
             const cleaned = cleanDateString(dateString);
             if (!cleaned) return '';
@@ -444,6 +459,7 @@
             document.getElementById("login-password").value = "";
         }
 
+        // INSTANT TAB SWITCHING: Zero delay using local memory/storage cache
         function switchTab(tabId) {
             document.querySelectorAll("[id^='tab-']").forEach(el => el.classList.add("hidden"));
             document.querySelectorAll(".nav-item").forEach(el => el.classList.remove("active"));
@@ -451,13 +467,12 @@
             document.getElementById(`tab-${tabId}`).classList.remove("hidden");
             document.getElementById(`nav-${tabId}`).classList.add("active");
 
-            if ((tabId === 'history' || tabId === 'insights' || tabId === 'admin')) {
-                if (!dataFetched) {
-                    fetchData();
-                } else {
-                    if (currentRole === "Admin") renderAdminTable();
-                    else { renderHistoryTable(); calculateInsights(); }
-                }
+            // Render instantly from local cache
+            if (tabId === 'history' || tabId === 'insights' || tabId === 'admin') {
+                if (currentRole === "Admin") renderAdminTable();
+                else { renderHistoryTable(); calculateInsights(); }
+                // Fetch fresh data silently in background
+                fetchData(true); 
             }
             if (tabId === 'log' && !document.getElementById("entry-id").value) resetForm();
         }
@@ -478,27 +493,11 @@
         }
 
         async function fetchUserListForDropdown() {
-            const select = document.getElementById("login-user-select");
-            
-            if (cachedUsersList) {
+            const res = await apiCall({ action: "getUsers" }, null);
+            if (res && res.success && res.users) {
+                cachedUsersList = res.users;
+                localStorage.setItem("tt_users", JSON.stringify(cachedUsersList));
                 renderUserDropdown(cachedUsersList);
-                return;
-            }
-
-            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject("Timeout"), 8000));
-            
-            try {
-                const fetchPromise = apiCall({ action: "getUsers" }, null);
-                const res = await Promise.race([fetchPromise, timeoutPromise]);
-                
-                if (res && res.success && res.users) {
-                    cachedUsersList = res.users;
-                    renderUserDropdown(cachedUsersList);
-                } else {
-                    select.innerHTML = `<option value="">No users found. Tap refresh.</option>`;
-                }
-            } catch (err) {
-                select.innerHTML = `<option value="">Connection error. Tap refresh icon.</option>`;
             }
         }
 
@@ -540,7 +539,8 @@
                 document.getElementById("app-bottom-nav").classList.remove("hidden");
                 document.getElementById("display-firstname").innerText = currentFirstName;
 
-                fetchData();
+                // Fetch data immediately in background
+                fetchData(false);
 
                 if(currentRole === "Admin") {
                     document.getElementById("nav-history").classList.add("hidden");
@@ -583,7 +583,8 @@
         }
 
         function logout() {
-            currentUser = ""; currentFirstName = ""; currentRole = ""; logsData = []; dataFetched = false;
+            currentUser = ""; currentFirstName = ""; currentRole = ""; logsData = [];
+            localStorage.removeItem("tt_logs");
             document.getElementById("dashboard-section").classList.add("hidden");
             document.getElementById("app-bottom-nav").classList.add("hidden");
             document.getElementById("user-controls").classList.add("hidden");
@@ -645,6 +646,7 @@
             handleStatusChange();
         }
 
+        // LIGHTNING SPEED: OPTIMISTIC UI SUBMISSION
         async function submitLog() {
             const logId = document.getElementById("entry-id").value;
             const recordUser = document.getElementById("entry-username").value || currentUser;
@@ -672,6 +674,28 @@
                 hours = hours.toFixed(2);
             }
 
+            // OPTIMISTIC UPDATE: Instantly push to local array so screen updates immediately without waiting
+            const tempLogId = logId || 'temp_' + Date.now();
+            const newEntry = { logId: tempLogId, username: recordUser, date: fromDate, status, inTime, outTime, location: loc, hours };
+            
+            const existingIdx = logsData.findIndex(l => l.logId === logId);
+            if (existingIdx >= 0) {
+                logsData[existingIdx] = newEntry;
+            } else {
+                logsData.unshift(newEntry);
+            }
+            
+            // Save & re-render instantly
+            localStorage.setItem("tt_logs", JSON.stringify(logsData));
+            msg.innerText = "Saved successfully!";
+            msg.style.color = "var(--accent-green)";
+
+            setTimeout(() => {
+                msg.innerText = "";
+                if (currentRole === "Admin") switchTab('admin'); else resetForm();
+            }, 600);
+
+            // Sync with backend quietly in the background
             let payload;
             if (logId) {
                 payload = { action: "updateLog", logId, username: recordUser, date: fromDate, status, inTime, outTime, location: loc, hours };
@@ -681,29 +705,22 @@
                 payload = { action: "logTime", username: recordUser, date: fromDate, status, inTime, outTime, location: loc, hours };
             }
 
-            const res = await apiCall(payload, "btn-submit-log");
-            
-            msg.innerText = res.message;
-            msg.style.color = res.success ? "var(--accent-green)" : "var(--accent-red)";
-            
-            if (res.success) {
-                dataFetched = false;
-                setTimeout(() => {
-                    msg.innerText = "";
-                    if (currentRole === "Admin") switchTab('admin'); else resetForm();
-                }, 1500);
-            }
+            apiCall(payload, null).then(res => {
+                if (res.success) fetchData(true); // background refresh
+            });
         }
 
-        async function fetchData() {
+        async function fetchData(silent = false) {
             const action = currentRole === "Admin" ? "getAllData" : "getUserData";
             const res = await apiCall({ action: action, username: currentUser }, null);
-            if (res.success) {
+            if (res && res.success) {
                 logsData = res.logs.sort((a, b) => new Date(b.date) - new Date(a.date));
-                dataFetched = true;
+                localStorage.setItem("tt_logs", JSON.stringify(logsData));
                 populateLocationDatalist();
-                if (currentRole === "Admin") renderAdminTable();
-                else { renderHistoryTable(); calculateInsights(); }
+                if (!silent) {
+                    if (currentRole === "Admin") renderAdminTable();
+                    else { renderHistoryTable(); calculateInsights(); }
+                }
             }
         }
 
