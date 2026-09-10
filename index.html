@@ -2,12 +2,16 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Meta tags for native app-like behavior on mobile -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#00438b">
+    
     <title>Enterprise Time Tracker</title>
     <style>
         /* Corporate UI Variables (TCS Inspired) */
         :root {
-            --primary: #00438b; /* Corporate Blue */
+            --primary: #00438b;
             --primary-hover: #00336a;
             --secondary: #f4f7f6;
             --accent-green: #10b981;
@@ -19,6 +23,12 @@
             --text-light: #64748b;
             --border: #e2e8f0;
             --surface: #ffffff;
+        }
+
+        /* Global Reset for App Feel */
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
@@ -33,21 +43,23 @@
             min-height: 100vh;
         }
 
-        /* Top Navigation Bar */
+        /* Sticky Top Navigation Bar */
         .topbar {
             width: 100%;
             background: var(--primary);
             color: white;
-            padding: 15px 30px;
-            box-sizing: border-box;
+            padding: 15px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
         }
-        .topbar h1 { margin: 0; font-size: 20px; font-weight: 600; letter-spacing: 0.5px; }
-        .topbar-right { display: flex; align-items: center; gap: 15px; }
-        .btn-logout { background: rgba(255,255,255,0.2); border: none; color: white; padding: 6px 12px; border-radius: 4px; cursor: pointer; transition: 0.2s; }
+        .topbar h1 { margin: 0; font-size: 18px; font-weight: 600; letter-spacing: 0.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .topbar-right { display: flex; align-items: center; gap: 10px; }
+        .btn-logout { background: rgba(255,255,255,0.2); border: none; color: white; padding: 6px 12px; border-radius: 4px; cursor: pointer; transition: 0.2s; font-size: 13px; }
         .btn-logout:hover { background: rgba(255,255,255,0.3); }
 
         .container {
@@ -65,21 +77,21 @@
         .hidden { display: none !important; }
 
         /* Auth Screen */
-        .auth-container { max-width: 400px; }
+        .auth-container { max-width: 400px; margin-top: 10vh; }
         .auth-toggle { text-align: center; margin-top: 15px; font-size: 14px; color: var(--text-light); }
         .auth-toggle span { color: var(--primary); cursor: pointer; font-weight: 600; }
 
         /* Forms */
         .form-row { display: flex; gap: 15px; margin-bottom: 15px; }
-        .form-group { flex: 1; display: flex; flex-direction: column; }
+        .form-group { flex: 1; display: flex; flex-direction: column; margin-bottom: 15px; }
         label { margin-bottom: 6px; font-size: 13px; font-weight: 600; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.5px; }
         input, select {
-            padding: 10px 12px; border: 1px solid var(--border); border-radius: 4px;
-            font-size: 15px; color: var(--text-dark); transition: border 0.2s;
+            width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 4px;
+            font-size: 15px; color: var(--text-dark); transition: border 0.2s; background: #fff;
         }
         input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0, 67, 139, 0.1); }
         
-        .btn-submit { background: var(--primary); color: white; border: none; padding: 12px 20px; border-radius: 4px; cursor: pointer; font-weight: 600; width: 100%; font-size: 15px; margin-top: 10px; }
+        .btn-submit { background: var(--primary); color: white; border: none; padding: 14px 20px; border-radius: 4px; cursor: pointer; font-weight: 600; width: 100%; font-size: 15px; margin-top: 10px; transition: background 0.2s; }
         .btn-submit:hover { background: var(--primary-hover); }
         .btn-submit:disabled { opacity: 0.7; cursor: not-allowed; }
 
@@ -87,30 +99,38 @@
         .quick-actions-card {
             background: #f8fafc; border: 1px dashed var(--border); border-radius: 8px; padding: 15px; margin-bottom: 25px;
         }
-        .quick-actions-card p { margin: 0 0 10px 0; font-size: 13px; font-weight: 600; color: var(--text-light); text-transform: uppercase; }
+        .quick-actions-header {
+            display: flex; flex-direction: column; margin-bottom: 12px;
+        }
+        .quick-actions-title { margin: 0; font-size: 13px; font-weight: 700; color: var(--text-dark); text-transform: uppercase; }
+        .quick-actions-date { font-size: 13px; font-weight: 600; color: var(--text-light); margin-top: 3px; }
+        
         .quick-buttons { display: flex; flex-wrap: wrap; gap: 10px; }
         .btn-quick {
-            flex: 1; min-width: 120px; border: none; padding: 10px; border-radius: 4px; color: white; font-weight: 600; font-size: 13px; cursor: pointer; transition: transform 0.1s;
+            flex: 1; min-width: 120px; border: none; padding: 12px; border-radius: 4px; color: white; font-weight: 600; font-size: 13px; cursor: pointer; transition: transform 0.1s;
         }
         .btn-quick:active { transform: scale(0.97); }
         .bg-green { background: var(--accent-green); } .bg-red { background: var(--accent-red); }
         .bg-amber { background: var(--accent-amber); } .bg-purple { background: var(--accent-purple); } .bg-gray { background: var(--accent-gray); }
 
         /* Navigation Tabs */
-        .nav-tabs { display: flex; gap: 5px; margin-bottom: 25px; border-bottom: 2px solid var(--border); padding-bottom: 0; }
+        .nav-tabs { 
+            display: flex; gap: 5px; margin-bottom: 25px; border-bottom: 2px solid var(--border); 
+            padding-bottom: 0; 
+        }
         .nav-tabs button {
-            background: none; color: var(--text-light); border: none; padding: 12px 20px; cursor: pointer; font-weight: 600; font-size: 15px; border-bottom: 3px solid transparent; margin-bottom: -2px;
+            background: none; color: var(--text-light); border: none; padding: 12px 20px; cursor: pointer; font-weight: 600; font-size: 15px; border-bottom: 3px solid transparent; margin-bottom: -2px; white-space: nowrap;
         }
         .nav-tabs button:hover { color: var(--primary); }
         .nav-tabs button.active { color: var(--primary); border-bottom-color: var(--primary); }
 
         /* Tables */
-        .table-container { overflow-x: auto; margin-top: 15px; border: 1px solid var(--border); border-radius: 8px; }
-        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
+        .table-container { overflow-x: auto; margin-top: 15px; border: 1px solid var(--border); border-radius: 8px; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; min-width: 500px; }
         th { background: #f8fafc; padding: 12px 15px; font-weight: 600; color: var(--text-light); border-bottom: 1px solid var(--border); }
         td { padding: 12px 15px; border-bottom: 1px solid var(--border); }
         tr:hover { background: #f1f5f9; }
-        .action-btn { background: var(--secondary); color: var(--primary); border: 1px solid var(--primary); padding: 5px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600; }
+        .action-btn { background: var(--secondary); color: var(--primary); border: 1px solid var(--primary); padding: 6px 14px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600; }
         .action-btn:hover { background: var(--primary); color: white; }
 
         /* Insights */
@@ -120,6 +140,29 @@
         .insight-value { font-size: 32px; font-weight: bold; color: var(--primary); }
 
         .status-msg { margin-top: 10px; text-align: center; font-weight: 600; font-size: 14px; min-height: 20px; }
+
+        /* Mobile Adaptations */
+        @media (max-width: 600px) {
+            body { background-color: var(--surface); } /* Flush white background on mobile */
+            .topbar { padding: 12px 15px; }
+            .topbar h1 { font-size: 16px; }
+            
+            .container {
+                width: 100%; margin: 0; padding: 20px 15px; border-radius: 0; box-shadow: none;
+            }
+
+            .form-row { flex-direction: column; gap: 0; margin-bottom: 0; }
+            
+            /* Make tabs scrollable horizontally on small screens */
+            .nav-tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+            .nav-tabs::-webkit-scrollbar { display: none; } /* Hide scrollbar for clean look */
+            .nav-tabs button { font-size: 14px; padding: 12px 15px; }
+            
+            .insights-grid { grid-template-columns: 1fr; gap: 15px; }
+            .btn-quick { min-width: 45%; } /* Fit two buttons per row */
+            
+            #display-user { display: none; } /* Hide username in topbar on very small screens to save space */
+        }
     </style>
 </head>
 <body>
@@ -128,7 +171,7 @@
     <div class="topbar hidden" id="app-topbar">
         <h1>Enterprise Time Tracker</h1>
         <div class="topbar-right">
-            <span id="display-user"></span>
+            <span id="display-user" style="font-size: 14px; font-weight: 500;"></span>
             <span id="display-role" style="background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 12px; font-size: 12px;"></span>
             <button class="btn-logout" onclick="logout()">Logout</button>
         </div>
@@ -139,11 +182,11 @@
         <!-- Login Form -->
         <div id="login-form-div">
             <h2 style="text-align: center;">Sign In</h2>
-            <div class="form-group" style="margin-bottom: 15px;">
+            <div class="form-group">
                 <label>Username</label>
                 <input type="text" id="login-username">
             </div>
-            <div class="form-group" style="margin-bottom: 15px;">
+            <div class="form-group">
                 <label>Password</label>
                 <input type="password" id="login-password">
             </div>
@@ -154,11 +197,11 @@
         <!-- Register Form -->
         <div id="register-form-div" class="hidden">
             <h2 style="text-align: center;">Create Account</h2>
-            <div class="form-group" style="margin-bottom: 15px;">
+            <div class="form-group">
                 <label>New Username</label>
                 <input type="text" id="reg-username">
             </div>
-            <div class="form-group" style="margin-bottom: 15px;">
+            <div class="form-group">
                 <label>New Password</label>
                 <input type="password" id="reg-password">
             </div>
@@ -184,7 +227,10 @@
         <div id="tab-log">
             <!-- Shortcuts (Only show when creating a new record, not editing) -->
             <div id="quick-actions-panel" class="quick-actions-card">
-                <p>Quick Actions (Fills form for Today)</p>
+                <div class="quick-actions-header">
+                    <span class="quick-actions-title">Quick Actions</span>
+                    <span class="quick-actions-date" id="quick-date-display">Date: --</span>
+                </div>
                 <div class="quick-buttons">
                     <button class="btn-quick bg-green" onclick="quickAction('in')">Punch In</button>
                     <button class="btn-quick bg-red" onclick="quickAction('out')">Punch Out</button>
@@ -237,9 +283,9 @@
 
         <!-- Tab 2: User History -->
         <div id="tab-history" class="hidden">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h3>My Historical Data</h3>
-                <span style="font-size: 13px; color: var(--text-light);">Sorted chronologically (Newest first)</span>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h3 style="margin: 0;">My Historical Data</h3>
+                <span style="font-size: 12px; color: var(--text-light);">Newest first</span>
             </div>
             <div class="table-container">
                 <table>
@@ -261,7 +307,7 @@
         <!-- Tab 3: Insights -->
         <div id="tab-insights" class="hidden">
             <h3>Analytics Dashboard</h3>
-            <p style="font-size: 14px; color: var(--text-light); margin-top: -5px;">*Averages exclude Leaves and Exceptions. No Shows count as 0 hours.</p>
+            <p style="font-size: 13px; color: var(--text-light); margin-top: -5px;">*Averages exclude Leaves and Exceptions. No Shows count as 0 hours.</p>
             <div class="insights-grid">
                 <div class="insight-card">
                     <div class="insight-title">Avg Hours / Day (This Month)</div>
@@ -301,19 +347,24 @@
         // =================================================================
         // CRITICAL: REPLACE THIS URL WITH YOUR GOOGLE WEB APP URL
         // =================================================================
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwT77gaKXuTfG6sqef61rgXtZaDqUagDfRX9w4c6Hx-y7ldEKmveTZrwpVAtBXIS60vfw/exec";
+        const SCRIPT_URL = "PASTE_YOUR_WEB_APP_URL_HERE";
         
         let currentUser = "";
         let currentRole = "";
         let logsData = [];
 
-        // --- Helper: Get Today's Date String (YYYY-MM-DD) ---
+        // --- Helpers: Date and Time Formatting ---
         function getTodayStr() {
             const today = new Date();
             const yyyy = today.getFullYear();
             const mm = String(today.getMonth() + 1).padStart(2, '0');
             const dd = String(today.getDate()).padStart(2, '0');
             return `${yyyy}-${mm}-${dd}`;
+        }
+        
+        function getReadableTodayStr() {
+            // Formats to something like: "10 Sep 2026"
+            return new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
         }
         
         function getCurrentTimeStr() {
@@ -442,6 +493,10 @@
         function resetForm() {
             document.getElementById("form-title").innerText = "Manual Entry Form";
             document.getElementById("quick-actions-panel").classList.remove("hidden");
+            
+            // Set the friendly date in the Quick Actions UI
+            document.getElementById("quick-date-display").innerText = "Date: " + getReadableTodayStr();
+
             document.getElementById("entry-id").value = "";
             document.getElementById("entry-username").value = currentUser;
             document.getElementById("entry-date").value = getTodayStr();
