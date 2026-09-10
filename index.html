@@ -56,7 +56,7 @@
             margin: 0; padding: 0;
             height: 100vh;
             display: flex; flex-direction: column;
-            overflow: hidden; /* Prevents body scrolling */
+            overflow: hidden;
         }
 
         /* Topbar */
@@ -73,7 +73,7 @@
 
         /* Main Content Area */
         .main-content {
-            flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 80px; /* Space for bottom nav */
+            flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 90px;
         }
         
         .container {
@@ -84,32 +84,38 @@
         h2, h3 { margin-top: 0; color: var(--primary); }
         .hidden { display: none !important; }
 
-        /* Forms (Compact Design) */
+        /* Forms */
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
-        .form-group { display: flex; flex-direction: column; }
+        .form-group { display: flex; flex-direction: column; margin-bottom: 12px; }
         label { margin-bottom: 4px; font-size: 12px; font-weight: 600; color: var(--text-light); text-transform: uppercase; }
         input, select {
-            width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px;
-            font-size: 14px; color: var(--text-dark); background: var(--input-bg);
+            width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px;
+            font-size: 15px; color: var(--text-dark); background: var(--input-bg);
         }
         input:focus, select:focus { outline: none; border-color: var(--primary); }
         
         .btn-submit { 
-            background: var(--primary); color: white; border: none; padding: 12px; border-radius: 6px; 
-            cursor: pointer; font-weight: 600; width: 100%; font-size: 15px; margin-top: 5px; 
+            background: var(--primary); color: white; border: none; padding: 16px; border-radius: 8px; 
+            cursor: pointer; font-weight: 700; width: 100%; font-size: 16px; margin-top: 10px; 
+            box-shadow: 0 4px 10px rgba(0, 67, 139, 0.2);
         }
 
-        /* Quick Actions (Sleek Chips) */
-        .quick-actions-card { margin-bottom: 15px; }
-        .quick-actions-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        /* Thumb-Optimized Quick Actions Card */
+        .quick-actions-card {
+            background: rgba(0,0,0,0.02); border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin: 15px 0;
+        }
+        .quick-actions-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         .quick-actions-title { font-size: 12px; font-weight: 700; color: var(--text-light); text-transform: uppercase; }
         .quick-actions-date { font-size: 12px; font-weight: 600; color: var(--text-light); }
         
-        .quick-buttons { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+        /* Large Thumb-Friendly Grid Layout */
+        .quick-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .btn-quick {
-            flex: 0 0 auto; border: none; padding: 8px 12px; border-radius: 20px; color: white; 
-            font-weight: 600; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 4px;
+            border: none; padding: 14px; border-radius: 8px; color: white; 
+            font-weight: 700; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
+        .btn-quick.full-width { grid-column: span 2; }
         .bg-green { background: var(--accent-green); } .bg-red { background: var(--accent-red); }
         .bg-amber { background: var(--accent-amber); } .bg-purple { background: var(--accent-purple); } .bg-gray { background: var(--accent-gray); }
 
@@ -118,15 +124,15 @@
         table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; min-width: 500px; }
         th { background: rgba(0,0,0,0.02); padding: 10px; font-weight: 600; color: var(--text-light); border-bottom: 1px solid var(--border); }
         td { padding: 10px; border-bottom: 1px solid var(--border); color: var(--text-dark); }
-        .action-btn { background: var(--secondary); color: var(--primary); border: 1px solid var(--border); padding: 4px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; }
+        .action-btn { background: var(--secondary); color: var(--primary); border: 1px solid var(--border); padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
 
         .insights-grid { display: grid; grid-template-columns: 1fr; gap: 15px; margin-top: 15px; }
         .insight-card { border: 1px solid var(--border); padding: 20px; border-radius: 8px; text-align: center; }
         .insight-value { font-size: 28px; font-weight: bold; color: var(--primary); margin-top: 5px; }
 
-        .status-msg { margin-top: 8px; text-align: center; font-weight: 600; font-size: 13px; min-height: 18px; }
+        .status-msg { margin-top: 10px; text-align: center; font-weight: 600; font-size: 14px; min-height: 20px; }
 
-        /* Bottom Navigation (Material Design) */
+        /* Bottom Navigation */
         .bottom-nav {
             position: fixed; bottom: 0; left: 0; width: 100%;
             background: var(--surface); border-top: 1px solid var(--border);
@@ -142,7 +148,6 @@
         .nav-item.active .material-icons-round { background: rgba(0, 67, 139, 0.1); border-radius: 12px; padding: 2px 12px; }
         body.dark-mode .nav-item.active .material-icons-round { background: rgba(96, 165, 250, 0.2); }
 
-        /* Auth Screen Specifics */
         .auth-toggle { text-align: center; margin-top: 15px; font-size: 13px; color: var(--text-light); }
         .auth-toggle span { color: var(--primary); cursor: pointer; font-weight: 600; }
     </style>
@@ -161,31 +166,27 @@
         </div>
     </div>
 
-    <!-- Main Scrollable Content Area -->
+    <!-- Main Content Area -->
     <div class="main-content">
         
         <!-- Auth Section -->
         <div id="auth-section" class="container" style="max-width: 400px; margin-top: 5vh;">
-            
-            <!-- Login Form -->
             <div id="login-form-div">
                 <h2 style="text-align: center; margin-bottom: 20px;">Sign In</h2>
                 
-                <!-- Dropdown for Regular Users -->
-                <div id="login-dropdown-area" class="form-group" style="margin-bottom: 12px;">
+                <div id="login-dropdown-area" class="form-group">
                     <label>Select Your Name</label>
                     <select id="login-user-select">
                         <option value="">Loading users...</option>
                     </select>
                 </div>
 
-                <!-- Text Input for Admin (Hidden by default) -->
-                <div id="login-admin-area" class="form-group hidden" style="margin-bottom: 12px;">
+                <div id="login-admin-area" class="form-group hidden">
                     <label>Admin Username</label>
                     <input type="text" id="login-admin-username" placeholder="Enter admin username">
                 </div>
 
-                <div class="form-group" style="margin-bottom: 15px;">
+                <div class="form-group">
                     <label>Password</label>
                     <input type="password" id="login-password">
                 </div>
@@ -198,15 +199,14 @@
                 </div>
             </div>
 
-            <!-- Register Form -->
             <div id="register-form-div" class="hidden">
                 <h2 style="text-align: center;">Create Account</h2>
                 <div class="form-row">
                     <div class="form-group"><label>First Name</label><input type="text" id="reg-fname"></div>
                     <div class="form-group"><label>Last Name</label><input type="text" id="reg-lname"></div>
                 </div>
-                <div class="form-group" style="margin-bottom: 12px;"><label>Username</label><input type="text" id="reg-username"></div>
-                <div class="form-group" style="margin-bottom: 15px;"><label>Password</label><input type="password" id="reg-password"></div>
+                <div class="form-group"><label>Username</label><input type="text" id="reg-username"></div>
+                <div class="form-group"><label>Password</label><input type="password" id="reg-password"></div>
                 <button class="btn-submit" id="btn-register" onclick="register()">Sign Up</button>
                 <div class="auth-toggle">Already have an account? <span onclick="toggleAuthForm('login')">Sign In</span></div>
             </div>
@@ -218,21 +218,7 @@
             
             <!-- Tab 1: Record Entry -->
             <div id="tab-log">
-                <div id="quick-actions-panel" class="quick-actions-card">
-                    <div class="quick-actions-header">
-                        <span class="quick-actions-title">Quick Actions</span>
-                        <span class="quick-actions-date" id="quick-date-display">--</span>
-                    </div>
-                    <div class="quick-buttons">
-                        <button class="btn-quick bg-green" onclick="quickAction('in')"><i class="material-icons-round" style="font-size:14px;">login</i> In</button>
-                        <button class="btn-quick bg-red" onclick="quickAction('out')"><i class="material-icons-round" style="font-size:14px;">logout</i> Out</button>
-                        <button class="btn-quick bg-amber" onclick="quickAction('leave')">Leave</button>
-                        <button class="btn-quick bg-purple" onclick="quickAction('exception')">Exception</button>
-                        <button class="btn-quick bg-gray" onclick="quickAction('noshow')">No Show</button>
-                    </div>
-                </div>
-
-                <h3 id="form-title" style="margin-bottom: 15px; font-size:16px;">Manual Entry</h3>
+                <h3 id="form-title" style="margin-bottom: 12px; font-size:16px;">Manual Entry</h3>
                 <input type="hidden" id="entry-id">
                 <input type="hidden" id="entry-username">
                 
@@ -254,9 +240,24 @@
                     <div class="form-group"><label>Out Time</label><input type="time" id="entry-out"></div>
                 </div>
 
-                <div class="form-group" style="margin-bottom: 10px;">
+                <div class="form-group">
                     <label>Office Location</label>
                     <input type="text" id="entry-location" placeholder="e.g., Main Office">
+                </div>
+
+                <!-- Thumb-Friendly Quick Action Buttons (Placed right before Save) -->
+                <div id="quick-actions-panel" class="quick-actions-card">
+                    <div class="quick-actions-header">
+                        <span class="quick-actions-title">⚡ Quick Shortcuts</span>
+                        <span class="quick-actions-date" id="quick-date-display">--</span>
+                    </div>
+                    <div class="quick-buttons">
+                        <button class="btn-quick bg-green" onclick="quickAction('in')"><i class="material-icons-round">login</i> Punch In</button>
+                        <button class="btn-quick bg-red" onclick="quickAction('out')"><i class="material-icons-round">logout</i> Punch Out</button>
+                        <button class="btn-quick bg-amber" onclick="quickAction('leave')">Mark Leave</button>
+                        <button class="btn-quick bg-purple" onclick="quickAction('exception')">Exception</button>
+                        <button class="btn-quick bg-gray full-width" onclick="quickAction('noshow')">No Show</button>
+                    </div>
                 </div>
 
                 <button class="btn-submit" id="btn-submit-log" onclick="submitLog()">Save Entry</button>
@@ -309,7 +310,6 @@
 
     <!-- Bottom Navigation Bar -->
     <nav class="bottom-nav hidden" id="app-bottom-nav">
-        <!-- User Tabs -->
         <button class="nav-item active" id="nav-log" onclick="switchTab('log')">
             <i class="material-icons-round">edit_square</i><span>Record</span>
         </button>
@@ -319,7 +319,6 @@
         <button class="nav-item" id="nav-insights" onclick="switchTab('insights')">
             <i class="material-icons-round">insights</i><span>Insights</span>
         </button>
-        <!-- Admin Tab (Takes up space if user is admin) -->
         <button class="nav-item hidden" id="nav-admin" onclick="switchTab('admin')">
             <i class="material-icons-round">admin_panel_settings</i><span>All Logs</span>
         </button>
@@ -337,16 +336,13 @@
         let logsData = [];
         let isAdminLoginMode = false;
 
-        // --- Initialization ---
         window.onload = () => {
             fetchUserListForDropdown();
-            // Check system preference for dark mode
             if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
                 toggleDarkMode(true);
             }
         };
 
-        // --- Dark Mode ---
         function toggleDarkMode(forceDark = null) {
             const body = document.body;
             const icon = document.getElementById("theme-icon");
@@ -361,23 +357,18 @@
             }
         }
 
-        // --- Helpers ---
         function getTodayStr() {
             const today = new Date();
-            const yyyy = today.getFullYear();
-            const mm = String(today.getMonth() + 1).padStart(2, '0');
-            const dd = String(today.getDate()).padStart(2, '0');
-            return `${yyyy}-${mm}-${dd}`;
+            return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
         }
         function getReadableTodayStr() {
             return new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
         }
         function getCurrentTimeStr() {
             const now = new Date();
-            return String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+            return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
         }
 
-        // --- Auth UI Toggles ---
         function toggleAuthForm(type) {
             document.getElementById("login-form-div").classList.toggle("hidden", type !== 'login');
             document.getElementById("register-form-div").classList.toggle("hidden", type !== 'register');
@@ -391,7 +382,6 @@
             document.getElementById("toggle-admin-btn").innerText = isAdminLoginMode ? "User Login?" : "Admin Login?";
         }
 
-        // --- Tab Navigation ---
         function switchTab(tabId) {
             document.querySelectorAll("[id^='tab-']").forEach(el => el.classList.add("hidden"));
             document.querySelectorAll(".nav-item").forEach(el => el.classList.remove("active"));
@@ -403,7 +393,6 @@
             if (tabId === 'log' && !document.getElementById("entry-id").value) resetForm();
         }
 
-        // --- Core API Caller ---
         async function apiCall(payload, btnId) {
             const btn = document.getElementById(btnId);
             let originalText = "";
@@ -419,7 +408,6 @@
             }
         }
 
-        // --- Authentication ---
         async function fetchUserListForDropdown() {
             const res = await apiCall({ action: "getUsers" }, null);
             const select = document.getElementById("login-user-select");
@@ -438,11 +426,7 @@
         }
 
         async function login() {
-            // Determine which field to use based on mode
-            const user = isAdminLoginMode 
-                ? document.getElementById("login-admin-username").value 
-                : document.getElementById("login-user-select").value;
-                
+            const user = isAdminLoginMode ? document.getElementById("login-admin-username").value : document.getElementById("login-user-select").value;
             const pass = document.getElementById("login-password").value;
             const msg = document.getElementById("auth-msg");
             
@@ -488,13 +472,12 @@
             
             if(!fName || !lName || !user || !pass) return msg.innerText = "Fill all fields.";
 
-            const payload = { action: "createUser", newUsername: user, newPassword: pass, firstName: fName, lastName: lName };
-            const res = await apiCall(payload, "btn-register");
+            const res = await apiCall({ action: "createUser", newUsername: user, newPassword: pass, firstName: fName, lastName: lName }, "btn-register");
             
             msg.innerText = res.message;
             msg.style.color = res.success ? "var(--accent-green)" : "var(--accent-red)";
             if(res.success) {
-                fetchUserListForDropdown(); // Refresh dropdown
+                fetchUserListForDropdown();
                 setTimeout(() => toggleAuthForm('login'), 2000);
             }
         }
@@ -509,7 +492,6 @@
             document.getElementById("auth-msg").innerText = "";
         }
 
-        // --- Form & Quick Actions ---
         function resetForm() {
             document.getElementById("form-title").innerText = "Manual Entry";
             document.getElementById("quick-actions-panel").classList.remove("hidden");
@@ -559,7 +541,6 @@
 
             if (!dateStr) return msg.innerText = "Date is required.";
 
-            // STRICT VALIDATION: If Present, both In and Out must be filled
             if (status === "Present" && (!inTime || !outTime)) {
                 msg.style.color = "var(--accent-red)";
                 return msg.innerText = "In Time and Out Time cannot be blank when status is Present.";
@@ -588,7 +569,6 @@
             }
         }
 
-        // --- Data Fetching & Rendering ---
         async function fetchData() {
             const action = currentRole === "Admin" ? "getAllData" : "getUserData";
             const res = await apiCall({ action: action, username: currentUser }, null);
