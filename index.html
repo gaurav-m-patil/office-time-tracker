@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#4f46e5" id="theme-color-meta">
     
-    <link rel="manifest" href="manifest.json?v=15.0">
+    <link rel="manifest" href="manifest.json?v=16.0">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2083/2083214.png">
     
     <title>Enterprise Time Tracker</title>
@@ -462,7 +462,6 @@
             return clean;
         }
 
-        // SMART DURATION FORMATTER: Formats raw decimal hours or minute counts into clean "Xm" or "Xh Ym"
         function formatDurationDisplay(hoursVal) {
             if (hoursVal === '-' || hoursVal === null || hoursVal === undefined || hoursVal === '') return '-';
             let num = parseFloat(hoursVal);
@@ -859,7 +858,8 @@
                     });
 
                     let pct = validWorkDays > 0 ? Math.round((attendedDays / validWorkDays) * 100) : 0;
-                    let monthAvgHrs = monthHoursDivisor > 0 ? (monthHours / monthHoursDivisor).toFixed(1) : "0";
+                    let monthAvgDecimal = monthHoursDivisor > 0 ? (monthHours / monthHoursDivisor) : 0;
+                    let monthAvgFormatted = formatDurationDisplay(monthAvgDecimal);
                     
                     if (logsInMonth.length > 0) hasDataInQuarter = true;
 
@@ -871,7 +871,7 @@
                     qMonthsData.push({
                         name: monthNames[mIdx],
                         pct: pct,
-                        avgHrs: monthAvgHrs,
+                        avgHrs: monthAvgFormatted,
                         hasData: logsInMonth.length > 0
                     });
                 });
@@ -879,14 +879,15 @@
                 if (!hasDataInQuarter && qMonthsData.length === 0) return;
 
                 let quarterPct = qValidDays > 0 ? Math.round((qAttended / qValidDays) * 100) : 0;
-                let quarterAvgHrs = qHoursDivisor > 0 ? (qTotalHours / qHoursDivisor).toFixed(1) : "0";
+                let quarterAvgDecimal = qHoursDivisor > 0 ? (qTotalHours / qHoursDivisor) : 0;
+                let quarterAvgFormatted = formatDurationDisplay(quarterAvgDecimal);
 
                 let block = document.createElement("div");
                 block.className = "quarter-block";
                 block.innerHTML = `
                     <div class="quarter-header">
                         <span class="quarter-title">${q.name} (${currentFYStartYear}-${String(currentFYStartYear+1).substring(2)})</span>
-                        <span class="quarter-stats">Attendance: <strong>${quarterPct}%</strong> | Avg: <strong>${quarterAvgHrs} hrs</strong></span>
+                        <span class="quarter-stats">Attendance: <strong>${quarterPct}%</strong> | Avg: <strong>${quarterAvgFormatted}</strong></span>
                     </div>
                     <div class="months-grid">
                         ${qMonthsData.map(m => `
@@ -895,7 +896,7 @@
                                 <div class="circle-progress" style="--pct: ${m.hasData ? m.pct : 0};">
                                     <div class="circle-value">${m.hasData ? m.pct + '%' : 'N/A'}</div>
                                 </div>
-                                <div class="month-avg-hours">${m.hasData ? m.avgHrs + ' hrs' : '-'}</div>
+                                <div class="month-avg-hours">${m.hasData ? m.avgHrs : '-'}</div>
                             </div>
                         `).join('')}
                     </div>
