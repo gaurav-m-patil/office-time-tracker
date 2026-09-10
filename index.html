@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Office Time Tracker</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --background: #f3f4f6;
+            --surface: #ffffff;
+            --text: #1f2937;
+            --border: #e5e7eb;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--background);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            background: var(--surface);
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 800px;
+        }
+        h2 { margin-top: 0; }
+        .hidden { display: none !important; }
+        
+        /* Forms */
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: 500; }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            width: 100%;
+        }
+        button:hover { background: #1d4ed8; }
+        button:disabled { background: #93c5fd; cursor: not-allowed; }
+
+        /* Navigation */
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 10px;
+        }
+        .nav-tabs button {
+            background: none;
+            color: var(--text);
+            border: 1px solid var(--border);
+            width: auto;
+        }
+        .nav-tabs button.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* Tables & Insights */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        .action-btn { background: #4b5563; padding: 5px 10px; width: auto; font-size: 12px; }
+        .insight-card {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .insight-value { font-size: 24px; font-weight: bold; color: var(--primary); }
+        #status-msg { margin-top: 15px; text-align: center; font-weight: 500; }
+    </style>
+</head>
+<body>
+
+    <!-- Login Section -->
+    <div id="login-section" class="container">
+        <h2>Office Time Tracker - Login</h2>
+        <div class="form-group">
+            <label>Username</label>
+            <input type="text" id="login-username">
+        </div>
+        <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="login-password">
+        </div>
+        <button id="btn-login" onclick="login()">Login</button>
+        <div id="login-msg" id="status-msg"></div>
+    </div>
+
+    <!-- Dashboard Section -->
+    <div id="dashboard-section" class="container hidden">
+        <h2>Welcome, <span id="display-user"></span></h2>
+        
+        <div class="nav-tabs">
+            <button id="nav-log" class="active" onclick="switchTab('log')">Log / Edit Time</button>
+            <button id="nav-history" onclick="switchTab('history')">My History</button>
+            <button id="nav-insights" onclick="switchTab('insights')">Insights</button>
+            <button id="nav-admin" class="hidden" onclick="switchTab('admin')">Admin Panel</button>
+            <button onclick="logout()" style="margin-left: auto; background: #dc2626;">Logout</button>
+        </div>
+
+        <!-- Log/Edit Time Tab -->
+        <div id="tab-log">
+            <h3 id="form-title">Submit Daily Log</h3>
+            <input type="hidden" id="entry-id"> <!-- Used for updates -->
+            
+            <div class="form-group">
+                <label>Date</label>
+                <input type="date" id="entry-date">
+            </div>
+            <div class="form-group">
+                <label>Status</label>
+                <select id="entry-status" onchange="handleStatusChange()">
+                    <option value="Present">Present</option>
+                    <option value="Leave">Leave</option>
+                    <option value="Exception">Exception</option>
+                    <option value="No Show">No Show</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>In Time</label>
+                <input type="time" id="entry-in">
+            </div>
+            <div class="form-group">
+                <label>Out Time</label>
+                <input type="time" id="entry-out">
+            </div>
+            <div class="form-group">
+                <label>Office Location</label>
+                <input type="text" id="entry-location" placeholder="e.g., Main Office">
+            </div>
+            <button id="btn-submit-log" onclick="submitLog()">Save Entry</button>
+            <div id="log-msg" class="status-msg"></div>
+        </div>
+
+        <!-- History Tab -->
+        <div id="tab-history" class="hidden">
+            <h3>My Past Logs</h3>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>In</th>
+                            <th>Out</th>
+                            <th>Hours</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-table-body">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Insights Tab -->
+        <div id="tab-insights" class="hidden">
+            <h3>My Analytics</h3>
+            <p style="font-size: 14px; color: #666;">Averages exclude Leaves and Exceptions. No Shows count as 0 hours.</p>
+            <div class="insight-card">
+                <div>Average Hours / Day (Current Month)</div>
+                <div class="insight-value" id="insight-month">--</div>
+            </div>
+            <div class="insight-card">
+                <div>Average Hours / Day (Current Quarter)</div>
+                <div class="insight-value" id="insight-quarter">--</div>
+            </div>
+        </div>
+
+        <!-- Admin Tab -->
+        <div id="tab-admin" class="hidden">
+            <h3>Create New User</h3>
+            <div class="form-group">
+                <label>New Username</label>
+                <input type="text" id="new-username">
+            </div>
+            <div class="form-group">
+                <label>New Password</label>
+                <input type="text" id="new-password">
+            </div>
+            <div class="form-group">
+                <label>Role</label>
+                <select id="new-role">
+                    <option value="User">User</option>
+                    <option value="Admin">Admin</option>
+                </select>
+            </div>
+            <button id="btn-create-user" onclick="createUser()">Create User</button>
+            <div id="admin-msg" class="status-msg"></div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // REPLACE THIS URL WITH YOUR WEB APP URL
+        // ==========================================
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwT77gaKXuTfG6sqef61rgXtZaDqUagDfRX9w4c6Hx-y7ldEKmveTZrwpVAtBXIS60vfw/exec";
+        
+        let currentUser = "";
+        let currentRole = "";
+        let userLogsData = [];
+
+        // --- UI & Navigation ---
+        function switchTab(tabId) {
+            document.querySelectorAll("[id^='tab-']").forEach(el => el.classList.add("hidden"));
+            document.querySelectorAll(".nav-tabs button").forEach(el => el.classList.remove("active"));
+            
+            document.getElementById(`tab-${tabId}`).classList.remove("hidden");
+            document.getElementById(`nav-${tabId}`).classList.add("active");
+
+            if (tabId === 'history' || tabId === 'insights') {
+                fetchUserData();
+            }
+        }
+
+        function handleStatusChange() {
+            const status = document.getElementById("entry-status").value;
+            const inTime = document.getElementById("entry-in");
+            const outTime = document.getElementById("entry-out");
+            
+            if (status === "Leave" || status === "Exception") {
+                inTime.value = ""; outTime.value = "";
+                inTime.disabled = true; outTime.disabled = true;
+            } else {
+                inTime.disabled = false; outTime.disabled = false;
+            }
+        }
+
+        // --- Core Functions ---
+        async function apiCall(payload, btnId) {
+            const btn = document.getElementById(btnId);
+            const originalText = btn.innerText;
+            btn.innerText = "Processing...";
+            btn.disabled = true;
+
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: "POST",
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                btn.innerText = originalText;
+                btn.disabled = false;
+                return result;
+            } catch (error) {
+                btn.innerText = originalText;
+                btn.disabled = false;
+                alert("Connection error. Please try again.");
+                return { success: false };
+            }
+        }
+
+        async function login() {
+            const user = document.getElementById("login-username").value;
+            const pass = document.getElementById("login-password").value;
+            const msg = document.getElementById("login-msg");
+            
+            if(!user || !pass) return msg.innerText = "Fill all fields.";
+
+            const res = await apiCall({ action: "login", username: user, password: pass }, "btn-login");
+            
+            if (res.success) {
+                currentUser = user;
+                currentRole = res.role;
+                document.getElementById("login-section").classList.add("hidden");
+                document.getElementById("dashboard-section").classList.remove("hidden");
+                document.getElementById("display-user").innerText = currentUser;
+                
+                if(currentRole === "Admin") {
+                    document.getElementById("nav-admin").classList.remove("hidden");
+                }
+                document.getElementById("entry-date").valueAsDate = new Date(); // Set today's date
+                fetchUserData();
+            } else {
+                msg.innerText = res.message;
+                msg.style.color = "red";
+            }
+        }
+
+        function logout() {
+            currentUser = ""; currentRole = ""; userLogsData = [];
+            document.getElementById("dashboard-section").classList.add("hidden");
+            document.getElementById("login-section").classList.remove("hidden");
+            document.getElementById("login-username").value = "";
+            document.getElementById("login-password").value = "";
+            document.getElementById("nav-admin").classList.add("hidden");
+            switchTab('log');
+        }
+
+        async function submitLog() {
+            const logId = document.getElementById("entry-id").value;
+            const dateStr = document.getElementById("entry-date").value;
+            const status = document.getElementById("entry-status").value;
+            const inTime = document.getElementById("entry-in").value;
+            const outTime = document.getElementById("entry-out").value;
+            const loc = document.getElementById("entry-location").value;
+            const msg = document.getElementById("log-msg");
+
+            if (!dateStr) return msg.innerText = "Date is required.";
+
+            // Calculate hours
+            let hours = 0;
+            if (status === "Present" && inTime && outTime) {
+                const [inH, inM] = inTime.split(':');
+                const [outH, outM] = outTime.split(':');
+                hours = ((parseInt(outH)*60 + parseInt(outM)) - (parseInt(inH)*60 + parseInt(inM))) / 60;
+                if (hours < 0) hours += 24; // Handle passing midnight slightly
+                hours = hours.toFixed(2);
+            }
+
+            const payload = {
+                action: logId ? "updateLog" : "logTime",
+                logId: logId,
+                username: currentUser,
+                date: dateStr,
+                status: status,
+                inTime: inTime,
+                outTime: outTime,
+                location: loc,
+                hours: hours
+            };
+
+            const res = await apiCall(payload, "btn-submit-log");
+            
+            if (res.success) {
+                msg.innerText = res.message;
+                msg.style.color = "green";
+                // Reset form
+                document.getElementById("entry-id").value = "";
+                document.getElementById("form-title").innerText = "Submit Daily Log";
+                document.getElementById("entry-in").value = "";
+                document.getElementById("entry-out").value = "";
+                setTimeout(() => msg.innerText = "", 3000);
+            }
+        }
+
+        async function fetchUserData() {
+            const res = await apiCall({ action: "getUserData", username: currentUser }, "nav-history"); // Reusing button state logic loosely
+            if (res.success) {
+                userLogsData = res.logs;
+                renderHistory();
+                calculateInsights();
+            }
+        }
+
+        function renderHistory() {
+            const tbody = document.getElementById("history-table-body");
+            tbody.innerHTML = "";
+            
+            // Sort by date descending
+            const sortedLogs = userLogsData.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            sortedLogs.forEach(log => {
+                const tr = document.createElement("tr");
+                const formattedDate = new Date(log.date).toLocaleDateString();
+                tr.innerHTML = `
+                    <td>${formattedDate}</td>
+                    <td>${log.status}</td>
+                    <td>${log.inTime || '-'}</td>
+                    <td>${log.outTime || '-'}</td>
+                    <td>${log.hours || '-'}</td>
+                    <td><button class="action-btn" onclick='editLog(${JSON.stringify(log).replace(/'/g, "&#39;")})'>Edit</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function editLog(log) {
+            switchTab('log');
+            document.getElementById("form-title").innerText = "Edit Existing Entry";
+            document.getElementById("entry-id").value = log.logId;
+            document.getElementById("entry-date").value = log.date.substring(0, 10);
+            document.getElementById("entry-status").value = log.status;
+            document.getElementById("entry-in").value = log.inTime;
+            document.getElementById("entry-out").value = log.outTime;
+            document.getElementById("entry-location").value = log.location;
+            handleStatusChange();
+        }
+
+        function calculateInsights() {
+            const now = new Date();
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
+            const currentQuarter = Math.floor(currentMonth / 3);
+
+            let monthHours = 0, monthDays = 0;
+            let quarterHours = 0, quarterDays = 0;
+
+            userLogsData.forEach(log => {
+                // Ignore Leave/Exception entirely for averages
+                if (log.status === "Leave" || log.status === "Exception") return;
+
+                const logDate = new Date(log.date);
+                const isSameYear = logDate.getFullYear() === currentYear;
+                const isSameMonth = logDate.getMonth() === currentMonth;
+                const isSameQuarter = Math.floor(logDate.getMonth() / 3) === currentQuarter;
+                
+                const hrs = parseFloat(log.hours) || 0; // "No Show" will naturally be 0 here
+
+                if (isSameYear && isSameMonth) {
+                    monthHours += hrs;
+                    monthDays += 1;
+                }
+                if (isSameYear && isSameQuarter) {
+                    quarterHours += hrs;
+                    quarterDays += 1;
+                }
+            });
+
+            const monthAvg = monthDays > 0 ? (monthHours / monthDays).toFixed(2) : 0;
+            const quarterAvg = quarterDays > 0 ? (quarterHours / quarterDays).toFixed(2) : 0;
+
+            document.getElementById("insight-month").innerText = `${monthAvg} hrs / day`;
+            document.getElementById("insight-quarter").innerText = `${quarterAvg} hrs / day`;
+        }
+
+        async function createUser() {
+            const nUser = document.getElementById("new-username").value;
+            const nPass = document.getElementById("new-password").value;
+            const nRole = document.getElementById("new-role").value;
+            const msg = document.getElementById("admin-msg");
+
+            if(!nUser || !nPass) return msg.innerText = "Fill all fields.";
+
+            const res = await apiCall({ action: "createUser", newUsername: nUser, newPassword: nPass, newRole: nRole }, "btn-create-user");
+            
+            msg.innerText = res.message;
+            msg.style.color = res.success ? "green" : "red";
+            if(res.success) {
+                document.getElementById("new-username").value = "";
+                document.getElementById("new-password").value = "";
+            }
+        }
+    </script>
+</body>
+</html>
