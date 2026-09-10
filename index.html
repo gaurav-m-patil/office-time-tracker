@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#4f46e5" id="theme-color-meta">
     
-    <link rel="manifest" href="manifest.json?v=5.0">
+    <link rel="manifest" href="manifest.json?v=6.0">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2083/2083214.png">
     
     <title>Enterprise Time Tracker</title>
@@ -90,6 +90,13 @@
         }
         input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15); }
         
+        /* Fix iOS native input sizing / flex issues */
+        input[type="date"], input[type="time"] {
+            appearance: none;
+            -webkit-appearance: none;
+            min-height: 46px;
+        }
+
         .btn-submit { 
             background: var(--primary); color: white; border: none; padding: 16px; border-radius: 10px; 
             cursor: pointer; font-weight: 700; width: 100%; font-size: 16px; margin-top: 10px; 
@@ -104,11 +111,12 @@
         .quick-actions-title { font-size: 12px; font-weight: 700; color: var(--text-light); text-transform: uppercase; }
         .quick-actions-date { font-size: 12px; font-weight: 600; color: var(--primary); }
         
-        .quick-buttons { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+        .quick-buttons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
         .btn-quick {
-            border: none; padding: 12px 8px; border-radius: 10px; color: white; 
+            border: none; padding: 12px 6px; border-radius: 10px; color: white; 
             font-weight: 700; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;
             box-shadow: 0 2px 6px rgba(0,0,0,0.08); transition: transform 0.1s;
+            white-space: nowrap;
         }
         .btn-quick:active { transform: scale(0.97); }
         .bg-green { background: var(--accent-green); } 
@@ -350,7 +358,6 @@
                 toggleDarkMode(true);
             }
             
-            // Add Enter key listener for admin username & password fields
             document.getElementById("login-admin-username").addEventListener("keydown", (e) => {
                 if (e.key === "Enter") login();
             });
@@ -373,13 +380,37 @@
             }
         }
 
-        function getTodayStr() {
-            const today = new Date();
-            return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+        // Safe local date formatting (YYYY-MM-DD) avoiding UTC time-zone shifts
+        function getLocalDateStr(dateObj = new Date()) {
+            const year = dateObj.getFullYear();
+            const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+            const day = String(dateObj.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
         }
+
         function getReadableTodayStr() {
-            return new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+            return formatDateDDMonYY(getLocalDateStr());
         }
+
+        // Formats "YYYY-MM-DD" or ISO string into "01-Sep-26"
+        function formatDateDDMonYY(dateString) {
+            if (!dateString) return '';
+            // Handle full ISO strings safely by splitting the date part
+            const cleanDateStr = dateString.toString().substring(0, 10);
+            const parts = cleanDateStr.split('-');
+            if (parts.length !== 3) return cleanDateStr;
+            
+            const year = parts[0];
+            const monthIdx = parseInt(parts[1], 10) - 1;
+            const day = parts[2];
+
+            const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            const mon = monthNames[monthIdx] || 'Jan';
+            const yy = year.substring(2);
+
+            return `${day}-${mon}-${yy}`;
+        }
+
         function getCurrentTimeStr() {
             const now = new Date();
             return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
@@ -442,7 +473,6 @@
             }
         }
 
-        // Auto-trigger login when 4 digits are entered
         function checkAutoLogin() {
             const pinField = document.getElementById("login-password");
             if (pinField.value.length === 4) {
@@ -485,7 +515,7 @@
             } else {
                 msg.innerText = "Incorrect PIN / Credentials";
                 msg.style.color = "var(--accent-red)";
-                document.getElementById("login-password").value = ""; // Clear incorrect PIN automatically
+                document.getElementById("login-password").value = "";
             }
         }
 
@@ -525,7 +555,7 @@
             document.getElementById("quick-date-display").innerText = getReadableTodayStr();
             document.getElementById("entry-id").value = "";
             document.getElementById("entry-username").value = currentUser;
-            document.getElementById("entry-from-date").value = getTodayStr();
+            document.getElementById("entry-from-date").value = getLocalDateStr();
             document.getElementById("entry-to-date").value = "";
             document.getElementById("entry-status").value = "Present";
             document.getElementById("entry-in").value = "";
@@ -560,7 +590,7 @@
         }
 
         function quickAction(type) {
-            document.getElementById("entry-from-date").value = getTodayStr();
+            document.getElementById("entry-from-date").value = getLocalDateStr();
             document.getElementById("entry-to-date").value = "";
             if (type === 'in') { document.getElementById("entry-status").value = "Present"; document.getElementById("entry-in").value = getCurrentTimeStr(); }
             else if (type === 'out') { document.getElementById("entry-status").value = "Present"; document.getElementById("entry-out").value = getCurrentTimeStr(); }
@@ -636,7 +666,7 @@
             const tbody = document.getElementById("history-table-body");
             tbody.innerHTML = logsData.map(log => `
                 <tr>
-                    <td>${log.date.substring(5, 10)}</td>
+                    <td><strong>${formatDateDDMonYY(log.date)}</strong></td>
                     <td><span style="font-size:10px; padding:3px 6px; border-radius:10px; background:var(--secondary); border:1px solid var(--border);">${log.status}</span></td>
                     <td>${log.inTime || '-'}</td>
                     <td>${log.outTime || '-'}</td>
@@ -651,7 +681,7 @@
             tbody.innerHTML = logsData.map(log => `
                 <tr>
                     <td style="font-weight:600; color:var(--primary);">${log.username}</td>
-                    <td>${log.date.substring(5, 10)}</td>
+                    <td><strong>${formatDateDDMonYY(log.date)}</strong></td>
                     <td>${log.status}</td>
                     <td>${log.inTime || '-'}</td>
                     <td>${log.outTime || '-'}</td>
@@ -702,7 +732,6 @@
             const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
             fyQuarters.forEach(q => {
-                let qYear = currentFYStartYear + q.yearOffset;
                 let qMonthsData = [];
                 let qPresent = 0, qNetWorkDays = 0, qTotalHours = 0, qPresentHoursCount = 0;
                 let hasDataInQuarter = false;
@@ -743,7 +772,7 @@
                     qMonthsData.push({
                         name: monthNames[mIdx],
                         pct: pct,
-                        hasData: logsInMonth.length > 0
+                        hasData: logsInMonth.length` + ``
                     });
                 });
 
