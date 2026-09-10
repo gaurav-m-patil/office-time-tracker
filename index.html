@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#4f46e5" id="theme-color-meta">
     
-    <link rel="manifest" href="manifest.json?v=10.0">
+    <link rel="manifest" href="manifest.json?v=11.0">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2083/2083214.png">
     
     <title>Enterprise Time Tracker</title>
@@ -66,33 +66,42 @@
         .icon-btn { 
             background: var(--secondary); border: 1px solid var(--border); color: var(--text-dark); 
             cursor: pointer; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%;
+            flex-shrink: 0;
         }
         .icon-btn:hover { background: var(--border); }
 
-        .main-content { flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 90px; }
+        .main-content { flex: 1; overflow-y: auto; padding: 12px; padding-bottom: 90px; width: 100%; }
         
         .container {
-            background: var(--surface); padding: 20px; border-radius: 16px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03); width: 100%; max-width: 800px; margin: 0 auto;
+            background: var(--surface); padding: 16px; border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03); width: 100%; max-width: 600px; margin: 0 auto;
             border: 1px solid var(--border);
         }
 
         h2, h3 { margin-top: 0; color: var(--primary); }
         .hidden { display: none !important; }
 
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
-        .form-group { display: flex; flex-direction: column; margin-bottom: 12px; }
+        /* Robust iOS Flex/Grid layout fixes to prevent overflow blowout */
+        .form-row { 
+            display: flex; gap: 10px; margin-bottom: 12px; width: 100%; 
+        }
+        @media (max-width: 480px) {
+            .form-row { flex-direction: column; gap: 12px; }
+        }
+        .form-group { 
+            display: flex; flex-direction: column; flex: 1; min-width: 0; width: 100%;
+        }
+        
         label { margin-bottom: 4px; font-size: 11px; font-weight: 700; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.5px; }
+        
         input, select {
-            width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 10px;
+            width: 100%; max-width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 10px;
             font-size: 15px; color: var(--text-dark); background: var(--input-bg);
-            transition: all 0.2s;
+            transition: all 0.2s; -webkit-appearance: none; appearance: none;
         }
         input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15); }
         
         input[type="date"], input[type="time"] {
-            appearance: none;
-            -webkit-appearance: none;
             min-height: 46px;
         }
 
@@ -104,18 +113,21 @@
         .btn-submit:hover { background: var(--primary-hover); }
 
         .quick-actions-card {
-            background: var(--secondary); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin: 15px 0;
+            background: var(--secondary); border: 1px solid var(--border); border-radius: 12px; padding: 12px; margin: 15px 0; width: 100%;
         }
         .quick-actions-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         .quick-actions-title { font-size: 12px; font-weight: 700; color: var(--text-light); text-transform: uppercase; }
         .quick-actions-date { font-size: 12px; font-weight: 600; color: var(--primary); }
         
-        .quick-buttons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .quick-buttons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; }
+        @media (max-width: 400px) {
+            .quick-buttons { grid-template-columns: repeat(2, 1fr); }
+        }
         .btn-quick {
             border: none; padding: 12px 6px; border-radius: 10px; color: white; 
             font-weight: 700; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;
             box-shadow: 0 2px 6px rgba(0,0,0,0.08); transition: transform 0.1s;
-            white-space: nowrap;
+            white-space: nowrap; width: 100%;
         }
         .btn-quick:active { transform: scale(0.97); }
         .bg-green { background: var(--accent-green); } 
@@ -125,32 +137,32 @@
         .bg-gray { background: var(--accent-gray); }
         .bg-blue { background: #0284c7; }
 
-        .table-container { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; margin-top: 10px; }
-        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; min-width: 500px; }
+        .table-container { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; margin-top: 10px; width: 100%; }
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; min-width: 450px; }
         th { background: var(--secondary); padding: 12px; font-weight: 700; color: var(--text-light); border-bottom: 1px solid var(--border); }
         td { padding: 12px; border-bottom: 1px solid var(--border); color: var(--text-dark); }
         .action-btn { background: var(--secondary); color: var(--primary); border: 1px solid var(--border); padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
 
         .quarter-block {
-            background: var(--secondary); border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin-bottom: 20px;
+            background: var(--secondary); border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin-bottom: 20px; width: 100%;
         }
-        .quarter-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+        .quarter-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 8px; flex-wrap: wrap; gap: 6px; }
         .quarter-title { font-size: 14px; font-weight: 800; color: var(--primary); text-transform: uppercase; }
         .quarter-stats { font-size: 12px; font-weight: 600; color: var(--text-light); }
         
-        .months-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .months-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
         .month-circle-card {
-            background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px; text-align: center;
+            background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 4px; text-align: center;
         }
-        .month-name { font-size: 11px; font-weight: 700; color: var(--text-light); margin-bottom: 6px; text-transform: uppercase; }
+        .month-name { font-size: 10px; font-weight: 700; color: var(--text-light); margin-bottom: 6px; text-transform: uppercase; }
         .circle-progress {
-            width: 55px; height: 55px; border-radius: 50%; background: conic-gradient(var(--primary) calc(var(--pct, 0) * 1%), var(--border) 0);
+            width: 50px; height: 50px; border-radius: 50%; background: conic-gradient(var(--primary) calc(var(--pct, 0) * 1%), var(--border) 0);
             display: flex; align-items: center; justify-content: center; margin: 0 auto; position: relative;
         }
         .circle-progress::before {
-            content: ""; position: absolute; width: 43px; height: 43px; border-radius: 50%; background: var(--surface);
+            content: ""; position: absolute; width: 38px; height: 38px; border-radius: 50%; background: var(--surface);
         }
-        .circle-value { position: relative; font-size: 11px; font-weight: 800; color: var(--text-dark); }
+        .circle-value { position: relative; font-size: 10px; font-weight: 800; color: var(--text-dark); }
 
         .status-msg { margin-top: 10px; text-align: center; font-weight: 600; font-size: 14px; min-height: 20px; }
 
@@ -194,19 +206,19 @@
             <div id="login-form-div">
                 <h2 style="text-align: center; margin-bottom: 20px;">Welcome Back</h2>
                 
-                <div id="login-dropdown-area" class="form-group">
+                <div id="login-dropdown-area" class="form-group" style="margin-bottom: 12px;">
                     <label>Select Your Name</label>
                     <select id="login-user-select">
                         <option value="">Loading users...</option>
                     </select>
                 </div>
 
-                <div id="login-admin-area" class="form-group hidden">
+                <div id="login-admin-area" class="form-group hidden" style="margin-bottom: 12px;">
                     <label>Admin Username</label>
                     <input type="text" id="login-admin-username" placeholder="Enter admin username">
                 </div>
 
-                <div class="form-group">
+                <div class="form-group" style="margin-bottom: 12px;">
                     <label>4-Digit PIN</label>
                     <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" id="login-password" placeholder="••••" style="letter-spacing: 4px; font-size: 18px; text-align: center;" oninput="checkAutoLogin()">
                 </div>
@@ -225,8 +237,8 @@
                     <div class="form-group"><label>First Name</label><input type="text" id="reg-fname" placeholder="John"></div>
                     <div class="form-group"><label>Last Name</label><input type="text" id="reg-lname" placeholder="Doe"></div>
                 </div>
-                <div class="form-group"><label>Username</label><input type="text" id="reg-username" placeholder="johndoe"></div>
-                <div class="form-group"><label>4-Digit PIN</label><input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" id="reg-password" placeholder="••••" style="letter-spacing: 4px; font-size: 18px; text-align: center;" onkeydown="if(event.key==='Enter') register()"></div>
+                <div class="form-group" style="margin-bottom: 12px;"><label>Username</label><input type="text" id="reg-username" placeholder="johndoe"></div>
+                <div class="form-group" style="margin-bottom: 12px;"><label>4-Digit PIN</label><input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" id="reg-password" placeholder="••••" style="letter-spacing: 4px; font-size: 18px; text-align: center;" onkeydown="if(event.key==='Enter') register()"></div>
                 <button class="btn-submit" id="btn-register" onclick="register()">Register</button>
                 <div class="auth-toggle">Already registered? <span onclick="toggleAuthForm('login')">Sign In</span></div>
             </div>
@@ -244,7 +256,7 @@
                 
                 <div class="form-row">
                     <div class="form-group"><label>From Date</label><input type="date" id="entry-from-date"></div>
-                    <div class="form-group"><label>To Date (Optional Range)</label><input type="date" id="entry-to-date"></div>
+                    <div class="form-group"><label>To Date (Optional)</label><input type="date" id="entry-to-date"></div>
                 </div>
 
                 <div class="form-row">
@@ -307,7 +319,7 @@
             <!-- Tab 3: Insights -->
             <div id="tab-insights" class="hidden">
                 <h3 style="margin-bottom: 5px;">Financial Year Analytics</h3>
-                <p style="font-size: 11px; color: var(--text-light); margin-top: 0; margin-bottom: 15px;">*Attendance % calculated over net working days (excluding weekends & holidays).</p>
+                <p style="font-size: 11px; color: var(--text-light); margin-top: 0; margin-bottom: 15px;">*Attendance % = (Present + Leave + Exception) / Working Days (No Shows count as missed). Avg Hours = (Present + No Show divisor).</p>
                 <div id="insights-container"></div>
             </div>
 
@@ -352,7 +364,6 @@
         let isAdminLoginMode = false;
 
         window.onload = () => {
-            // Load cached user list instantly if available in localStorage
             const localUsers = localStorage.getItem("tt_users");
             if (localUsers) {
                 try {
@@ -362,7 +373,6 @@
             }
             fetchUserListForDropdown();
 
-            // Load cached logs instantly for lightning-fast first paint
             const localLogs = localStorage.getItem("tt_logs");
             if (localLogs) {
                 try {
@@ -459,7 +469,6 @@
             document.getElementById("login-password").value = "";
         }
 
-        // INSTANT TAB SWITCHING: Zero delay using local memory/storage cache
         function switchTab(tabId) {
             document.querySelectorAll("[id^='tab-']").forEach(el => el.classList.add("hidden"));
             document.querySelectorAll(".nav-item").forEach(el => el.classList.remove("active"));
@@ -467,11 +476,9 @@
             document.getElementById(`tab-${tabId}`).classList.remove("hidden");
             document.getElementById(`nav-${tabId}`).classList.add("active");
 
-            // Render instantly from local cache
             if (tabId === 'history' || tabId === 'insights' || tabId === 'admin') {
                 if (currentRole === "Admin") renderAdminTable();
                 else { renderHistoryTable(); calculateInsights(); }
-                // Fetch fresh data silently in background
                 fetchData(true); 
             }
             if (tabId === 'log' && !document.getElementById("entry-id").value) resetForm();
@@ -539,7 +546,6 @@
                 document.getElementById("app-bottom-nav").classList.remove("hidden");
                 document.getElementById("display-firstname").innerText = currentFirstName;
 
-                // Fetch data immediately in background
                 fetchData(false);
 
                 if(currentRole === "Admin") {
@@ -646,7 +652,6 @@
             handleStatusChange();
         }
 
-        // LIGHTNING SPEED: OPTIMISTIC UI SUBMISSION
         async function submitLog() {
             const logId = document.getElementById("entry-id").value;
             const recordUser = document.getElementById("entry-username").value || currentUser;
@@ -674,7 +679,6 @@
                 hours = hours.toFixed(2);
             }
 
-            // OPTIMISTIC UPDATE: Instantly push to local array so screen updates immediately without waiting
             const tempLogId = logId || 'temp_' + Date.now();
             const newEntry = { logId: tempLogId, username: recordUser, date: fromDate, status, inTime, outTime, location: loc, hours };
             
@@ -685,7 +689,6 @@
                 logsData.unshift(newEntry);
             }
             
-            // Save & re-render instantly
             localStorage.setItem("tt_logs", JSON.stringify(logsData));
             msg.innerText = "Saved successfully!";
             msg.style.color = "var(--accent-green)";
@@ -695,7 +698,6 @@
                 if (currentRole === "Admin") switchTab('admin'); else resetForm();
             }, 600);
 
-            // Sync with backend quietly in the background
             let payload;
             if (logId) {
                 payload = { action: "updateLog", logId, username: recordUser, date: fromDate, status, inTime, outTime, location: loc, hours };
@@ -706,7 +708,7 @@
             }
 
             apiCall(payload, null).then(res => {
-                if (res.success) fetchData(true); // background refresh
+                if (res.success) fetchData(true);
             });
         }
 
@@ -795,7 +797,7 @@
 
             fyQuarters.forEach(q => {
                 let qMonthsData = [];
-                let qPresent = 0, qNetWorkDays = 0, qTotalHours = 0, qPresentHoursCount = 0;
+                let qAttended = 0, qValidDays = 0, qTotalHours = 0, qHoursDivisor = 0;
                 let hasDataInQuarter = false;
 
                 q.months.forEach(mIdx => {
@@ -806,30 +808,36 @@
 
                     let logsInMonth = monthlyMap[ymKey] || [];
                     
-                    let presentCount = 0;
-                    let netWorkDays = 0;
+                    let validWorkDays = 0;
+                    let attendedDays = 0;
                     let monthHours = 0;
-                    let monthPresentHrsCount = 0;
+                    let monthHoursDivisor = 0;
 
                     logsInMonth.forEach(l => {
-                        if (l.status !== "Weekend" && l.status !== "Holiday" && l.status !== "Leave" && l.status !== "Exception") {
-                            netWorkDays++;
+                        if (l.status !== "Weekend" && l.status !== "Holiday") {
+                            validWorkDays++; 
+                            
+                            if (l.status !== "No Show") {
+                                attendedDays++;
+                            }
+
                             if (l.status === "Present") {
-                                presentCount++;
                                 monthHours += parseFloat(l.hours) || 0;
-                                monthPresentHrsCount++;
+                                monthHoursDivisor++;
+                            } else if (l.status === "No Show") {
+                                monthHoursDivisor++;
                             }
                         }
                     });
 
-                    let pct = netWorkDays > 0 ? Math.round((presentCount / netWorkDays) * 100) : 0;
+                    let pct = validWorkDays > 0 ? Math.round((attendedDays / validWorkDays) * 100) : 0;
                     
                     if (logsInMonth.length > 0) hasDataInQuarter = true;
 
-                    qPresent += presentCount;
-                    qNetWorkDays += netWorkDays;
+                    qAttended += attendedDays;
+                    qValidDays += validWorkDays;
                     qTotalHours += monthHours;
-                    qPresentHoursCount += monthPresentHrsCount;
+                    qHoursDivisor += monthHoursDivisor;
 
                     qMonthsData.push({
                         name: monthNames[mIdx],
@@ -840,8 +848,8 @@
 
                 if (!hasDataInQuarter && qMonthsData.length === 0) return;
 
-                let quarterPct = qNetWorkDays > 0 ? Math.round((qPresent / qNetWorkDays) * 100) : 0;
-                let quarterAvgHrs = qPresentHoursCount > 0 ? (qTotalHours / qPresentHoursCount).toFixed(1) : "0";
+                let quarterPct = qValidDays > 0 ? Math.round((qAttended / qValidDays) * 100) : 0;
+                let quarterAvgHrs = qHoursDivisor > 0 ? (qTotalHours / qHoursDivisor).toFixed(1) : "0";
 
                 let block = document.createElement("div");
                 block.className = "quarter-block";
