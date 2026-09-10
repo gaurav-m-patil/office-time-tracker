@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#4f46e5" id="theme-color-meta">
     
-    <link rel="manifest" href="manifest.json?v=13.0">
+    <link rel="manifest" href="manifest.json?v=14.0">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2083/2083214.png">
     
     <title>Enterprise Time Tracker</title>
@@ -447,7 +447,6 @@
         function formatTimeDisplay(timeStr) {
             if (!timeStr) return '';
             let clean = timeStr.toString().trim();
-            // If already has AM/PM, return clean
             if (clean.toUpperCase().includes('AM') || clean.toUpperCase().includes('PM')) return clean;
             
             let parts = clean.split(':');
@@ -669,7 +668,9 @@
                 const [inH, inM] = inTime.split(':').map(Number);
                 const [outH, outM] = outTime.split(':').map(Number);
                 let diffMins = (outH * 60 + outM) - (inH * 60 + inM);
-                if (diffMins < 0) diffMins += 24 * 60; // Handle overnight shift wrap
+                if (diffMins < 0) diffMins += 24 * 60; // Overnight shift wrap
+                
+                // Calculate exact hours rounded to 2 decimals cleanly (e.g. 4 mins = 0.07, or show exact minutes)
                 hours = (diffMins / 60).toFixed(2);
             }
 
@@ -728,8 +729,8 @@
                 <tr>
                     <td><strong>${formatDateDDMonYY(log.date)}</strong></td>
                     <td><span style="font-size:10px; padding:3px 6px; border-radius:10px; background:var(--secondary); border:1px solid var(--border);">${log.status}</span></td>
-                    <td>${log.inTime || '-'}</td>
-                    <td>${log.outTime || '-'}</td>
+                    <td>${log.inTime ? formatTimeDisplay(log.inTime) : '-'}</td>
+                    <td>${log.outTime ? formatTimeDisplay(log.outTime) : '-'}</td>
                     <td><strong>${log.hours || '-'}</strong></td>
                     <td><button class="action-btn" onclick='editRecord(${JSON.stringify(log).replace(/'/g, "&#39;")})'><i class="material-icons-round" style="font-size:14px;">edit</i></button></td>
                 </tr>
@@ -743,8 +744,8 @@
                     <td style="font-weight:600; color:var(--primary);">${log.username}</td>
                     <td><strong>${formatDateDDMonYY(log.date)}</strong></td>
                     <td>${log.status}</td>
-                    <td>${log.inTime || '-'}</td>
-                    <td>${log.outTime || '-'}</td>
+                    <td>${log.inTime ? formatTimeDisplay(log.inTime) : '-'}</td>
+                    <td>${log.outTime ? formatTimeDisplay(log.outTime) : '-'}</td>
                     <td><strong>${log.hours || '-'}</strong></td>
                     <td><button class="action-btn" onclick='editRecord(${JSON.stringify(log).replace(/'/g, "&#39;")})'><i class="material-icons-round" style="font-size:14px;">edit</i></button></td>
                 </tr>
@@ -761,15 +762,16 @@
             document.getElementById("entry-to-date").value = "";
             document.getElementById("entry-status").value = log.status;
             
-            // Convert AM/PM back to 24-hr for time input field if needed
             document.getElementById("entry-in").value = log.inTime ? convertTo24Hour(log.inTime) : "";
             document.getElementById("entry-out").value = log.outTime ? convertTo24Hour(log.outTime) : "";
             handleStatusChange();
         }
 
         function convertTo24Hour(timeStr) {
-            let parts = timeStr.split(' ');
-            if (parts.length < 2) return timeStr;
+            let clean = timeStr.toString().trim();
+            if (!clean.toUpperCase().includes('AM') && !clean.toUpperCase().includes('PM')) return clean;
+            
+            let parts = clean.split(' ');
             let timeParts = parts[0].split(':');
             let h = parseInt(timeParts[0], 10);
             let m = timeParts[1];
