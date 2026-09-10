@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#4f46e5" id="theme-color-meta">
     
-    <link rel="manifest" href="manifest.json?v=4.0">
+    <link rel="manifest" href="manifest.json?v=5.0">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2083/2083214.png">
     
     <title>Enterprise Time Tracker</title>
@@ -118,14 +118,12 @@
         .bg-gray { background: var(--accent-gray); }
         .bg-blue { background: #0284c7; }
 
-        /* Tables & Cards */
         .table-container { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; margin-top: 10px; }
         table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; min-width: 500px; }
         th { background: var(--secondary); padding: 12px; font-weight: 700; color: var(--text-light); border-bottom: 1px solid var(--border); }
         td { padding: 12px; border-bottom: 1px solid var(--border); color: var(--text-dark); }
         .action-btn { background: var(--secondary); color: var(--primary); border: 1px solid var(--border); padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
 
-        /* Insights Cards & Monthly Percentage Circles */
         .quarter-block {
             background: var(--secondary); border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin-bottom: 20px;
         }
@@ -202,7 +200,7 @@
 
                 <div class="form-group">
                     <label>4-Digit PIN</label>
-                    <input type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="4" id="login-password" placeholder="••••" style="letter-spacing: 4px; font-size: 18px; text-align: center;">
+                    <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" id="login-password" placeholder="••••" style="letter-spacing: 4px; font-size: 18px; text-align: center;" oninput="checkAutoLogin()">
                 </div>
                 
                 <button class="btn-submit" id="btn-login" onclick="login()">Sign In</button>
@@ -220,7 +218,7 @@
                     <div class="form-group"><label>Last Name</label><input type="text" id="reg-lname" placeholder="Doe"></div>
                 </div>
                 <div class="form-group"><label>Username</label><input type="text" id="reg-username" placeholder="johndoe"></div>
-                <div class="form-group"><label>4-Digit PIN</label><input type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="4" id="reg-password" placeholder="••••" style="letter-spacing: 4px; font-size: 18px; text-align: center;"></div>
+                <div class="form-group"><label>4-Digit PIN</label><input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" id="reg-password" placeholder="••••" style="letter-spacing: 4px; font-size: 18px; text-align: center;" onkeydown="if(event.key==='Enter') register()"></div>
                 <button class="btn-submit" id="btn-register" onclick="register()">Register</button>
                 <div class="auth-toggle">Already registered? <span onclick="toggleAuthForm('login')">Sign In</span></div>
             </div>
@@ -351,6 +349,14 @@
             if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
                 toggleDarkMode(true);
             }
+            
+            // Add Enter key listener for admin username & password fields
+            document.getElementById("login-admin-username").addEventListener("keydown", (e) => {
+                if (e.key === "Enter") login();
+            });
+            document.getElementById("login-password").addEventListener("keydown", (e) => {
+                if (e.key === "Enter") login();
+            });
         };
 
         function toggleDarkMode(forceDark = null) {
@@ -390,6 +396,7 @@
             document.getElementById("login-dropdown-area").classList.toggle("hidden", isAdminLoginMode);
             document.getElementById("login-admin-area").classList.toggle("hidden", !isAdminLoginMode);
             document.getElementById("toggle-admin-btn").innerText = isAdminLoginMode ? "User Login?" : "Admin Login?";
+            document.getElementById("login-password").value = "";
         }
 
         function switchTab(tabId) {
@@ -435,6 +442,14 @@
             }
         }
 
+        // Auto-trigger login when 4 digits are entered
+        function checkAutoLogin() {
+            const pinField = document.getElementById("login-password");
+            if (pinField.value.length === 4) {
+                login();
+            }
+        }
+
         async function login() {
             const user = isAdminLoginMode ? document.getElementById("login-admin-username").value : document.getElementById("login-user-select").value;
             const pass = document.getElementById("login-password").value;
@@ -468,8 +483,9 @@
                     switchTab('log');
                 }
             } else {
-                msg.innerText = res.message;
+                msg.innerText = "Incorrect PIN / Credentials";
                 msg.style.color = "var(--accent-red)";
+                document.getElementById("login-password").value = ""; // Clear incorrect PIN automatically
             }
         }
 
@@ -481,6 +497,7 @@
             const msg = document.getElementById("auth-msg");
             
             if(!fName || !lName || !user || !pass) return msg.innerText = "Fill all fields.";
+            if(pass.length !== 4) return msg.innerText = "PIN must be exactly 4 digits.";
 
             const res = await apiCall({ action: "createUser", newUsername: user, newPassword: pass, firstName: fName, lastName: lName }, "btn-register");
             
@@ -668,15 +685,13 @@
             const currentMonth = now.getMonth();
             const currentFYStartYear = currentMonth >= 3 ? currentYear : currentYear - 1;
 
-            // Map data by 'YYYY-MM'
             let monthlyMap = {};
             logsData.forEach(log => {
-                const ym = log.date.substring(0, 7); // "YYYY-MM"
+                const ym = log.date.substring(0, 7);
                 if (!monthlyMap[ym]) monthlyMap[ym] = [];
                 monthlyMap[ym].push(log);
             });
 
-            // Financial Year Quarters configuration
             const fyQuarters = [
                 { name: "Q1: Apr – Jun", months: [3, 4, 5], yearOffset: 0 },
                 { name: "Q2: Jul – Sep", months: [6, 7, 8], yearOffset: 0 },
@@ -696,12 +711,10 @@
                     let mYear = (mIdx < 3 && q.name.includes("Q4")) ? currentFYStartYear + 1 : currentFYStartYear;
                     let ymKey = `${mYear}-${String(mIdx + 1).padStart(2, '0')}`;
                     
-                    // Don't show future months
                     if (new Date(mYear, mIdx, 1) > now) return;
 
                     let logsInMonth = monthlyMap[ymKey] || [];
                     
-                    // Calculate net working days (exclude Weekends, Holidays, Leaves, Exceptions)
                     let presentCount = 0;
                     let netWorkDays = 0;
                     let monthHours = 0;
