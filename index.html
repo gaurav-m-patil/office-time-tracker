@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#4f46e5" id="theme-color-meta">
     
-    <link rel="manifest" href="manifest.json?v=7.0">
+    <link rel="manifest" href="manifest.json?v=8.0">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2083/2083214.png">
     
     <title>Enterprise Time Tracker</title>
@@ -348,7 +348,8 @@
         let currentFirstName = "";
         let currentRole = "";
         let logsData = [];
-        let cachedUsersList = null; // Memory cache to optimize repeated dropdown fetch lag
+        let cachedUsersList = null;
+        let dataFetched = false; // Flag to check if data is already in memory
         let isAdminLoginMode = false;
 
         window.onload = () => {
@@ -365,7 +366,6 @@
             });
         };
 
-        // Developer / Hard Refresh button handler to clear storage & force reload
         function hardRefresh() {
             localStorage.clear();
             sessionStorage.clear();
@@ -391,6 +391,17 @@
             }
         }
 
+        // Strict Local Date String Parser (Prevents UTC timezone day-shift bugs like 1st Sep becoming 31st Aug)
+        function cleanDateString(rawDate) {
+            if (!rawDate) return "";
+            const str = rawDate.toString();
+            // If it's an ISO string or contains time, extract just the YYYY-MM-DD part cleanly
+            if (str.includes("T")) {
+                return str.substring(0, 10);
+            }
+            return str.substring(0, 10);
+        }
+
         function getLocalDateStr(dateObj = new Date()) {
             const year = dateObj.getFullYear();
             const month = String(dateObj.getMonth() + 1).padStart(2, '0');
@@ -403,10 +414,10 @@
         }
 
         function formatDateDDMonYY(dateString) {
-            if (!dateString) return '';
-            const cleanDateStr = dateString.toString().substring(0, 10);
-            const parts = cleanDateStr.split('-');
-            if (parts.length !== 3) return cleanDateStr;
+            const cleaned = cleanDateString(dateString);
+            if (!cleaned) return '';
+            const parts = cleaned.split('-');
+            if (parts.length !== 3) return cleaned;
             
             const year = parts[0];
             const monthIdx = parseInt(parts[1], 10) - 1;
@@ -438,6 +449,7 @@
             document.getElementById("login-password").value = "";
         }
 
+        // INSTANT TAB SWITCHING: Uses local memory cache instead of fetching every click
         function switchTab(tabId) {
             document.querySelectorAll("[id^='tab-']").forEach(el => el.classList.add("hidden"));
             document.querySelectorAll(".nav-item").forEach(el => el.classList.remove("active"));
@@ -445,7 +457,16 @@
             document.getElementById(`tab-${tabId}`).classList.remove("hidden");
             document.getElementById(`nav-${tabId}`).classList.add("active");
 
-            if (tabId === 'history' || tabId === 'insights' || tabId === 'admin') fetchData();
+            // Only fetch from network if data hasn't been loaded yet in this session
+            if ((tabId === 'history' || tabId === 'insights' || tabId === 'admin')) {
+                if (!dataFetched) {
+                    fetchData();
+                } else {
+                    // Instantly render from memory with zero lag
+                    if (currentRole === "Admin") renderAdminTable();
+                    else { renderHistoryTable(); calculateInsights(); }
+                }
+            }
             if (tabId === 'log' && !document.getElementById("entry-id").value) resetForm();
         }
 
@@ -464,7 +485,6 @@
             }
         }
 
-        // Optimized user list loading with memory cache to prevent hanging loops
         async function fetchUserListForDropdown() {
             const select = document.getElementById("login-user-select");
             
@@ -473,12 +493,21 @@
                 return;
             }
 
-            const res = await apiCall({ action: "getUsers" }, null);
-            if (res.success && res.users) {
-                cachedUsersList = res.users;
-                renderUserDropdown(cachedUsersList);
-            } else {
-                select.innerHTML = `<option value="">Failed to load users. Click refresh.</option>`;
+            // Fallback timeout to prevent infinite hanging if network drops
+            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject("Timeout"), 8000));
+            
+            try {
+                const fetchPromise = apiCall({ action: "getUsers" }, null);
+                const res = await Promise.race([fetchPromise, timeoutPromise]);
+                
+                if (res && res.success && res.users) {
+                    cachedUsersList = res.users;
+                    renderUserDropdown(cachedUsersList);
+                } else {
+                    select.innerHTML = `<option value="">No users found. Tap refresh.</option>`;
+                }
+            } catch (err) {
+                select.innerHTML = `<option value="">Connection error. Tap refresh icon.</option>`;
             }
         }
 
@@ -520,6 +549,9 @@
                 document.getElementById("app-bottom-nav").classList.remove("hidden");
                 document.getElementById("display-firstname").innerText = currentFirstName;
 
+                // Pre-fetch data immediately upon login in the background for zero-lag tab switching
+                fetchData();
+
                 if(currentRole === "Admin") {
                     document.getElementById("nav-history").classList.add("hidden");
                     document.getElementById("nav-insights").classList.add("hidden");
@@ -554,14 +586,14 @@
             msg.innerText = res.message;
             msg.style.color = res.success ? "var(--accent-green)" : "var(--accent-red)";
             if(res.success) {
-                cachedUsersList = null; // Clear cache so new user appears
+                cachedUsersList = null;
                 fetchUserListForDropdown();
                 setTimeout(() => toggleAuthForm('login'), 2000);
             }
         }
 
         function logout() {
-            currentUser = ""; currentFirstName = ""; currentRole = ""; logsData = [];
+            currentUser = ""; currentFirstName = ""; currentRole = ""; logsData = []; dataFetched = false;
             document.getElementById("dashboard-section").classList.add("hidden");
             document.getElementById("app-bottom-nav").classList.add("hidden");
             document.getElementById("user-controls").classList.add("hidden");
@@ -665,6 +697,7 @@
             msg.style.color = res.success ? "var(--accent-green)" : "var(--accent-red)";
             
             if (res.success) {
+                dataFetched = false; // Invalidate local cache so next tab switch re-fetches fresh data from sheet
                 setTimeout(() => {
                     msg.innerText = "";
                     if (currentRole === "Admin") switchTab('admin'); else resetForm();
@@ -677,6 +710,7 @@
             const res = await apiCall({ action: action, username: currentUser }, null);
             if (res.success) {
                 logsData = res.logs.sort((a, b) => new Date(b.date) - new Date(a.date));
+                dataFetched = true; // Mark as cached in memory
                 populateLocationDatalist();
                 if (currentRole === "Admin") renderAdminTable();
                 else { renderHistoryTable(); calculateInsights(); }
@@ -718,7 +752,7 @@
             document.getElementById("quick-actions-panel").classList.add("hidden");
             document.getElementById("entry-id").value = log.logId;
             document.getElementById("entry-username").value = log.username;
-            document.getElementById("entry-from-date").value = log.date.substring(0, 10);
+            document.getElementById("entry-from-date").value = cleanDateString(log.date);
             document.getElementById("entry-to-date").value = "";
             document.getElementById("entry-status").value = log.status;
             document.getElementById("entry-in").value = log.inTime;
@@ -738,7 +772,7 @@
 
             let monthlyMap = {};
             logsData.forEach(log => {
-                const ym = log.date.substring(0, 7);
+                const ym = cleanDateString(log.date).substring(0, 7);
                 if (!monthlyMap[ym]) monthlyMap[ym] = [];
                 monthlyMap[ym].push(log);
             });
@@ -770,7 +804,7 @@
                     let monthHours = 0;
                     let monthPresentHrsCount = 0;
 
-                    logsInMonth.flows = logsInMonth.forEach(l => {
+                    logsInMonth.forEach(l => {
                         if (l.status !== "Weekend" && l.status !== "Holiday" && l.status !== "Leave" && l.status !== "Exception") {
                             netWorkDays++;
                             if (l.status === "Present") {
@@ -793,7 +827,7 @@
                     qMonthsData.push({
                         name: monthNames[mIdx],
                         pct: pct,
-                        hasData: logsInMonth.length > 0
+                        hasData: logsInManagerOrMonthHasData(logsInMonth)
                     });
                 });
 
@@ -822,6 +856,10 @@
                 `;
                 container.appendChild(block);
             });
+        }
+
+        function logsInManagerOrMonthHasData(arr) {
+            return arr && arr.length > 0;
         }
     </script>
 </body>
