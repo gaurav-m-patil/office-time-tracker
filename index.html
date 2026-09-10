@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#4f46e5" id="theme-color-meta">
     
-    <link rel="manifest" href="manifest.json?v=6.0">
+    <link rel="manifest" href="manifest.json?v=7.0">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2083/2083214.png">
     
     <title>Enterprise Time Tracker</title>
@@ -61,7 +61,7 @@
             border-bottom: 1px solid var(--border); z-index: 1000;
         }
         .topbar h1 { margin: 0; font-size: 18px; font-weight: 700; color: var(--primary); letter-spacing: -0.5px; }
-        .topbar-right { display: flex; align-items: center; gap: 12px; }
+        .topbar-right { display: flex; align-items: center; gap: 8px; }
         .user-greeting { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
         .icon-btn { 
             background: var(--secondary); border: 1px solid var(--border); color: var(--text-dark); 
@@ -90,7 +90,6 @@
         }
         input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15); }
         
-        /* Fix iOS native input sizing / flex issues */
         input[type="date"], input[type="time"] {
             appearance: none;
             -webkit-appearance: none;
@@ -179,8 +178,9 @@
     <div class="topbar">
         <h1>TimeTracker</h1>
         <div class="topbar-right">
+            <button class="icon-btn" onclick="hardRefresh()" title="Developer Refresh"><i class="material-icons-round" style="font-size:18px;">refresh</i></button>
             <button class="icon-btn" onclick="toggleDarkMode()" title="Toggle Theme"><i class="material-icons-round" id="theme-icon">dark_mode</i></button>
-            <div id="user-controls" class="hidden" style="display:flex; align-items:center; gap:10px;">
+            <div id="user-controls" class="hidden" style="display:flex; align-items:center; gap:8px;">
                 <span class="user-greeting"><i class="material-icons-round" style="font-size:18px; color:var(--primary);">account_circle</i> <span id="display-firstname"></span></span>
                 <button class="icon-btn" onclick="logout()" title="Logout"><i class="material-icons-round" style="font-size:18px;">logout</i></button>
             </div>
@@ -308,9 +308,7 @@
             <div id="tab-insights" class="hidden">
                 <h3 style="margin-bottom: 5px;">Financial Year Analytics</h3>
                 <p style="font-size: 11px; color: var(--text-light); margin-top: 0; margin-bottom: 15px;">*Attendance % calculated over net working days (excluding weekends & holidays).</p>
-                <div id="insights-container">
-                    <!-- Populated dynamically by FY quarters -->
-                </div>
+                <div id="insights-container"></div>
             </div>
 
             <!-- Tab 4: Admin Panel -->
@@ -350,6 +348,7 @@
         let currentFirstName = "";
         let currentRole = "";
         let logsData = [];
+        let cachedUsersList = null; // Memory cache to optimize repeated dropdown fetch lag
         let isAdminLoginMode = false;
 
         window.onload = () => {
@@ -366,6 +365,18 @@
             });
         };
 
+        // Developer / Hard Refresh button handler to clear storage & force reload
+        function hardRefresh() {
+            localStorage.clear();
+            sessionStorage.clear();
+            if ('caches' in window) {
+                caches.keys().then((names) => {
+                    names.forEach((name) => { caches.delete(name); });
+                });
+            }
+            window.location.reload(true);
+        }
+
         function toggleDarkMode(forceDark = null) {
             const body = document.body;
             const icon = document.getElementById("theme-icon");
@@ -380,7 +391,6 @@
             }
         }
 
-        // Safe local date formatting (YYYY-MM-DD) avoiding UTC time-zone shifts
         function getLocalDateStr(dateObj = new Date()) {
             const year = dateObj.getFullYear();
             const month = String(dateObj.getMonth() + 1).padStart(2, '0');
@@ -392,10 +402,8 @@
             return formatDateDDMonYY(getLocalDateStr());
         }
 
-        // Formats "YYYY-MM-DD" or ISO string into "01-Sep-26"
         function formatDateDDMonYY(dateString) {
             if (!dateString) return '';
-            // Handle full ISO strings safely by splitting the date part
             const cleanDateStr = dateString.toString().substring(0, 10);
             const parts = cleanDateStr.split('-');
             if (parts.length !== 3) return cleanDateStr;
@@ -456,21 +464,33 @@
             }
         }
 
+        // Optimized user list loading with memory cache to prevent hanging loops
         async function fetchUserListForDropdown() {
-            const res = await apiCall({ action: "getUsers" }, null);
             const select = document.getElementById("login-user-select");
-            select.innerHTML = "";
-            if (res.success && res.users.length > 0) {
-                select.innerHTML = `<option value="">Select your name...</option>`;
-                res.users.forEach(u => {
-                    const option = document.createElement("option");
-                    option.value = u.username;
-                    option.innerText = `${u.firstName} ${u.lastName}`.trim();
-                    select.appendChild(option);
-                });
-            } else {
-                select.innerHTML = `<option value="">No users found</option>`;
+            
+            if (cachedUsersList) {
+                renderUserDropdown(cachedUsersList);
+                return;
             }
+
+            const res = await apiCall({ action: "getUsers" }, null);
+            if (res.success && res.users) {
+                cachedUsersList = res.users;
+                renderUserDropdown(cachedUsersList);
+            } else {
+                select.innerHTML = `<option value="">Failed to load users. Click refresh.</option>`;
+            }
+        }
+
+        function renderUserDropdown(users) {
+            const select = document.getElementById("login-user-select");
+            select.innerHTML = `<option value="">Select your name...</option>`;
+            users.forEach(u => {
+                const option = document.createElement("option");
+                option.value = u.username;
+                option.innerText = `${u.firstName} ${u.lastName}`.trim();
+                select.appendChild(option);
+            });
         }
 
         function checkAutoLogin() {
@@ -534,6 +554,7 @@
             msg.innerText = res.message;
             msg.style.color = res.success ? "var(--accent-green)" : "var(--accent-red)";
             if(res.success) {
+                cachedUsersList = null; // Clear cache so new user appears
                 fetchUserListForDropdown();
                 setTimeout(() => toggleAuthForm('login'), 2000);
             }
@@ -749,7 +770,7 @@
                     let monthHours = 0;
                     let monthPresentHrsCount = 0;
 
-                    logsInMonth.forEach(l => {
+                    logsInMonth.flows = logsInMonth.forEach(l => {
                         if (l.status !== "Weekend" && l.status !== "Holiday" && l.status !== "Leave" && l.status !== "Exception") {
                             netWorkDays++;
                             if (l.status === "Present") {
@@ -772,7 +793,7 @@
                     qMonthsData.push({
                         name: monthNames[mIdx],
                         pct: pct,
-                        hasData: logsInMonth.length` + ``
+                        hasData: logsInMonth.length > 0
                     });
                 });
 
