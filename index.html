@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#4f46e5" id="theme-color-meta">
     
-    <link rel="manifest" href="manifest.json?v=12.0">
+    <link rel="manifest" href="manifest.json?v=13.0">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2083/2083214.png">
     
     <title>Enterprise Time Tracker</title>
@@ -130,14 +130,12 @@
         .bg-gray { background: var(--accent-gray); }
         .bg-blue { background: #0284c7; }
 
-        /* Table & History layout fixes */
         .table-container { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; margin-top: 10px; width: 100%; }
         table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; min-width: 450px; }
         th { background: var(--secondary); padding: 12px; font-weight: 700; color: var(--text-light); border-bottom: 1px solid var(--border); }
-        td { padding: 12px; border-bottom: 1px solid var(--border); color: var(--text-dark); white-space: nowrap; } /* Forces single-row layout */
+        td { padding: 12px; border-bottom: 1px solid var(--border); color: var(--text-dark); white-space: nowrap; }
         .action-btn { background: var(--secondary); color: var(--primary); border: 1px solid var(--border); padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
 
-        /* Insights blocks */
         .quarter-block {
             background: var(--secondary); border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin-bottom: 20px; width: 100%;
         }
@@ -158,7 +156,7 @@
             content: ""; position: absolute; width: 38px; height: 38px; border-radius: 50%; background: var(--surface);
         }
         .circle-value { position: relative; font-size: 10px; font-weight: 800; color: var(--text-dark); }
-        .month-avg-hours { font-size: 10px; font-weight: 700; color: var(--text-light); margin-top: 6px; }
+        .month-avg-hours { font-size: 10px; font-weight: 700; color: var(--text-light); margin-top: 6px; text-align: center; width: 100%; }
 
         .status-msg { margin-top: 10px; text-align: center; font-weight: 600; font-size: 14px; min-height: 20px; }
 
@@ -256,7 +254,7 @@
                 </div>
 
                 <div class="form-row">
-                    <div class="form-group">
+                    <div class="form-group" style="width: 100%;">
                         <label>Status</label>
                         <select id="entry-status" onchange="handleStatusChange()">
                             <option value="Present">Present</option>
@@ -266,11 +264,6 @@
                             <option value="Weekend">Weekend</option>
                             <option value="Holiday">Holiday</option>
                         </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Office Location</label>
-                        <input type="text" id="entry-location" list="location-suggestions" placeholder="e.g., Mumbai Office">
-                        <datalist id="location-suggestions"></datalist>
                     </div>
                 </div>
                 
@@ -451,6 +444,25 @@
             return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
         }
 
+        function formatTimeDisplay(timeStr) {
+            if (!timeStr) return '';
+            let clean = timeStr.toString().trim();
+            // If already has AM/PM, return clean
+            if (clean.toUpperCase().includes('AM') || clean.toUpperCase().includes('PM')) return clean;
+            
+            let parts = clean.split(':');
+            if (parts.length >= 2) {
+                let h = parseInt(parts[0], 10);
+                let m = parts[1].substring(0, 2);
+                if (!isNaN(h)) {
+                    let ampm = h >= 12 ? 'PM' : 'AM';
+                    h = h % 12; h = h ? h : 12;
+                    return `${String(h).padStart(2, '0')}:${m} ${ampm}`;
+                }
+            }
+            return clean;
+        }
+
         function toggleAuthForm(type) {
             document.getElementById("login-form-div").classList.toggle("hidden", type !== 'login');
             document.getElementById("register-form-div").classList.toggle("hidden", type !== 'register');
@@ -606,33 +618,20 @@
             document.getElementById("entry-status").value = "Present";
             document.getElementById("entry-in").value = "";
             document.getElementById("entry-out").value = "";
-            document.getElementById("entry-location").value = "";
             handleStatusChange();
-            populateLocationDatalist();
         }
 
         function handleStatusChange() {
             const status = document.getElementById("entry-status").value;
             const inTime = document.getElementById("entry-in");
             const outTime = document.getElementById("entry-out");
-            const locationInput = document.getElementById("entry-location");
             
             if (status !== "Present") {
                 inTime.value = ""; outTime.value = "";
                 inTime.disabled = true; outTime.disabled = true;
-                locationInput.value = "NA";
-                locationInput.disabled = true;
             } else {
                 inTime.disabled = false; outTime.disabled = false;
-                if(locationInput.value === "NA") locationInput.value = "";
-                locationInput.disabled = false;
             }
-        }
-
-        function populateLocationDatalist() {
-            const datalist = document.getElementById("location-suggestions");
-            const uniqueLocs = [...new Set(logsData.map(l => l.location).filter(l => l && l !== "NA"))];
-            datalist.innerHTML = uniqueLocs.map(loc => `<option value="${loc}">`).join('');
         }
 
         function quickAction(type) {
@@ -656,7 +655,6 @@
             const status = document.getElementById("entry-status").value;
             const inTime = document.getElementById("entry-in").value;
             const outTime = document.getElementById("entry-out").value;
-            const loc = document.getElementById("entry-location").value || "NA";
             const msg = document.getElementById("log-msg");
 
             if (!fromDate) return msg.innerText = "From Date is required.";
@@ -668,15 +666,18 @@
 
             let hours = 0;
             if (status === "Present" && inTime && outTime) {
-                const [inH, inM] = inTime.split(':');
-                const [outH, outM] = outTime.split(':');
-                hours = ((parseInt(outH)*60 + parseInt(outM)) - (parseInt(inH)*60 + parseInt(inM))) / 60;
-                if (hours < 0) hours += 24; 
-                hours = hours.toFixed(2);
+                const [inH, inM] = inTime.split(':').map(Number);
+                const [outH, outM] = outTime.split(':').map(Number);
+                let diffMins = (outH * 60 + outM) - (inH * 60 + inM);
+                if (diffMins < 0) diffMins += 24 * 60; // Handle overnight shift wrap
+                hours = (diffMins / 60).toFixed(2);
             }
 
+            const cleanInTime = formatTimeDisplay(inTime);
+            const cleanOutTime = formatTimeDisplay(outTime);
+
             const tempLogId = logId || 'temp_' + Date.now();
-            const newEntry = { logId: tempLogId, username: recordUser, date: fromDate, status, inTime, outTime, location: loc, hours };
+            const newEntry = { logId: tempLogId, username: recordUser, date: fromDate, status, inTime: cleanInTime, outTime: cleanOutTime, hours };
             
             const existingIdx = logsData.findIndex(l => l.logId === logId);
             if (existingIdx >= 0) {
@@ -696,11 +697,11 @@
 
             let payload;
             if (logId) {
-                payload = { action: "updateLog", logId, username: recordUser, date: fromDate, status, inTime, outTime, location: loc, hours };
+                payload = { action: "updateLog", logId, username: recordUser, date: fromDate, status, inTime: cleanInTime, outTime: cleanOutTime, hours };
             } else if (toDate && toDate !== fromDate) {
-                payload = { action: "logTimeRange", username: recordUser, fromDate, toDate, status, inTime, outTime, location: loc, hours };
+                payload = { action: "logTimeRange", username: recordUser, fromDate, toDate, status, inTime: cleanInTime, outTime: cleanOutTime, hours };
             } else {
-                payload = { action: "logTime", username: recordUser, date: fromDate, status, inTime, outTime, location: loc, hours };
+                payload = { action: "logTime", username: recordUser, date: fromDate, status, inTime: cleanInTime, outTime: cleanOutTime, hours };
             }
 
             apiCall(payload, null).then(res => {
@@ -714,7 +715,6 @@
             if (res && res.success) {
                 logsData = res.logs.sort((a, b) => new Date(b.date) - new Date(a.date));
                 localStorage.setItem("tt_logs", JSON.stringify(logsData));
-                populateLocationDatalist();
                 if (!silent) {
                     if (currentRole === "Admin") renderAdminTable();
                     else { renderHistoryTable(); calculateInsights(); }
@@ -760,10 +760,23 @@
             document.getElementById("entry-from-date").value = cleanDateString(log.date);
             document.getElementById("entry-to-date").value = "";
             document.getElementById("entry-status").value = log.status;
-            document.getElementById("entry-in").value = log.inTime;
-            document.getElementById("entry-out").value = log.outTime;
-            document.getElementById("entry-location").value = log.location;
+            
+            // Convert AM/PM back to 24-hr for time input field if needed
+            document.getElementById("entry-in").value = log.inTime ? convertTo24Hour(log.inTime) : "";
+            document.getElementById("entry-out").value = log.outTime ? convertTo24Hour(log.outTime) : "";
             handleStatusChange();
+        }
+
+        function convertTo24Hour(timeStr) {
+            let parts = timeStr.split(' ');
+            if (parts.length < 2) return timeStr;
+            let timeParts = parts[0].split(':');
+            let h = parseInt(timeParts[0], 10);
+            let m = timeParts[1];
+            let ampm = parts[1].toUpperCase();
+            if (ampm === 'PM' && h < 12) h += 12;
+            if (ampm === 'AM' && h === 12) h = 0;
+            return `${String(h).padStart(2, '0')}:${m}`;
         }
 
         function calculateInsights() {
