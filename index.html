@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#4f46e5" id="theme-color-meta">
     
-    <link rel="manifest" href="manifest.json?v=14.0">
+    <link rel="manifest" href="manifest.json?v=15.0">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2083/2083214.png">
     
     <title>Enterprise Time Tracker</title>
@@ -298,7 +298,7 @@
                 <div class="table-container">
                     <table>
                         <thead>
-                            <tr><th>Date</th><th>Status</th><th>In</th><th>Out</th><th>Hrs</th><th></th></tr>
+                            <tr><th>Date</th><th>Status</th><th>In</th><th>Out</th><th>Duration</th><th></th></tr>
                         </thead>
                         <tbody id="history-table-body"></tbody>
                     </table>
@@ -318,7 +318,7 @@
                 <div class="table-container">
                     <table>
                         <thead>
-                            <tr><th>User</th><th>Date</th><th>Status</th><th>In</th><th>Out</th><th>Hrs</th><th></th></tr>
+                            <tr><th>User</th><th>Date</th><th>Status</th><th>In</th><th>Out</th><th>Duration</th><th></th></tr>
                         </thead>
                         <tbody id="admin-table-body"></tbody>
                     </table>
@@ -460,6 +460,25 @@
                 }
             }
             return clean;
+        }
+
+        // SMART DURATION FORMATTER: Formats raw decimal hours or minute counts into clean "Xm" or "Xh Ym"
+        function formatDurationDisplay(hoursVal) {
+            if (hoursVal === '-' || hoursVal === null || hoursVal === undefined || hoursVal === '') return '-';
+            let num = parseFloat(hoursVal);
+            if (isNaN(num) || num === 0) return '0m';
+            
+            let totalMins = Math.round(num * 60);
+            let hrs = Math.floor(totalMins / 60);
+            let mins = totalMins % 60;
+            
+            if (hrs === 0) {
+                return `${mins}m`;
+            } else if (mins === 0) {
+                return `${hrs}h`;
+            } else {
+                return `${hrs}h ${mins}m`;
+            }
         }
 
         function toggleAuthForm(type) {
@@ -669,8 +688,6 @@
                 const [outH, outM] = outTime.split(':').map(Number);
                 let diffMins = (outH * 60 + outM) - (inH * 60 + inM);
                 if (diffMins < 0) diffMins += 24 * 60; // Overnight shift wrap
-                
-                // Calculate exact hours rounded to 2 decimals cleanly (e.g. 4 mins = 0.07, or show exact minutes)
                 hours = (diffMins / 60).toFixed(2);
             }
 
@@ -731,7 +748,7 @@
                     <td><span style="font-size:10px; padding:3px 6px; border-radius:10px; background:var(--secondary); border:1px solid var(--border);">${log.status}</span></td>
                     <td>${log.inTime ? formatTimeDisplay(log.inTime) : '-'}</td>
                     <td>${log.outTime ? formatTimeDisplay(log.outTime) : '-'}</td>
-                    <td><strong>${log.hours || '-'}</strong></td>
+                    <td><strong>${formatDurationDisplay(log.hours)}</strong></td>
                     <td><button class="action-btn" onclick='editRecord(${JSON.stringify(log).replace(/'/g, "&#39;")})'><i class="material-icons-round" style="font-size:14px;">edit</i></button></td>
                 </tr>
             `).join('');
@@ -746,7 +763,7 @@
                     <td>${log.status}</td>
                     <td>${log.inTime ? formatTimeDisplay(log.inTime) : '-'}</td>
                     <td>${log.outTime ? formatTimeDisplay(log.outTime) : '-'}</td>
-                    <td><strong>${log.hours || '-'}</strong></td>
+                    <td><strong>${formatDurationDisplay(log.hours)}</strong></td>
                     <td><button class="action-btn" onclick='editRecord(${JSON.stringify(log).replace(/'/g, "&#39;")})'><i class="material-icons-round" style="font-size:14px;">edit</i></button></td>
                 </tr>
             `).join('');
