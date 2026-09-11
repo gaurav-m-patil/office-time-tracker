@@ -1,501 +1,348 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#F4F0FF" id="theme-color-meta">
-<link rel="manifest" href="manifest.json?v=16.0">
-<link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2083/2083214.png">
-<title>Enterprise Time Tracker</title>
-<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
-<style>
-:root{
-    --bg:#f4f0ff;--surface:#ffffff;--surface-soft:#faf9ff;--surface-lilac:#f0edff;
-    --primary:#6f54d9;--primary-dark:#5d43c7;--primary-soft:#ebe5ff;
-    --text:#17151d;--muted:#7d7886;--line:#e8e4ee;
-    --green:#42a56b;--red:#df5c68;--blue:#6575e8;--amber:#e2a53a;
-    --shadow:0 8px 30px rgba(80,62,130,.10);
-    --shadow-soft:0 2px 12px rgba(80,62,130,.07);
-}
-body.dark-mode{
-    --bg:#17151d;--surface:#211f28;--surface-soft:#27242f;--surface-lilac:#302b3b;
-    --primary:#bca7ff;--primary-dark:#a88cf2;--primary-soft:#41375b;
-    --text:#f4eff8;--muted:#aaa3b2;--line:#3d3846;
-    --green:#86d5a4;--red:#ff9da8;--blue:#aab5ff;--amber:#f1c56e;
-    --shadow:0 8px 30px rgba(0,0,0,.25);--shadow-soft:0 2px 12px rgba(0,0,0,.2);
-}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;margin:0}
-body{
-    font-family:Inter,Roboto,"Segoe UI",sans-serif;
-    background:
-      radial-gradient(circle at 8% 78%,rgba(215,157,255,.18) 0 80px,transparent 81px),
-      radial-gradient(circle at 92% 10%,rgba(238,140,239,.14) 0 100px,transparent 101px),
-      var(--bg);
-    color:var(--text);overflow:hidden;
-}
-button,input,select{font:inherit}
-button{cursor:pointer}
-.hidden{display:none!important}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#4f46e5" id="theme-color-meta">
+    
+    <link rel="manifest" href="manifest.json?v=16.0">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2083/2083214.png">
+    
+    <title>Enterprise Time Tracker</title>
+    
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --secondary: #f8fafc;
+            --surface: #ffffff;
+            --text-dark: #0f172a;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+            --input-bg: #ffffff;
+            
+            --accent-green: #059669;
+            --accent-red: #dc2626;
+            --accent-amber: #d97706;
+            --accent-purple: #7c3aed;
+            --accent-gray: #4b5563;
+        }
 
-/* Decorative reference-inspired background loops */
-body:before,body:after{
-    content:"";position:fixed;pointer-events:none;z-index:-1;
-    width:180px;height:180px;border:11px solid rgba(225,151,243,.22);
-    border-radius:55% 45% 60% 40%;transform:rotate(34deg);
-}
-body:before{left:-105px;bottom:-40px}
-body:after{right:-95px;top:-85px}
+        body.dark-mode {
+            --primary: #818cf8;
+            --primary-hover: #6366f1;
+            --secondary: #090d16;
+            --surface: #1e293b;
+            --text-dark: #f8fafc;
+            --text-light: #94a3b8;
+            --border: #334155;
+            --input-bg: #0f172a;
+        }
 
-/* Compact top bar */
-.topbar{
-    height:66px;padding:0 max(16px,calc((100% - 900px)/2));
-    display:flex;align-items:center;justify-content:space-between;
-    background:rgba(255,255,255,.80);border-bottom:1px solid rgba(255,255,255,.7);
-    backdrop-filter:blur(16px);z-index:20;
-}
-body.dark-mode .topbar{background:rgba(33,31,40,.82)}
-.brand{display:flex;align-items:center;gap:9px}
-.brand-mark{
-    width:36px;height:36px;border-radius:12px;display:grid;place-items:center;
-    background:var(--primary-soft);color:var(--primary)
-}
-.brand-mark .material-icons-round{font-size:20px}
-.topbar h1{margin:0;font-size:17px;font-weight:700;letter-spacing:-.3px}
-.brand-subtitle{display:none}
-.topbar-right{display:flex;align-items:center;gap:3px}
-.icon-btn{
-    width:38px;height:38px;border:0;border-radius:50%;display:grid;place-items:center;
-    background:transparent;color:var(--muted);transition:.18s ease
-}
-.icon-btn:hover{background:var(--primary-soft);color:var(--primary)}
-.user-greeting{
-    margin-left:5px;padding:7px 11px;border-radius:18px;background:var(--surface);
-    color:var(--text);font-size:12px;font-weight:650;box-shadow:var(--shadow-soft)
-}
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
-/* Main app surface */
-.main-content{
-    height:calc(100vh - 66px);overflow-y:auto;padding:12px 12px 104px;
-}
-.main-content::-webkit-scrollbar{width:5px}
-.main-content::-webkit-scrollbar-thumb{background:#d8d1e5;border-radius:10px}
-.container{
-    width:min(100%,430px);margin:0 auto;padding:18px 16px 24px;
-    background:rgba(255,255,255,.94);border-radius:28px;box-shadow:var(--shadow);
-}
-body.dark-mode .container{background:rgba(33,31,40,.96)}
-#auth-section{margin:7vh auto 0;padding:28px 22px;max-width:430px}
+        body {
+            font-family: "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+            background-color: var(--secondary);
+            color: var(--text-dark);
+            margin: 0; padding: 0;
+            height: 100vh;
+            display: flex; flex-direction: column;
+            overflow: hidden;
+        }
 
-/* Authentication */
-.auth-logo{
-    width:58px;height:58px;margin:0 auto 14px;border-radius:18px;
-    display:grid;place-items:center;background:var(--primary-soft);color:var(--primary)
-}
-.auth-logo .material-icons-round{font-size:30px}
-#auth-section h2{margin:0;text-align:center;font-size:27px;letter-spacing:-.7px}
-.auth-intro{margin:6px 0 22px;text-align:center;color:var(--muted);font-size:12px}
+        .topbar {
+            background: var(--surface); color: var(--text-dark);
+            padding: 12px 20px; display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid var(--border); z-index: 1000;
+        }
+        .topbar h1 { margin: 0; font-size: 18px; font-weight: 700; color: var(--primary); letter-spacing: -0.5px; }
+        .topbar-right { display: flex; align-items: center; gap: 8px; }
+        .user-greeting { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+        .icon-btn { 
+            background: var(--secondary); border: 1px solid var(--border); color: var(--text-dark); 
+            cursor: pointer; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .icon-btn:hover { background: var(--border); }
 
-/* Date header inspired by the reference */
-.reference-date-header{
-    display:flex;align-items:center;justify-content:space-between;margin-bottom:13px;
-}
-.reference-month{display:flex;align-items:center;gap:7px;font-size:21px;font-weight:500;letter-spacing:-.5px}
-.reference-month .material-icons-round{font-size:21px;color:var(--muted)}
-.reference-request{
-    min-height:34px;padding:6px 12px;border:1px solid var(--line);border-radius:18px;
-    background:var(--surface);color:var(--text);font-size:11px;font-weight:650;
-    box-shadow:var(--shadow-soft)
-}
-.reference-request .material-icons-round{font-size:15px;vertical-align:-3px;margin-left:3px}
-.date-rail{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;margin-bottom:13px}
-.date-pill{
-    min-width:0;padding:7px 2px 6px;text-align:center;border:1px solid var(--line);
-    border-radius:17px;background:var(--surface-soft);color:var(--muted);font-size:9px
-}
-.date-pill strong{display:block;color:var(--text);font-size:12px;font-weight:500}
-.date-pill span{display:block;margin-top:1px;font-size:8px}
-.date-pill.active{border-color:var(--primary);box-shadow:0 0 0 1px rgba(111,84,217,.18);color:var(--primary)}
-.date-pill.active strong{color:var(--primary)}
+        .main-content { flex: 1; overflow-y: auto; padding: 12px; padding-bottom: 90px; width: 100%; }
+        
+        .container {
+            background: var(--surface); padding: 16px; border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03); width: 100%; max-width: 600px; margin: 0 auto;
+            border: 1px solid var(--border);
+        }
 
-/* Location */
-.location-card{
-    display:flex;align-items:center;gap:9px;padding:10px 11px;margin-bottom:17px;
-    background:var(--surface-soft);border:1px solid rgba(232,228,238,.75);border-radius:9px
-}
-.location-icon{
-    width:27px;height:27px;display:grid;place-items:center;border-radius:50%;
-    background:var(--primary-soft);color:var(--primary);flex:none
-}
-.location-icon .material-icons-round{font-size:16px}
-.location-copy{min-width:0;flex:1}
-.location-label{font-size:9px;color:var(--muted);margin-bottom:2px}
-.location-value{font-size:11px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.location-change{
-    padding:5px 9px;border:1px solid var(--line);border-radius:7px;background:var(--surface);
-    color:var(--text);font-size:10px
-}
+        h2, h3 { margin-top: 0; color: var(--primary); }
+        .hidden { display: none !important; }
 
-/* Hero circular check-in area */
-.hero-action{text-align:center;margin:7px 0 17px}
-.attendance-ring{
-    width:205px;height:205px;margin:0 auto;position:relative;border-radius:50%;
-    display:grid;place-items:center;
-    background:conic-gradient(var(--primary) 0deg,rgba(205,191,239,.13) 0deg 360deg);
-}
-.attendance-ring:before{
-    content:"";position:absolute;inset:8px;border-radius:50%;
-    border:1px dashed rgba(111,84,217,.16);
-}
-.attendance-ring:after{
-    content:"";position:absolute;inset:18px;border-radius:50%;
-    background:var(--surface);box-shadow:0 0 0 1px rgba(111,84,217,.12),0 4px 20px rgba(111,84,217,.07)
-}
-.check-action{
-    position:relative;z-index:2;width:154px;height:154px;border-radius:50%;border:0;
-    background:var(--surface-soft);color:var(--text);font-size:28px;font-weight:400;
-    box-shadow:inset 0 0 0 1px rgba(111,84,217,.08);transition:.2s ease
-}
-.check-action:hover{color:var(--primary);transform:scale(1.015)}
-.check-action:active{transform:scale(.98)}
-.hero-caption{margin-top:8px;color:var(--muted);font-size:10px}
+        .form-row { display: flex; gap: 10px; margin-bottom: 12px; width: 100%; }
+        @media (max-width: 480px) {
+            .form-row { flex-direction: column; gap: 12px; }
+        }
+        .form-group { display: flex; flex-direction: column; flex: 1; min-width: 0; width: 100%; }
+        
+        label { margin-bottom: 4px; font-size: 11px; font-weight: 700; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        input, select {
+            width: 100%; max-width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 10px;
+            font-size: 15px; color: var(--text-dark); background: var(--input-bg);
+            transition: all 0.2s; -webkit-appearance: none; appearance: none;
+        }
+        input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15); }
+        
+        input[type="date"], input[type="time"] { min-height: 46px; }
 
-/* Timer mode */
-.work-duration{font-size:9px;color:var(--muted);margin-bottom:3px}
-.digital-time{
-    font-family:"Roboto Mono",monospace;font-size:28px;font-weight:500;letter-spacing:1px;
-    color:var(--text)
-}
-.remaining{
-    display:inline-flex;align-items:center;gap:4px;margin-top:5px;padding:4px 8px;
-    border-radius:12px;background:var(--primary-soft);color:var(--primary);font-size:9px;font-weight:700
-}
+        .btn-submit { 
+            background: var(--primary); color: white; border: none; padding: 16px; border-radius: 10px; 
+            cursor: pointer; font-weight: 700; width: 100%; font-size: 16px; margin-top: 10px; 
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25); transition: background 0.2s;
+        }
+        .btn-submit:hover { background: var(--primary-hover); }
 
-/* Three compact metrics */
-.metric-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:0 0 9px}
-.metric-card{
-    min-height:77px;padding:9px 8px;border:1px solid var(--line);border-radius:11px;
-    background:var(--surface);box-shadow:var(--shadow-soft);position:relative;overflow:hidden
-}
-.metric-card:after{
-    content:"";position:absolute;right:-16px;top:-16px;width:58px;height:58px;
-    background-image:radial-gradient(circle,var(--primary-soft) 1.4px,transparent 1.5px);
-    background-size:9px 9px;opacity:.55
-}
-.metric-icon{
-    width:24px;height:24px;border-radius:50%;display:grid;place-items:center;margin-bottom:6px
-}
-.metric-icon .material-icons-round{font-size:14px}
-.metric-icon.in{background:#fff0d1;color:var(--amber)}
-.metric-icon.out{background:#ffe5e8;color:var(--red)}
-.metric-icon.hours{background:#e7e9ff;color:var(--blue)}
-.metric-value{font-size:13px;font-weight:750;min-height:16px}
-.metric-label{font-size:9px;color:var(--muted);margin-top:2px}
+        .quick-actions-card {
+            background: var(--secondary); border: 1px solid var(--border); border-radius: 12px; padding: 12px; margin: 15px 0; width: 100%;
+        }
+        .quick-actions-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .quick-actions-title { font-size: 12px; font-weight: 700; color: var(--text-light); text-transform: uppercase; }
+        .quick-actions-date { font-size: 12px; font-weight: 600; color: var(--primary); }
+        
+        .quick-buttons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; }
+        @media (max-width: 400px) {
+            .quick-buttons { grid-template-columns: repeat(2, 1fr); }
+        }
+        .btn-quick {
+            border: none; padding: 12px 6px; border-radius: 10px; color: white; 
+            font-weight: 700; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08); transition: transform 0.1s;
+            white-space: nowrap; width: 100%;
+        }
+        .btn-quick:active { transform: scale(0.97); }
+        .bg-green { background: var(--accent-green); } 
+        .bg-red { background: var(--accent-red); }
+        .bg-amber { background: var(--accent-amber); } 
+        .bg-purple { background: var(--accent-purple); } 
+        .bg-gray { background: var(--accent-gray); }
+        .bg-blue { background: #0284c7; }
 
-/* Work mode chip */
-.work-mode{
-    width:100%;min-height:37px;padding:7px 10px;margin-bottom:13px;
-    border:1px solid var(--line);border-radius:8px;background:var(--surface);
-    color:var(--text);font-size:11px;text-align:center
-}
-.work-mode .material-icons-round{font-size:14px;vertical-align:-3px;margin-right:3px}
+        .table-container { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; margin-top: 10px; width: 100%; }
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; min-width: 450px; }
+        th { background: var(--secondary); padding: 12px; font-weight: 700; color: var(--text-light); border-bottom: 1px solid var(--border); }
+        td { padding: 12px; border-bottom: 1px solid var(--border); color: var(--text-dark); white-space: nowrap; }
+        .action-btn { background: var(--secondary); color: var(--primary); border: 1px solid var(--border); padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
 
-/* Form details - retained, restyled as a clean expandable-looking card */
-.details-card{
-    margin-top:13px;padding:13px;border-radius:15px;background:var(--surface-soft);
-    border:1px solid var(--line)
-}
-.details-title{display:flex;align-items:center;gap:6px;margin-bottom:11px;font-size:12px;font-weight:750}
-.details-title .material-icons-round{font-size:17px;color:var(--primary)}
-.form-row{display:flex;gap:9px;margin-bottom:10px;width:100%}
-.form-group{display:flex;flex-direction:column;flex:1;min-width:0;width:100%}
-label{
-    margin:0 0 -1px 10px;padding:0 4px;width:max-content;position:relative;z-index:2;
-    background:var(--surface-soft);color:var(--muted);font-size:9px;font-weight:600
-}
-input,select{
-    width:100%;min-height:45px;padding:10px 11px;color:var(--text);background:var(--surface);
-    border:1px solid var(--line);border-radius:8px;outline:none;font-size:12px;
-    transition:.18s ease
-}
-input:focus,select:focus{border:1.5px solid var(--primary);box-shadow:0 0 0 3px rgba(111,84,217,.08)}
-input:disabled,select:disabled{opacity:.5;background:var(--surface-lilac)}
-input::placeholder{color:var(--muted)}
-#login-form-div input,#register-form-div input,#login-form-div select{min-height:52px}
-#login-form-div label,#register-form-div label{background:var(--surface);font-size:10px}
-#login-form-div .form-group,#register-form-div .form-group{margin-bottom:14px}
+        .quarter-block {
+            background: var(--secondary); border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin-bottom: 20px; width: 100%;
+        }
+        .quarter-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 8px; flex-wrap: wrap; gap: 6px; }
+        .quarter-title { font-size: 14px; font-weight: 800; color: var(--primary); text-transform: uppercase; }
+        .quarter-stats { font-size: 12px; font-weight: 600; color: var(--text-light); }
+        
+        .months-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .month-circle-card {
+            background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 4px; text-align: center; display: flex; flex-direction: column; align-items: center;
+        }
+        .month-name { font-size: 10px; font-weight: 700; color: var(--text-light); margin-bottom: 6px; text-transform: uppercase; }
+        .circle-progress {
+            width: 50px; height: 50px; border-radius: 50%; background: conic-gradient(var(--primary) calc(var(--pct, 0) * 1%), var(--border) 0);
+            display: flex; align-items: center; justify-content: center; margin: 0 auto; position: relative;
+        }
+        .circle-progress::before {
+            content: ""; position: absolute; width: 38px; height: 38px; border-radius: 50%; background: var(--surface);
+        }
+        .circle-value { position: relative; font-size: 10px; font-weight: 800; color: var(--text-dark); }
+        .month-avg-hours { font-size: 10px; font-weight: 700; color: var(--text-light); margin-top: 6px; text-align: center; width: 100%; }
 
-/* Primary controls */
-.btn-submit{
-    width:100%;min-height:46px;margin-top:5px;padding:11px 20px;border:0;border-radius:24px;
-    background:var(--primary);color:#fff;font-size:13px;font-weight:700;box-shadow:var(--shadow-soft);
-    transition:.18s ease
-}
-.btn-submit:hover{background:var(--primary-dark);box-shadow:var(--shadow)}
-.btn-submit:active{transform:scale(.99)}
-.btn-submit:disabled{opacity:.55;cursor:wait}
-.status-msg{min-height:19px;margin-top:9px;text-align:center;font-size:11px;font-weight:650}
+        .status-msg { margin-top: 10px; text-align: center; font-weight: 600; font-size: 14px; min-height: 20px; }
 
-/* Quick actions: compact icon tiles like the reference */
-.quick-actions-card{margin:13px 0 0;padding:0;background:transparent;border:0}
-.quick-actions-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-.quick-actions-title{font-size:11px;font-weight:750}
-.quick-actions-title .material-icons-round{font-size:14px;vertical-align:-3px;color:var(--primary)}
-.quick-actions-date{font-size:9px;color:var(--muted)}
-.quick-buttons{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
-.btn-quick{
-    min-height:39px;padding:7px 3px;border:1px solid var(--line);border-radius:9px;
-    display:flex;align-items:center;justify-content:center;gap:3px;
-    background:var(--surface);color:var(--text);font-size:9px;font-weight:650;box-shadow:var(--shadow-soft)
-}
-.btn-quick .material-icons-round{font-size:14px}
-.btn-quick:hover{transform:translateY(-1px);box-shadow:var(--shadow)}
-.bg-green{color:var(--green)}.bg-red{color:var(--red)}.bg-amber{color:var(--amber)}
-.bg-purple{color:var(--primary)}.bg-gray{color:var(--muted)}.bg-blue{color:var(--blue)}
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background: var(--surface); border-top: 1px solid var(--border);
+            display: flex; justify-content: space-around; padding: 10px 0 14px 0; z-index: 1000;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.03);
+        }
+        .nav-item {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: none; border: none; color: var(--text-light); cursor: pointer;
+            width: 25%; font-size: 11px; font-weight: 700; gap: 4px;
+        }
+        .nav-item.active { color: var(--primary); }
+        .nav-item .material-icons-round { font-size: 24px; }
+        .nav-item.active .material-icons-round { background: rgba(79, 70, 229, 0.12); border-radius: 12px; padding: 2px 12px; }
 
-/* History / admin */
-.section-header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:16px}
-.section-header h3{margin:0!important;font-size:21px!important;font-weight:700;letter-spacing:-.5px}
-.section-header p{margin:4px 0 0;color:var(--muted);font-size:10px}
-.section-icon{
-    width:42px;height:42px;flex:none;border-radius:14px;display:grid;place-items:center;
-    background:var(--primary-soft);color:var(--primary)
-}
-.section-icon .material-icons-round{font-size:21px}
-.table-container{width:100%;overflow:auto;border:1px solid var(--line);border-radius:14px}
-table{width:100%;border-collapse:collapse;text-align:left;font-size:11px;min-width:520px}
-th{padding:11px;background:var(--surface-lilac);color:var(--muted);font-size:9px;text-transform:uppercase;letter-spacing:.04em}
-td{padding:11px;border-top:1px solid var(--line);white-space:nowrap}
-.action-btn{
-    width:32px;height:32px;display:inline-grid;place-items:center;border:0;border-radius:50%;
-    background:var(--primary-soft);color:var(--primary)
-}
-
-/* Insights */
-.quarter-block{padding:13px;margin-bottom:10px;background:var(--surface-soft);border:1px solid var(--line);border-radius:15px}
-.quarter-header{display:flex;justify-content:space-between;gap:7px;align-items:center;margin-bottom:11px}
-.quarter-title{font-size:11px;font-weight:750}
-.quarter-stats{font-size:9px;color:var(--muted)}
-.months-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
-.month-circle-card{padding:10px 3px;text-align:center;background:var(--surface);border:1px solid var(--line);border-radius:11px;box-shadow:var(--shadow-soft)}
-.month-name{font-size:8px;font-weight:750;color:var(--muted);text-transform:uppercase}
-.circle-progress{width:46px;height:46px;margin:6px auto;border-radius:50%;display:flex;align-items:center;justify-content:center;background:conic-gradient(var(--primary) calc(var(--pct,0)*1%),var(--line) 0)}
-.circle-progress:before{content:"";position:absolute;width:35px;height:35px;border-radius:50%;background:var(--surface)}
-.circle-value{position:relative;font-size:9px;font-weight:750}
-.month-avg-hours{font-size:8px;color:var(--muted)}
-
-/* Bottom navigation: floating pill */
-.bottom-nav{
-    position:fixed;left:50%;bottom:10px;transform:translateX(-50%);
-    width:min(430px,calc(100% - 22px));height:60px;padding:4px 6px;
-    display:flex;align-items:center;justify-content:space-around;
-    background:rgba(255,255,255,.94);border:1px solid rgba(232,228,238,.9);
-    border-radius:31px;box-shadow:0 8px 28px rgba(55,43,83,.18);z-index:30;
-    backdrop-filter:blur(18px)
-}
-body.dark-mode .bottom-nav{background:rgba(33,31,40,.95)}
-.nav-item{
-    width:25%;height:49px;border:0;background:transparent;border-radius:25px;
-    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;
-    color:var(--muted);font-size:8px;font-weight:650;transition:.18s ease
-}
-.nav-item .material-icons-round{font-size:20px;padding:4px 15px;border-radius:18px}
-.nav-item.active{color:var(--text)}
-.nav-item.active .material-icons-round{background:#2e2c34;color:#fff}
-body.dark-mode .nav-item.active .material-icons-round{background:#f0eaf7;color:#211f26}
-
-/* Desktop keeps the mobile-inspired proportions, like the supplied reference */
-@media(min-width:700px){
-    .main-content{padding-top:20px}
-    .container{padding:22px 19px 28px}
-    #dashboard-section{min-height:calc(100vh - 102px)}
-}
-@media(max-width:430px){
-    .topbar{padding:0 12px}
-    .container{border-radius:25px}
-}
-@media(max-width:370px){
-    .date-rail{gap:2px}
-    .date-pill{padding-left:1px;padding-right:1px}
-    .quick-buttons{grid-template-columns:repeat(3,1fr)}
-    .attendance-ring{width:185px;height:185px}
-    .check-action{width:138px;height:138px;font-size:25px}
-}
-@media(prefers-reduced-motion:reduce){
-    *,*:before,*:after{transition:none!important}
-}
-</style>
+        .auth-toggle { text-align: center; margin-top: 15px; font-size: 13px; color: var(--text-light); }
+        .auth-toggle span { color: var(--primary); cursor: pointer; font-weight: 700; }
+    </style>
 </head>
 <body>
-<header class="topbar">
-    <div class="brand">
-        <div class="brand-mark"><i class="material-icons-round">schedule</i></div>
-        <div><h1>TimeTracker</h1><div class="brand-subtitle">Attendance &amp; productivity</div></div>
-    </div>
-    <div class="topbar-right">
-        <button class="icon-btn" onclick="hardRefresh()" title="Refresh"><i class="material-icons-round">refresh</i></button>
-        <button class="icon-btn" onclick="toggleDarkMode()" title="Theme"><i class="material-icons-round" id="theme-icon">dark_mode</i></button>
-        <div id="user-controls" class="hidden" style="display:flex;align-items:center;">
-            <span class="user-greeting"><i class="material-icons-round" style="font-size:16px;color:var(--primary);vertical-align:-3px;">account_circle</i> <span id="display-firstname"></span></span>
-            <button class="icon-btn" onclick="logout()" title="Logout"><i class="material-icons-round">logout</i></button>
-        </div>
-    </div>
-</header>
 
-<main class="main-content">
-
-<section id="auth-section" class="container">
-    <div id="login-form-div">
-        <div class="auth-logo"><i class="material-icons-round">schedule</i></div>
-        <h2>Welcome back</h2>
-        <p class="auth-intro">Sign in to manage your attendance</p>
-        <div id="login-dropdown-area" class="form-group">
-            <label>Select Your Name</label>
-            <select id="login-user-select"><option value="">Loading users...</option></select>
-        </div>
-        <div id="login-admin-area" class="form-group hidden">
-            <label>Admin Username</label><input type="text" id="login-admin-username" placeholder="Enter admin username">
-        </div>
-        <div class="form-group">
-            <label>4-Digit PIN</label>
-            <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" id="login-password" placeholder="••••" style="letter-spacing:5px;font-size:20px;text-align:center;" oninput="checkAutoLogin()">
-        </div>
-        <button class="btn-submit" id="btn-login" onclick="login()"><i class="material-icons-round" style="font-size:17px;vertical-align:-4px;margin-right:4px;">login</i> Sign In</button>
-        <div class="auth-toggle" style="text-align:center;margin-top:16px;color:var(--muted);font-size:11px;">
-            <span id="toggle-admin-btn" onclick="toggleAdminLogin()" style="color:var(--primary);font-weight:700;cursor:pointer;">Admin Login?</span>
-            &nbsp;·&nbsp;
-            <span onclick="toggleAuthForm('register')" style="color:var(--primary);font-weight:700;cursor:pointer;">Create Account</span>
+    <div class="topbar">
+        <h1>TimeTracker</h1>
+        <div class="topbar-right">
+            <button class="icon-btn" onclick="hardRefresh()" title="Developer Refresh"><i class="material-icons-round" style="font-size:18px;">refresh</i></button>
+            <button class="icon-btn" onclick="toggleDarkMode()" title="Toggle Theme"><i class="material-icons-round" id="theme-icon">dark_mode</i></button>
+            <div id="user-controls" class="hidden" style="display:flex; align-items:center; gap:8px;">
+                <span class="user-greeting"><i class="material-icons-round" style="font-size:18px; color:var(--primary);">account_circle</i> <span id="display-firstname"></span></span>
+                <button class="icon-btn" onclick="logout()" title="Logout"><i class="material-icons-round" style="font-size:18px;">logout</i></button>
+            </div>
         </div>
     </div>
 
-    <div id="register-form-div" class="hidden">
-        <div class="auth-logo"><i class="material-icons-round">person_add</i></div>
-        <h2>Create account</h2>
-        <p class="auth-intro">Set up your TimeTracker profile</p>
-        <div class="form-row">
-            <div class="form-group"><label>First Name</label><input type="text" id="reg-fname" placeholder="John"></div>
-            <div class="form-group"><label>Last Name</label><input type="text" id="reg-lname" placeholder="Doe"></div>
+    <div class="main-content">
+        
+        <!-- Auth Section -->
+        <div id="auth-section" class="container" style="max-width: 400px; margin-top: 5vh;">
+            <div id="login-form-div">
+                <h2 style="text-align: center; margin-bottom: 20px;">Welcome Back</h2>
+                
+                <div id="login-dropdown-area" class="form-group" style="margin-bottom: 12px;">
+                    <label>Select Your Name</label>
+                    <select id="login-user-select">
+                        <option value="">Loading users...</option>
+                    </select>
+                </div>
+
+                <div id="login-admin-area" class="form-group hidden" style="margin-bottom: 12px;">
+                    <label>Admin Username</label>
+                    <input type="text" id="login-admin-username" placeholder="Enter admin username">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label>4-Digit PIN</label>
+                    <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" id="login-password" placeholder="••••" style="letter-spacing: 4px; font-size: 18px; text-align: center;" oninput="checkAutoLogin()">
+                </div>
+                
+                <button class="btn-submit" id="btn-login" onclick="login()">Sign In</button>
+                
+                <div class="auth-toggle">
+                    <span id="toggle-admin-btn" onclick="toggleAdminLogin()">Admin Login?</span> | 
+                    <span onclick="toggleAuthForm('register')">Create Account</span>
+                </div>
+            </div>
+
+            <div id="register-form-div" class="hidden">
+                <h2 style="text-align: center;">Create Account</h2>
+                <div class="form-row">
+                    <div class="form-group"><label>First Name</label><input type="text" id="reg-fname" placeholder="John"></div>
+                    <div class="form-group"><label>Last Name</label><input type="text" id="reg-lname" placeholder="Doe"></div>
+                </div>
+                <div class="form-group" style="margin-bottom: 12px;"><label>Username</label><input type="text" id="reg-username" placeholder="johndoe"></div>
+                <div class="form-group" style="margin-bottom: 12px;"><label>4-Digit PIN</label><input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" id="reg-password" placeholder="••••" style="letter-spacing: 4px; font-size: 18px; text-align: center;" onkeydown="if(event.key==='Enter') register()"></div>
+                <button class="btn-submit" id="btn-register" onclick="register()">Register</button>
+                <div class="auth-toggle">Already registered? <span onclick="toggleAuthForm('login')">Sign In</span></div>
+            </div>
+            <div id="auth-msg" class="status-msg"></div>
         </div>
-        <div class="form-group"><label>Username</label><input type="text" id="reg-username" placeholder="johndoe"></div>
-        <div class="form-group"><label>4-Digit PIN</label><input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" id="reg-password" placeholder="••••" style="letter-spacing:5px;font-size:20px;text-align:center;" onkeydown="if(event.key==='Enter') register()"></div>
-        <button class="btn-submit" id="btn-register" onclick="register()"><i class="material-icons-round" style="font-size:17px;vertical-align:-4px;margin-right:4px;">person_add</i> Register</button>
-        <div class="auth-toggle" style="text-align:center;margin-top:16px;color:var(--muted);font-size:11px;">Already registered? <span onclick="toggleAuthForm('login')" style="color:var(--primary);font-weight:700;cursor:pointer;">Sign In</span></div>
+
+        <!-- Dashboard Section -->
+        <div id="dashboard-section" class="container hidden">
+            
+            <!-- Tab 1: Record Entry -->
+            <div id="tab-log">
+                <h3 id="form-title" style="margin-bottom: 12px; font-size:16px;">Record Attendance</h3>
+                <input type="hidden" id="entry-id">
+                <input type="hidden" id="entry-username">
+                
+                <div class="form-row">
+                    <div class="form-group"><label>From Date</label><input type="date" id="entry-from-date"></div>
+                    <div class="form-group"><label>To Date (Optional)</label><input type="date" id="entry-to-date"></div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group" style="width: 100%;">
+                        <label>Status</label>
+                        <select id="entry-status" onchange="handleStatusChange()">
+                            <option value="Present">Present</option>
+                            <option value="Leave">Leave</option>
+                            <option value="Exception">Exception</option>
+                            <option value="No Show">No Show</option>
+                            <option value="Weekend">Weekend</option>
+                            <option value="Holiday">Holiday</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group"><label>In Time</label><input type="time" id="entry-in"></div>
+                    <div class="form-group"><label>Out Time</label><input type="time" id="entry-out"></div>
+                </div>
+
+                <div id="quick-actions-panel" class="quick-actions-card">
+                    <div class="quick-actions-header">
+                        <span class="quick-actions-title">⚡ Quick Shortcuts</span>
+                        <span class="quick-actions-date" id="quick-date-display">--</span>
+                    </div>
+                    <div class="quick-buttons">
+                        <button class="btn-quick bg-green" onclick="quickAction('in')"><i class="material-icons-round" style="font-size:14px;">login</i> In</button>
+                        <button class="btn-quick bg-red" onclick="quickAction('out')"><i class="material-icons-round" style="font-size:14px;">logout</i> Out</button>
+                        <button class="btn-quick bg-amber" onclick="quickAction('leave')">Leave</button>
+                        <button class="btn-quick bg-purple" onclick="quickAction('exception')">Exception</button>
+                        <button class="btn-quick bg-gray" onclick="quickAction('noshow')">No Show</button>
+                        <button class="btn-quick bg-blue" onclick="quickAction('weekend')">Weekend</button>
+                        <button class="btn-quick bg-blue" onclick="quickAction('holiday')">Holiday</button>
+                    </div>
+                </div>
+
+                <button class="btn-submit" id="btn-submit-log" onclick="submitLog()">Save Entry</button>
+                <div id="log-msg" class="status-msg"></div>
+            </div>
+
+            <!-- Tab 2: User History -->
+            <div id="tab-history" class="hidden">
+                <h3 style="margin-bottom: 5px;">My History</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr><th>Date</th><th>Status</th><th>In</th><th>Out</th><th>Duration</th><th></th></tr>
+                        </thead>
+                        <tbody id="history-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab 3: Insights -->
+            <div id="tab-insights" class="hidden">
+                <h3 style="margin-bottom: 5px;">Financial Year Analytics</h3>
+                <p style="font-size: 11px; color: var(--text-light); margin-top: 0; margin-bottom: 15px;">*Attendance % calculated over net working days (excluding weekends & holidays).</p>
+                <div id="insights-container"></div>
+            </div>
+
+            <!-- Tab 4: Admin Panel -->
+            <div id="tab-admin" class="hidden">
+                <h3 style="margin-bottom: 5px;">Organization Records</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr><th>User</th><th>Date</th><th>Status</th><th>In</th><th>Out</th><th>Duration</th><th></th></tr>
+                        </thead>
+                        <tbody id="admin-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
-    <div id="auth-msg" class="status-msg"></div>
-</section>
 
-<section id="dashboard-section" class="container hidden">
-    <div id="tab-log">
-        <div class="reference-date-header">
-            <div class="reference-month"><i class="material-icons-round">calendar_month</i><span id="current-month-label">Today</span></div>
-            <button class="reference-request">Request <i class="material-icons-round">add</i></button>
-        </div>
+    <nav class="bottom-nav hidden" id="app-bottom-nav">
+        <button class="nav-item active" id="nav-log" onclick="switchTab('log')">
+            <i class="material-icons-round">edit_square</i><span>Record</span>
+        </button>
+        <button class="nav-item" id="nav-history" onclick="switchTab('history')">
+            <i class="material-icons-round">history</i><span>History</span>
+        </button>
+        <button class="nav-item" id="nav-insights" onclick="switchTab('insights')">
+            <i class="material-icons-round">insights</i><span>Insights</span>
+        </button>
+        <button class="nav-item hidden" id="nav-admin" onclick="switchTab('admin')">
+            <i class="material-icons-round">admin_panel_settings</i><span>All Logs</span>
+        </button>
+    </nav>
 
-        <div class="date-rail" id="date-rail"></div>
-
-        <div class="location-card">
-            <div class="location-icon"><i class="material-icons-round">location_on</i></div>
-            <div class="location-copy">
-                <div class="location-label">Location Registered</div>
-                <div class="location-value">Work location</div>
-            </div>
-            <button class="location-change" type="button">Change</button>
-        </div>
-
-        <input type="hidden" id="entry-id">
-        <input type="hidden" id="entry-username">
-
-        <div class="hero-action">
-            <div class="attendance-ring" id="attendance-ring">
-                <button class="check-action" type="button" onclick="quickAction('in')">Check-In</button>
-            </div>
-            <div class="hero-caption">Tap to record your current check-in time</div>
-        </div>
-
-        <div class="metric-grid">
-            <div class="metric-card">
-                <div class="metric-icon in"><i class="material-icons-round">login</i></div>
-                <div class="metric-value" id="visual-in-time">--:--</div>
-                <div class="metric-label">Check-In</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-icon out"><i class="material-icons-round">logout</i></div>
-                <div class="metric-value" id="visual-out-time">--:--</div>
-                <div class="metric-label">Check-Out</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-icon hours"><i class="material-icons-round">schedule</i></div>
-                <div class="metric-value" id="visual-total-hours">--</div>
-                <div class="metric-label">Total Hours</div>
-            </div>
-        </div>
-
-        <div class="work-mode"><i class="material-icons-round">home</i> I'm working from home</div>
-
-        <div class="details-card">
-            <div class="details-title"><i class="material-icons-round">tune</i><span id="form-title">Attendance details</span></div>
-            <div class="form-row">
-                <div class="form-group"><label>From Date</label><input type="date" id="entry-from-date"></div>
-                <div class="form-group"><label>To Date (Optional)</label><input type="date" id="entry-to-date"></div>
-            </div>
-            <div class="form-row">
-                <div class="form-group"><label>Status</label><select id="entry-status" onchange="handleStatusChange()">
-                    <option value="Present">Present</option><option value="Leave">Leave</option><option value="Exception">Exception</option>
-                    <option value="No Show">No Show</option><option value="Weekend">Weekend</option><option value="Holiday">Holiday</option>
-                </select></div>
-                <div class="form-group"><label>In Time</label><input type="time" id="entry-in"></div>
-                <div class="form-group"><label>Out Time</label><input type="time" id="entry-out"></div>
-            </div>
-        </div>
-
-        <div id="quick-actions-panel" class="quick-actions-card">
-            <div class="quick-actions-header">
-                <span class="quick-actions-title"><i class="material-icons-round">bolt</i> Quick actions</span>
-                <span class="quick-actions-date" id="quick-date-display">--</span>
-            </div>
-            <div class="quick-buttons">
-                <button class="btn-quick bg-green" onclick="quickAction('in')"><i class="material-icons-round">login</i>In</button>
-                <button class="btn-quick bg-red" onclick="quickAction('out')"><i class="material-icons-round">logout</i>Out</button>
-                <button class="btn-quick bg-amber" onclick="quickAction('leave')"><i class="material-icons-round">event_busy</i>Leave</button>
-                <button class="btn-quick bg-purple" onclick="quickAction('exception')"><i class="material-icons-round">warning</i>Exception</button>
-                <button class="btn-quick bg-gray" onclick="quickAction('noshow')"><i class="material-icons-round">person_off</i>No Show</button>
-                <button class="btn-quick bg-blue" onclick="quickAction('weekend')"><i class="material-icons-round">weekend</i>Weekend</button>
-                <button class="btn-quick bg-blue" onclick="quickAction('holiday')"><i class="material-icons-round">celebration</i>Holiday</button>
-            </div>
-        </div>
-
-        <button class="btn-submit" id="btn-submit-log" onclick="submitLog()"><i class="material-icons-round" style="font-size:17px;vertical-align:-4px;margin-right:4px;">save</i> Save Attendance</button>
-        <div id="log-msg" class="status-msg"></div>
-    </div>
-
-    <div id="tab-history" class="hidden">
-        <div class="section-header"><div><h3>My History</h3><p>Your recorded attendance entries.</p></div><div class="section-icon"><i class="material-icons-round">history</i></div></div>
-        <div class="table-container"><table><thead><tr><th>Date</th><th>Status</th><th>In</th><th>Out</th><th>Duration</th><th></th></tr></thead><tbody id="history-table-body"></tbody></table></div>
-    </div>
-
-    <div id="tab-insights" class="hidden">
-        <div class="section-header"><div><h3>Financial Year Analytics</h3><p>Attendance and average working hours by quarter.</p></div><div class="section-icon"><i class="material-icons-round">insights</i></div></div>
-        <p style="font-size:9px;color:var(--muted);margin:-4px 0 14px;">*Attendance % calculated over net working days (excluding weekends &amp; holidays).</p>
-        <div id="insights-container"></div>
-    </div>
-
-    <div id="tab-admin" class="hidden">
-        <div class="section-header"><div><h3>Organization Records</h3><p>Attendance records across the organization.</p></div><div class="section-icon"><i class="material-icons-round">admin_panel_settings</i></div></div>
-        <div class="table-container"><table><thead><tr><th>User</th><th>Date</th><th>Status</th><th>In</th><th>Out</th><th>Duration</th><th></th></tr></thead><tbody id="admin-table-body"></tbody></table></div>
-    </div>
-</section>
-</main>
-
-<nav class="bottom-nav hidden" id="app-bottom-nav">
-    <button class="nav-item active" id="nav-log" onclick="switchTab('log')"><i class="material-icons-round">home</i><span>Home</span></button>
-    <button class="nav-item" id="nav-history" onclick="switchTab('history')"><i class="material-icons-round">calendar_month</i><span>Calendar</span></button>
-    <button class="nav-item" id="nav-insights" onclick="switchTab('insights')"><i class="material-icons-round">insert_chart</i><span>Insights</span></button>
-    <button class="nav-item hidden" id="nav-admin" onclick="switchTab('admin')"><i class="material-icons-round">person</i><span>All Logs</span></button>
-</nav>
-
-<script>
+    <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwT77gaKXuTfG6sqef61rgXtZaDqUagDfRX9w4c6Hx-y7ldEKmveTZrwpVAtBXIS60vfw/exec";
         
         let currentUser = "";
@@ -1058,365 +905,5 @@ body.dark-mode .nav-item.active .material-icons-round{background:#f0eaf7;color:#
             });
         }
     </script>
-
-
-<style>
-/* =========================================================
-   v2 UI POLISH — cleaner, calmer, less clumsy across ALL tabs
-   ========================================================= */
-#dashboard-section.container{
-    width:min(100%,460px);
-    max-width:460px;
-    padding:0;
-    background:transparent;
-    box-shadow:none;
-    border-radius:0;
-}
-#dashboard-section > [id^="tab-"]{
-    width:100%;
-    padding:18px;
-    border:1px solid rgba(232,228,238,.9);
-    border-radius:26px;
-    background:rgba(255,255,255,.97);
-    box-shadow:0 10px 35px rgba(72,57,108,.09);
-}
-body.dark-mode #dashboard-section > [id^="tab-"]{
-    background:rgba(33,31,40,.97);
-    border-color:var(--line);
-}
-
-/* LOG / HOME */
-#tab-log .reference-date-header{margin-bottom:11px}
-#tab-log .reference-month{font-size:20px}
-#tab-log .date-rail{margin-left:1px;margin-right:1px}
-#tab-log .location-card{
-    padding:9px 10px;
-    margin-bottom:13px;
-    box-shadow:none;
-}
-#tab-log .hero-action{margin-top:3px;margin-bottom:14px}
-#tab-log .attendance-ring{
-    width:194px;height:194px;
-}
-#tab-log .check-action{
-    width:146px;height:146px;
-    font-size:26px;
-}
-#tab-log .hero-caption{font-size:9px}
-#tab-log .metric-grid{gap:8px}
-#tab-log .metric-card{
-    min-height:73px;
-    padding:8px;
-    border-radius:13px;
-}
-#tab-log .work-mode{
-    margin:10px 0 12px;
-    min-height:35px;
-}
-#tab-log .details-card{
-    margin-top:0;
-    padding:12px;
-    border-radius:14px;
-}
-#tab-log .quick-actions-card{margin-top:12px}
-#tab-log .quick-buttons{gap:7px}
-#tab-log .btn-quick{
-    min-height:38px;
-    border-radius:11px;
-    background:var(--surface-soft);
-}
-#tab-log .btn-submit{
-    margin-top:12px;
-}
-
-/* Better hierarchy for form title when editing */
-.details-title{
-    padding-bottom:9px;
-    margin-bottom:9px;
-    border-bottom:1px solid var(--line);
-}
-.details-title span{font-size:11px}
-
-/* SHARED TAB HEADER */
-.section-header{
-    margin-bottom:14px;
-    align-items:center;
-}
-.section-header > div:first-child{
-    min-width:0;
-}
-.section-header h3{
-    font-size:19px!important;
-    line-height:1.15;
-}
-.section-header p{
-    max-width:280px;
-    line-height:1.4;
-}
-.section-icon{
-    width:40px;height:40px;
-    border-radius:13px;
-}
-
-/* HISTORY — turn the table into a light data surface */
-#tab-history .table-container,
-#tab-admin .table-container{
-    border:0;
-    overflow:visible;
-    border-radius:0;
-}
-#tab-history table,
-#tab-admin table{
-    min-width:0;
-    width:100%;
-    border-collapse:separate;
-    border-spacing:0 7px;
-}
-#tab-history thead th,
-#tab-admin thead th{
-    padding:4px 8px 6px;
-    background:transparent;
-    border:0;
-    font-size:8px;
-    letter-spacing:.08em;
-}
-#tab-history tbody tr,
-#tab-admin tbody tr{
-    background:var(--surface-soft);
-}
-#tab-history tbody td,
-#tab-admin tbody td{
-    padding:10px 8px;
-    border-top:1px solid var(--line);
-    border-bottom:1px solid var(--line);
-    font-size:10px;
-}
-#tab-history tbody td:first-child,
-#tab-admin tbody td:first-child{
-    border-left:1px solid var(--line);
-    border-radius:12px 0 0 12px;
-}
-#tab-history tbody td:last-child,
-#tab-admin tbody td:last-child{
-    border-right:1px solid var(--line);
-    border-radius:0 12px 12px 0;
-}
-#tab-history tbody tr:hover,
-#tab-admin tbody tr:hover{
-    transform:translateY(-1px);
-}
-#tab-history .action-btn,
-#tab-admin .action-btn{
-    width:30px;height:30px;
-}
-
-/* Status pills generated by the existing JS */
-#history-table-body td:nth-child(2) span{
-    display:inline-block;
-    padding:4px 8px!important;
-    background:var(--primary-soft)!important;
-    border:0!important;
-    color:var(--primary);
-    font-size:8px!important;
-    font-weight:750;
-}
-#admin-table-body td:nth-child(3){
-    color:var(--primary);
-    font-weight:700;
-}
-
-/* INSIGHTS — make quarterly analytics feel like dashboard cards */
-#tab-insights > p{
-    padding:8px 10px;
-    margin-bottom:12px!important;
-    border-radius:9px;
-    background:var(--surface-soft);
-}
-#insights-container{
-    display:flex;
-    flex-direction:column;
-    gap:9px;
-}
-#insights-container .quarter-block{
-    margin:0;
-    padding:12px;
-    border-radius:16px;
-    background:var(--surface-soft);
-    border:1px solid var(--line);
-    box-shadow:none;
-}
-#insights-container .quarter-header{
-    margin-bottom:9px;
-}
-#insights-container .quarter-title{
-    font-size:10px;
-}
-#insights-container .quarter-stats{
-    font-size:8px;
-    text-align:right;
-}
-#insights-container .quarter-stats strong{
-    color:var(--primary);
-}
-#insights-container .months-grid{
-    gap:6px;
-}
-#insights-container .month-circle-card{
-    padding:9px 3px;
-    min-height:91px;
-    border-radius:12px;
-    box-shadow:none;
-}
-#insights-container .month-name{
-    font-size:8px;
-}
-#insights-container .circle-progress{
-    width:44px;height:44px;
-    margin:5px auto;
-}
-#insights-container .circle-progress:before{
-    width:34px;height:34px;
-}
-#insights-container .circle-value{
-    font-size:8px;
-}
-#insights-container .month-avg-hours{
-    font-size:8px;
-}
-
-/* ADMIN — more executive-looking, without changing the data */
-#tab-admin .section-header{
-    margin-bottom:12px;
-}
-#tab-admin #admin-table-body td:first-child{
-    color:var(--primary)!important;
-    font-weight:750!important;
-}
-
-/* Bottom navigation — cleaner active state */
-.bottom-nav{
-    height:58px;
-    padding:4px;
-    bottom:12px;
-}
-.nav-item{
-    height:50px;
-    font-size:7px;
-    gap:1px;
-}
-.nav-item .material-icons-round{
-    font-size:19px;
-    padding:4px 16px;
-}
-.nav-item.active .material-icons-round{
-    box-shadow:0 3px 9px rgba(0,0,0,.12);
-}
-
-/* Mobile: cards become comfortable stacked records */
-@media(max-width:560px){
-    #dashboard-section > [id^="tab-"]{padding:16px}
-}
-@media(max-width:410px){
-    #dashboard-section > [id^="tab-"]{
-        border-radius:23px;
-        padding:14px;
-    }
-    #tab-log .attendance-ring{width:184px;height:184px}
-    #tab-log .check-action{width:138px;height:138px;font-size:24px}
-}
-
-/* Very narrow screens: history/admin rows become actual cards */
-@media(max-width:350px){
-    #tab-history thead,#tab-admin thead{display:none}
-    #tab-history table,#tab-admin table,
-    #tab-history tbody,#tab-admin tbody,
-    #tab-history tr,#tab-admin tr,
-    #tab-history td,#tab-admin td{
-        display:block;width:100%;
-    }
-    #tab-history table,#tab-admin table{border-spacing:0}
-    #tab-history tbody tr,#tab-admin tbody tr{
-        margin-bottom:8px;
-        border:1px solid var(--line);
-        border-radius:13px;
-        padding:7px;
-    }
-    #tab-history tbody td,#tab-admin tbody td{
-        border:0!important;
-        border-radius:0!important;
-        padding:4px 5px;
-        white-space:normal;
-    }
-}
-</style>
-
-<script>
-(function(){
-    function refreshReferenceUI(){
-        const now = new Date();
-        const monthNames=["January","February","March","April","May","June","July","August","September","October","November","December"];
-        const days=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
-        const monthLabel=document.getElementById("current-month-label");
-        if(monthLabel) monthLabel.textContent=monthNames[now.getMonth()]+" "+now.getFullYear();
-
-        const rail=document.getElementById("date-rail");
-        if(rail){
-            rail.innerHTML="";
-            const start=new Date(now); start.setDate(now.getDate()-3);
-            for(let i=0;i<8;i++){
-                const d=new Date(start); d.setDate(start.getDate()+i);
-                const pill=document.createElement("div");
-                pill.className="date-pill"+(d.toDateString()===now.toDateString()?" active":"");
-                pill.innerHTML="<strong>"+d.getDate()+"</strong><span>"+days[d.getDay()]+"</span>";
-                rail.appendChild(pill);
-            }
-        }
-        const q=document.getElementById("quick-date-display");
-        if(q && typeof getReadableTodayStr==="function") q.textContent=getReadableTodayStr();
-
-        syncVisualMetrics();
-    }
-
-    function syncVisualMetrics(){
-        const inEl=document.getElementById("entry-in"), outEl=document.getElementById("entry-out");
-        const statusEl=document.getElementById("entry-status");
-        const vi=document.getElementById("visual-in-time"), vo=document.getElementById("visual-out-time"), vh=document.getElementById("visual-total-hours");
-        if(!inEl || !vi) return;
-        vi.textContent=inEl.value ? formatTimeDisplay(inEl.value) : "--:--";
-        vo.textContent=outEl.value ? formatTimeDisplay(outEl.value) : "--:--";
-        let hours=0;
-        if(statusEl && statusEl.value==="Present" && inEl.value && outEl.value){
-            const a=inEl.value.split(":").map(Number), b=outEl.value.split(":").map(Number);
-            let mins=(b[0]*60+b[1])-(a[0]*60+a[1]); if(mins<0) mins+=1440;
-            hours=mins/60;
-        }
-        vh.textContent=hours ? (Math.floor(hours)+"h"+(Math.round((hours%1)*60)? " "+Math.round((hours%1)*60)+"m":"")) : "--";
-        const ring=document.getElementById("attendance-ring");
-        if(ring){
-            const pct=hours ? Math.min(100,Math.round(hours/8*100)) : (inEl.value ? 8 : 0);
-            ring.style.background="conic-gradient(var(--primary) "+(pct*3.6)+"deg, rgba(205,191,239,.13) 0deg)";
-        }
-    }
-
-    document.addEventListener("input",function(e){
-        if(e.target && ["entry-in","entry-out","entry-status"].includes(e.target.id)) syncVisualMetrics();
-    });
-    document.addEventListener("change",function(e){
-        if(e.target && ["entry-in","entry-out","entry-status"].includes(e.target.id)) syncVisualMetrics();
-    });
-
-    const oldReset=window.resetForm;
-    window.resetForm=function(){
-        oldReset.apply(this,arguments);
-        setTimeout(refreshReferenceUI,0);
-    };
-    const oldQuick=window.quickAction;
-    window.quickAction=function(type){
-        oldQuick.apply(this,arguments);
-        setTimeout(syncVisualMetrics,0);
-    };
-    setTimeout(refreshReferenceUI,80);
-})();
-</script>
-
-</body></html>
+</body>
+</html>
