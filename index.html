@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#4f46e5" id="theme-color-meta">
     
-    <link rel="manifest" href="manifest.json?v=16.0">
+    <link rel="manifest" href="manifest.json?v=19.0">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2083/2083214.png">
     
     <title>Enterprise Time Tracker</title>
@@ -62,6 +62,11 @@
         }
         .topbar h1 { margin: 0; font-size: 18px; font-weight: 700; color: var(--primary); letter-spacing: -0.5px; }
         .topbar-right { display: flex; align-items: center; gap: 8px; }
+        
+        /* Sync Spinner Animation */
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .spinning { animation: spin 1s linear infinite; color: var(--primary); }
+        
         .user-greeting { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
         .icon-btn { 
             background: var(--secondary); border: 1px solid var(--border); color: var(--text-dark); 
@@ -112,15 +117,15 @@
         .quick-actions-title { font-size: 12px; font-weight: 700; color: var(--text-light); text-transform: uppercase; }
         .quick-actions-date { font-size: 12px; font-weight: 600; color: var(--primary); }
         
-        .quick-buttons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; }
-        @media (max-width: 400px) {
-            .quick-buttons { grid-template-columns: repeat(2, 1fr); }
-        }
+        /* Auto-adjusting flex grid for remaining 5 buttons */
+        .quick-buttons-5 { display: flex; flex-wrap: wrap; gap: 8px; width: 100%; }
+        .quick-buttons-5 > button { flex: 1 1 calc(33.333% - 8px); min-height: 42px; }
+        
         .btn-quick {
             border: none; padding: 12px 6px; border-radius: 10px; color: white; 
             font-weight: 700; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;
             box-shadow: 0 2px 6px rgba(0,0,0,0.08); transition: transform 0.1s;
-            white-space: nowrap; width: 100%;
+            white-space: nowrap; width: 100%; margin: 0;
         }
         .btn-quick:active { transform: scale(0.97); }
         .bg-green { background: var(--accent-green); } 
@@ -184,6 +189,11 @@
     <div class="topbar">
         <h1>TimeTracker</h1>
         <div class="topbar-right">
+            <!-- Sync Indicator added here -->
+            <div id="sync-indicator" class="hidden" style="display:flex; align-items:center; margin-right:4px;">
+                <i class="material-icons-round spinning" style="font-size: 20px;">sync</i>
+            </div>
+            
             <button class="icon-btn" onclick="hardRefresh()" title="Developer Refresh"><i class="material-icons-round" style="font-size:18px;">refresh</i></button>
             <button class="icon-btn" onclick="toggleDarkMode()" title="Toggle Theme"><i class="material-icons-round" id="theme-icon">dark_mode</i></button>
             <div id="user-controls" class="hidden" style="display:flex; align-items:center; gap:8px;">
@@ -214,7 +224,7 @@
 
                 <div class="form-group" style="margin-bottom: 12px;">
                     <label>4-Digit PIN</label>
-                    <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" id="login-password" placeholder="••••" style="letter-spacing: 4px; font-size: 18px; text-align: center;" oninput="checkAutoLogin()">
+                    <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" id="login-password" placeholder="••••" style="letter-spacing: 4px; font-size: 18px; text-align: center;" oninput="checkAutoLogin(event)">
                 </div>
                 
                 <button class="btn-submit" id="btn-login" onclick="login()">Sign In</button>
@@ -242,7 +252,7 @@
         <!-- Dashboard Section -->
         <div id="dashboard-section" class="container hidden">
             
-            <!-- Tab 1: Record Entry -->
+            <!-- Tab 1: Record Entry / Update -->
             <div id="tab-log">
                 <h3 id="form-title" style="margin-bottom: 12px; font-size:16px;">Record Attendance</h3>
                 <input type="hidden" id="entry-id">
@@ -267,9 +277,24 @@
                     </div>
                 </div>
                 
+                <!-- Inline In/Out Field and Button Layout -->
                 <div class="form-row">
-                    <div class="form-group"><label>In Time</label><input type="time" id="entry-in"></div>
-                    <div class="form-group"><label>Out Time</label><input type="time" id="entry-out"></div>
+                    <div class="form-group" style="width: 100%;">
+                        <label>In Time</label>
+                        <div style="display:flex; gap:8px;">
+                            <input type="time" id="entry-in" style="flex: 3;">
+                            <button class="btn-quick bg-green" onclick="quickAction('in')" style="flex: 1;"><i class="material-icons-round" style="font-size:14px;">login</i> In</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group" style="width: 100%;">
+                        <label>Out Time</label>
+                        <div style="display:flex; gap:8px;">
+                            <input type="time" id="entry-out" style="flex: 3;">
+                            <button class="btn-quick bg-red" onclick="quickAction('out')" style="flex: 1;"><i class="material-icons-round" style="font-size:14px;">logout</i> Out</button>
+                        </div>
+                    </div>
                 </div>
 
                 <div id="quick-actions-panel" class="quick-actions-card">
@@ -277,9 +302,8 @@
                         <span class="quick-actions-title">⚡ Quick Shortcuts</span>
                         <span class="quick-actions-date" id="quick-date-display">--</span>
                     </div>
-                    <div class="quick-buttons">
-                        <button class="btn-quick bg-green" onclick="quickAction('in')"><i class="material-icons-round" style="font-size:14px;">login</i> In</button>
-                        <button class="btn-quick bg-red" onclick="quickAction('out')"><i class="material-icons-round" style="font-size:14px;">logout</i> Out</button>
+                    <!-- Dynamically sized 5 buttons -->
+                    <div class="quick-buttons-5">
                         <button class="btn-quick bg-amber" onclick="quickAction('leave')">Leave</button>
                         <button class="btn-quick bg-purple" onclick="quickAction('exception')">Exception</button>
                         <button class="btn-quick bg-gray" onclick="quickAction('noshow')">No Show</button>
@@ -351,16 +375,47 @@
         let logsData = [];
         let cachedUsersList = null;
         let isAdminLoginMode = false;
+        let isLoggingIn = false; 
+        let activeSyncs = 0; // Tracks active background calls for the spinner
 
         window.onload = () => {
-            const localUsers = localStorage.getItem("tt_users");
-            if (localUsers) {
-                try {
-                    cachedUsersList = JSON.parse(localUsers);
-                    renderUserDropdown(cachedUsersList);
-                } catch(e) {}
+            const savedUser = localStorage.getItem("tt_current_user");
+            const savedName = localStorage.getItem("tt_current_name");
+            const savedRole = localStorage.getItem("tt_current_role");
+
+            if (savedUser) {
+                currentUser = savedUser;
+                currentFirstName = savedName || savedUser;
+                currentRole = savedRole || "User";
+                
+                document.getElementById("auth-section").classList.add("hidden");
+                document.getElementById("user-controls").classList.remove("hidden");
+                document.getElementById("dashboard-section").classList.remove("hidden");
+                document.getElementById("app-bottom-nav").classList.remove("hidden");
+                document.getElementById("display-firstname").innerText = currentFirstName;
+
+                if(currentRole === "Admin") {
+                    document.getElementById("nav-history").classList.add("hidden");
+                    document.getElementById("nav-insights").classList.add("hidden");
+                    document.getElementById("nav-admin").classList.remove("hidden");
+                    switchTab('admin');
+                } else {
+                    document.getElementById("nav-history").classList.remove("hidden");
+                    document.getElementById("nav-insights").classList.remove("hidden");
+                    document.getElementById("nav-admin").classList.add("hidden");
+                    resetForm();
+                    switchTab('log');
+                }
+            } else {
+                const localUsers = localStorage.getItem("tt_users");
+                if (localUsers) {
+                    try {
+                        cachedUsersList = JSON.parse(localUsers);
+                        renderUserDropdown(cachedUsersList);
+                    } catch(e) {}
+                }
+                fetchUserListForDropdown();
             }
-            fetchUserListForDropdown();
 
             const localLogs = localStorage.getItem("tt_logs");
             if (localLogs) {
@@ -372,13 +427,6 @@
             if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
                 toggleDarkMode(true);
             }
-            
-            document.getElementById("login-admin-username").addEventListener("keydown", (e) => {
-                if (e.key === "Enter") login();
-            });
-            document.getElementById("login-password").addEventListener("keydown", (e) => {
-                if (e.key === "Enter") login();
-            });
         };
 
         function hardRefresh() {
@@ -510,31 +558,58 @@
         }
 
         async function apiCall(payload, btnId) {
+            activeSyncs++;
+            const syncIndicator = document.getElementById("sync-indicator");
+            if (syncIndicator) syncIndicator.classList.remove("hidden");
+
             const btn = document.getElementById(btnId);
             let originalText = "";
             if (btn) { originalText = btn.innerHTML; btn.innerText = "Processing..."; btn.disabled = true; }
+            
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 12000);
+
             try {
-                const response = await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(payload) });
+                const response = await fetch(SCRIPT_URL, { 
+                    method: "POST", 
+                    body: JSON.stringify(payload),
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
                 const result = await response.json();
+                
                 if (btn) { btn.innerHTML = originalText; btn.disabled = false; }
+                activeSyncs--;
+                if (activeSyncs <= 0 && syncIndicator) syncIndicator.classList.add("hidden");
+                
                 return result;
             } catch (error) {
+                clearTimeout(timeoutId);
                 if (btn) { btn.innerHTML = originalText; btn.disabled = false; }
-                return { success: false, message: "Network Error" };
+                activeSyncs--;
+                if (activeSyncs <= 0 && syncIndicator) syncIndicator.classList.add("hidden");
+                
+                return { success: false, message: "Connection timeout." };
             }
         }
 
         async function fetchUserListForDropdown() {
+            const select = document.getElementById("login-user-select");
             const res = await apiCall({ action: "getUsers" }, null);
             if (res && res.success && res.users) {
                 cachedUsersList = res.users;
                 localStorage.setItem("tt_users", JSON.stringify(cachedUsersList));
                 renderUserDropdown(cachedUsersList);
+            } else {
+                if (!cachedUsersList) {
+                    select.innerHTML = `<option value="">Failed to connect. Tap Refresh icon</option>`;
+                }
             }
         }
 
         function renderUserDropdown(users) {
             const select = document.getElementById("login-user-select");
+            const currentVal = select.value;
             select.innerHTML = `<option value="">Select your name...</option>`;
             users.forEach(u => {
                 const option = document.createElement("option");
@@ -542,29 +617,39 @@
                 option.innerText = `${u.firstName} ${u.lastName}`.trim();
                 select.appendChild(option);
             });
+            if (currentVal) select.value = currentVal;
         }
 
-        function checkAutoLogin() {
+        function checkAutoLogin(e) {
             const pinField = document.getElementById("login-password");
-            if (pinField.value.length === 4) {
+            if (pinField.value.length === 4 && !isLoggingIn) {
                 login();
             }
         }
 
         async function login() {
+            if (isLoggingIn) return;
+            
             const user = isAdminLoginMode ? document.getElementById("login-admin-username").value : document.getElementById("login-user-select").value;
             const pass = document.getElementById("login-password").value;
             const msg = document.getElementById("auth-msg");
             
             if(!user || !pass) return msg.innerText = "Please fill all fields.";
+            if(pass.length !== 4 && !isAdminLoginMode) return msg.innerText = "PIN must be 4 digits.";
 
+            isLoggingIn = true;
             const res = await apiCall({ action: "login", username: user, password: pass }, "btn-login");
+            isLoggingIn = false;
             
             if (res.success) {
                 currentUser = user;
                 currentRole = res.role;
                 currentFirstName = res.firstName;
                 
+                localStorage.setItem("tt_current_user", currentUser);
+                localStorage.setItem("tt_current_name", currentFirstName);
+                localStorage.setItem("tt_current_role", currentRole);
+
                 document.getElementById("auth-section").classList.add("hidden");
                 document.getElementById("user-controls").classList.remove("hidden");
                 document.getElementById("dashboard-section").classList.remove("hidden");
@@ -586,7 +671,7 @@
                     switchTab('log');
                 }
             } else {
-                msg.innerText = "Incorrect PIN / Credentials";
+                msg.innerText = res.message || "Incorrect PIN / Credentials";
                 msg.style.color = "var(--accent-red)";
                 document.getElementById("login-password").value = "";
             }
@@ -616,12 +701,17 @@
         function logout() {
             currentUser = ""; currentFirstName = ""; currentRole = ""; logsData = [];
             localStorage.removeItem("tt_logs");
+            localStorage.removeItem("tt_current_user");
+            localStorage.removeItem("tt_current_name");
+            localStorage.removeItem("tt_current_role");
+
             document.getElementById("dashboard-section").classList.add("hidden");
             document.getElementById("app-bottom-nav").classList.add("hidden");
             document.getElementById("user-controls").classList.add("hidden");
             document.getElementById("auth-section").classList.remove("hidden");
             document.getElementById("login-password").value = "";
             document.getElementById("auth-msg").innerText = "";
+            fetchUserListForDropdown();
         }
 
         function resetForm() {
@@ -635,6 +725,7 @@
             document.getElementById("entry-status").value = "Present";
             document.getElementById("entry-in").value = "";
             document.getElementById("entry-out").value = "";
+            document.getElementById("btn-submit-log").innerText = "Save Entry";
             handleStatusChange();
         }
 
@@ -686,7 +777,7 @@
                 const [inH, inM] = inTime.split(':').map(Number);
                 const [outH, outM] = outTime.split(':').map(Number);
                 let diffMins = (outH * 60 + outM) - (inH * 60 + inM);
-                if (diffMins < 0) diffMins += 24 * 60; // Overnight shift wrap
+                if (diffMins < 0) diffMins += 24 * 60; 
                 hours = (diffMins / 60).toFixed(2);
             }
 
@@ -704,13 +795,15 @@
             }
             
             localStorage.setItem("tt_logs", JSON.stringify(logsData));
-            msg.innerText = "Saved successfully!";
+            
+            // Dynamic Success message
+            msg.innerText = logId ? "Updated successfully!" : "Saved successfully!";
             msg.style.color = "var(--accent-green)";
 
             setTimeout(() => {
                 msg.innerText = "";
                 if (currentRole === "Admin") switchTab('admin'); else resetForm();
-            }, 600);
+            }, 800);
 
             let payload;
             if (logId) {
@@ -770,8 +863,7 @@
 
         function editRecord(log) {
             switchTab('log');
-            document.getElementById("form-title").innerText = `Editing: ${log.username}`;
-            document.getElementById("quick-actions-panel").classList.add("hidden");
+            document.getElementById("form-title").innerText = `Update Entry: ${formatDateDDMonYY(log.date)}`;
             document.getElementById("entry-id").value = log.logId;
             document.getElementById("entry-username").value = log.username;
             document.getElementById("entry-from-date").value = cleanDateString(log.date);
@@ -780,6 +872,8 @@
             
             document.getElementById("entry-in").value = log.inTime ? convertTo24Hour(log.inTime) : "";
             document.getElementById("entry-out").value = log.outTime ? convertTo24Hour(log.outTime) : "";
+            
+            document.getElementById("btn-submit-log").innerText = "Update Entry";
             handleStatusChange();
         }
 
