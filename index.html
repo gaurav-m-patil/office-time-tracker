@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#4f46e5" id="theme-color-meta">
     
-    <link rel="manifest" href="manifest.json?v=21.0">
+    <link rel="manifest" href="manifest.json?v=22.0">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2083/2083214.png">
     
     <title>Enterprise Time Tracker</title>
@@ -420,7 +420,7 @@
             setupSwipeGestures();
         };
 
-        // SWIPE GESTURE SETUP FOR MOBILE
+        // SMART SWIPE GESTURES
         function setupSwipeGestures() {
             const mainContent = document.getElementById('scroll-content');
             let startX = 0, startY = 0;
@@ -434,16 +434,22 @@
                 let endX = e.changedTouches[0].screenX;
                 let endY = e.changedTouches[0].screenY;
                 
-                // Ignore swipe if mostly vertical (scrolling)
                 if (Math.abs(endY - startY) > Math.abs(endX - startX)) return;
-                
-                // Ignore small unintentional horizontal swipes
                 if (Math.abs(endX - startX) < 60) return;
                 
-                // Ignore swipe if initiated inside a horizontal table to allow table scrolling
-                if (e.target.closest('.table-container')) return;
+                // Allow history table to scroll horizontally without switching tabs 
+                const table = e.target.closest('.table-container');
+                if (table && table.scrollWidth > table.clientWidth) {
+                    const isSwipingLeft = startX > endX;
+                    const isSwipingRight = startX < endX;
+                    const isAtLeftEdge = table.scrollLeft <= 0;
+                    const isAtRightEdge = Math.ceil(table.scrollLeft + table.clientWidth) >= table.scrollWidth;
+
+                    // If they are swiping but the table still has room to scroll in that direction, abort tab switch.
+                    if (isSwipingLeft && !isAtRightEdge) return;
+                    if (isSwipingRight && !isAtLeftEdge) return;
+                }
                 
-                // Skip if not logged in
                 if (document.getElementById("dashboard-section").classList.contains("hidden")) return;
 
                 const tabs = currentRole === "Admin" ? ['log', 'admin'] : ['log', 'history', 'insights'];
@@ -456,10 +462,10 @@
                 let currentIndex = tabs.indexOf(currentTab);
                 if (currentIndex === -1) return; 
 
-                if (endX < startX && currentIndex < tabs.length - 1) {
-                    switchTab(tabs[currentIndex + 1]); // Swiped Left
-                } else if (endX > startX && currentIndex > 0) {
-                    switchTab(tabs[currentIndex - 1]); // Swiped Right
+                if (startX > endX && currentIndex < tabs.length - 1) {
+                    switchTab(tabs[currentIndex + 1]); 
+                } else if (startX < endX && currentIndex > 0) {
+                    switchTab(tabs[currentIndex - 1]); 
                 }
             }, {passive: true});
         }
@@ -584,8 +590,7 @@
             document.getElementById(`tab-${tabId}`).classList.remove("hidden");
             document.getElementById(`nav-${tabId}`).classList.add("active");
 
-            // INSTANT SWITCH LOGIC: Always resets form when switching to Record tab so user gets a fresh form
-            if (tabId === 'log') resetForm();
+            if (tabId === 'log') resetForm(); // Ensures a clean form when switching back to the Record tab
 
             if (tabId === 'history' || tabId === 'insights' || tabId === 'admin') {
                 if (currentRole === "Admin") renderAdminTable();
@@ -759,7 +764,7 @@
 
         function resetForm() {
             document.getElementById("form-title").innerText = "Record Attendance";
-            document.getElementById("quick-actions-panel").classList.remove("hidden");
+            document.getElementById("quick-actions-panel").classList.remove("hidden"); // Allows shortcuts to be visible again
             document.getElementById("quick-date-display").innerText = getReadableTodayStr();
             document.getElementById("entry-id").value = "";
             document.getElementById("entry-username").value = currentUser;
@@ -915,7 +920,9 @@
             switchTab('log'); 
             
             document.getElementById("form-title").innerText = `Update Entry: ${formatDateDDMonYY(log.date)}`;
-            document.getElementById("quick-actions-panel").classList.add("hidden");
+            
+            // NOTE: The quick actions panel hiding constraint has been removed as requested
+            
             document.getElementById("entry-id").value = log.logId;
             document.getElementById("entry-username").value = log.username;
             document.getElementById("entry-from-date").value = cleanDateString(log.date);
