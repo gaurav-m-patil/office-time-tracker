@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#4f46e5" id="theme-color-meta">
     
-    <link rel="manifest" href="manifest.json?v=19.0">
+    <link rel="manifest" href="manifest.json?v=21.0">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2083/2083214.png">
     
     <title>Enterprise Time Tracker</title>
@@ -63,7 +63,6 @@
         .topbar h1 { margin: 0; font-size: 18px; font-weight: 700; color: var(--primary); letter-spacing: -0.5px; }
         .topbar-right { display: flex; align-items: center; gap: 8px; }
         
-        /* Sync Spinner Animation */
         @keyframes spin { 100% { transform: rotate(360deg); } }
         .spinning { animation: spin 1s linear infinite; color: var(--primary); }
         
@@ -75,7 +74,7 @@
         }
         .icon-btn:hover { background: var(--border); }
 
-        .main-content { flex: 1; overflow-y: auto; padding: 12px; padding-bottom: 90px; width: 100%; }
+        .main-content { flex: 1; overflow-y: auto; padding: 12px; padding-bottom: 90px; width: 100%; transition: transform 0.2s ease-in-out; }
         
         .container {
             background: var(--surface); padding: 16px; border-radius: 16px;
@@ -117,7 +116,6 @@
         .quick-actions-title { font-size: 12px; font-weight: 700; color: var(--text-light); text-transform: uppercase; }
         .quick-actions-date { font-size: 12px; font-weight: 600; color: var(--primary); }
         
-        /* Auto-adjusting flex grid for remaining 5 buttons */
         .quick-buttons-5 { display: flex; flex-wrap: wrap; gap: 8px; width: 100%; }
         .quick-buttons-5 > button { flex: 1 1 calc(33.333% - 8px); min-height: 42px; }
         
@@ -189,7 +187,6 @@
     <div class="topbar">
         <h1>TimeTracker</h1>
         <div class="topbar-right">
-            <!-- Sync Indicator added here -->
             <div id="sync-indicator" class="hidden" style="display:flex; align-items:center; margin-right:4px;">
                 <i class="material-icons-round spinning" style="font-size: 20px;">sync</i>
             </div>
@@ -203,9 +200,8 @@
         </div>
     </div>
 
-    <div class="main-content">
+    <div class="main-content" id="scroll-content">
         
-        <!-- Auth Section -->
         <div id="auth-section" class="container" style="max-width: 400px; margin-top: 5vh;">
             <div id="login-form-div">
                 <h2 style="text-align: center; margin-bottom: 20px;">Welcome Back</h2>
@@ -249,10 +245,8 @@
             <div id="auth-msg" class="status-msg"></div>
         </div>
 
-        <!-- Dashboard Section -->
         <div id="dashboard-section" class="container hidden">
             
-            <!-- Tab 1: Record Entry / Update -->
             <div id="tab-log">
                 <h3 id="form-title" style="margin-bottom: 12px; font-size:16px;">Record Attendance</h3>
                 <input type="hidden" id="entry-id">
@@ -277,7 +271,6 @@
                     </div>
                 </div>
                 
-                <!-- Inline In/Out Field and Button Layout -->
                 <div class="form-row">
                     <div class="form-group" style="width: 100%;">
                         <label>In Time</label>
@@ -302,7 +295,6 @@
                         <span class="quick-actions-title">⚡ Quick Shortcuts</span>
                         <span class="quick-actions-date" id="quick-date-display">--</span>
                     </div>
-                    <!-- Dynamically sized 5 buttons -->
                     <div class="quick-buttons-5">
                         <button class="btn-quick bg-amber" onclick="quickAction('leave')">Leave</button>
                         <button class="btn-quick bg-purple" onclick="quickAction('exception')">Exception</button>
@@ -316,7 +308,6 @@
                 <div id="log-msg" class="status-msg"></div>
             </div>
 
-            <!-- Tab 2: User History -->
             <div id="tab-history" class="hidden">
                 <h3 style="margin-bottom: 5px;">My History</h3>
                 <div class="table-container">
@@ -329,14 +320,12 @@
                 </div>
             </div>
 
-            <!-- Tab 3: Insights -->
             <div id="tab-insights" class="hidden">
                 <h3 style="margin-bottom: 5px;">Financial Year Analytics</h3>
                 <p style="font-size: 11px; color: var(--text-light); margin-top: 0; margin-bottom: 15px;">*Attendance % calculated over net working days (excluding weekends & holidays).</p>
                 <div id="insights-container"></div>
             </div>
 
-            <!-- Tab 4: Admin Panel -->
             <div id="tab-admin" class="hidden">
                 <h3 style="margin-bottom: 5px;">Organization Records</h3>
                 <div class="table-container">
@@ -376,7 +365,7 @@
         let cachedUsersList = null;
         let isAdminLoginMode = false;
         let isLoggingIn = false; 
-        let activeSyncs = 0; // Tracks active background calls for the spinner
+        let activeSyncs = 0; 
 
         window.onload = () => {
             const savedUser = localStorage.getItem("tt_current_user");
@@ -394,6 +383,11 @@
                 document.getElementById("app-bottom-nav").classList.remove("hidden");
                 document.getElementById("display-firstname").innerText = currentFirstName;
 
+                const localLogs = localStorage.getItem("tt_logs");
+                if (localLogs) {
+                    try { logsData = JSON.parse(localLogs); } catch(e) {}
+                }
+
                 if(currentRole === "Admin") {
                     document.getElementById("nav-history").classList.add("hidden");
                     document.getElementById("nav-insights").classList.add("hidden");
@@ -406,6 +400,8 @@
                     resetForm();
                     switchTab('log');
                 }
+                
+                fetchData(true); 
             } else {
                 const localUsers = localStorage.getItem("tt_users");
                 if (localUsers) {
@@ -417,17 +413,56 @@
                 fetchUserListForDropdown();
             }
 
-            const localLogs = localStorage.getItem("tt_logs");
-            if (localLogs) {
-                try {
-                    logsData = JSON.parse(localLogs);
-                } catch(e) {}
-            }
-
             if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
                 toggleDarkMode(true);
             }
+            
+            setupSwipeGestures();
         };
+
+        // SWIPE GESTURE SETUP FOR MOBILE
+        function setupSwipeGestures() {
+            const mainContent = document.getElementById('scroll-content');
+            let startX = 0, startY = 0;
+
+            mainContent.addEventListener('touchstart', e => {
+                startX = e.changedTouches[0].screenX;
+                startY = e.changedTouches[0].screenY;
+            }, {passive: true});
+
+            mainContent.addEventListener('touchend', e => {
+                let endX = e.changedTouches[0].screenX;
+                let endY = e.changedTouches[0].screenY;
+                
+                // Ignore swipe if mostly vertical (scrolling)
+                if (Math.abs(endY - startY) > Math.abs(endX - startX)) return;
+                
+                // Ignore small unintentional horizontal swipes
+                if (Math.abs(endX - startX) < 60) return;
+                
+                // Ignore swipe if initiated inside a horizontal table to allow table scrolling
+                if (e.target.closest('.table-container')) return;
+                
+                // Skip if not logged in
+                if (document.getElementById("dashboard-section").classList.contains("hidden")) return;
+
+                const tabs = currentRole === "Admin" ? ['log', 'admin'] : ['log', 'history', 'insights'];
+                
+                let currentTab = 'log';
+                document.querySelectorAll(".nav-item.active").forEach(el => {
+                    currentTab = el.id.replace('nav-', '');
+                });
+                
+                let currentIndex = tabs.indexOf(currentTab);
+                if (currentIndex === -1) return; 
+
+                if (endX < startX && currentIndex < tabs.length - 1) {
+                    switchTab(tabs[currentIndex + 1]); // Swiped Left
+                } else if (endX > startX && currentIndex > 0) {
+                    switchTab(tabs[currentIndex - 1]); // Swiped Right
+                }
+            }, {passive: true});
+        }
 
         function hardRefresh() {
             localStorage.clear();
@@ -549,12 +584,13 @@
             document.getElementById(`tab-${tabId}`).classList.remove("hidden");
             document.getElementById(`nav-${tabId}`).classList.add("active");
 
+            // INSTANT SWITCH LOGIC: Always resets form when switching to Record tab so user gets a fresh form
+            if (tabId === 'log') resetForm();
+
             if (tabId === 'history' || tabId === 'insights' || tabId === 'admin') {
                 if (currentRole === "Admin") renderAdminTable();
                 else { renderHistoryTable(); calculateInsights(); }
-                fetchData(true); 
             }
-            if (tabId === 'log' && !document.getElementById("entry-id").value) resetForm();
         }
 
         async function apiCall(payload, btnId) {
@@ -602,7 +638,7 @@
                 renderUserDropdown(cachedUsersList);
             } else {
                 if (!cachedUsersList) {
-                    select.innerHTML = `<option value="">Failed to connect. Tap Refresh icon</option>`;
+                    select.innerHTML = `<option value="">Network issue. Tap top-right refresh.</option>`;
                 }
             }
         }
@@ -638,8 +674,15 @@
             if(pass.length !== 4 && !isAdminLoginMode) return msg.innerText = "PIN must be 4 digits.";
 
             isLoggingIn = true;
-            const res = await apiCall({ action: "login", username: user, password: pass }, "btn-login");
+            const btn = document.getElementById("btn-login");
+            const originalText = btn.innerHTML;
+            btn.innerText = "Signing in...";
+            btn.disabled = true;
+
+            const res = await apiCall({ action: "login", username: user, password: pass }, null);
             isLoggingIn = false;
+            btn.innerHTML = originalText;
+            btn.disabled = false;
             
             if (res.success) {
                 currentUser = user;
@@ -656,8 +699,6 @@
                 document.getElementById("app-bottom-nav").classList.remove("hidden");
                 document.getElementById("display-firstname").innerText = currentFirstName;
 
-                fetchData(false);
-
                 if(currentRole === "Admin") {
                     document.getElementById("nav-history").classList.add("hidden");
                     document.getElementById("nav-insights").classList.add("hidden");
@@ -670,6 +711,8 @@
                     resetForm();
                     switchTab('log');
                 }
+                
+                fetchData(true);
             } else {
                 msg.innerText = res.message || "Incorrect PIN / Credentials";
                 msg.style.color = "var(--accent-red)";
@@ -796,14 +839,21 @@
             
             localStorage.setItem("tt_logs", JSON.stringify(logsData));
             
-            // Dynamic Success message
             msg.innerText = logId ? "Updated successfully!" : "Saved successfully!";
             msg.style.color = "var(--accent-green)";
 
             setTimeout(() => {
                 msg.innerText = "";
-                if (currentRole === "Admin") switchTab('admin'); else resetForm();
-            }, 800);
+                if (currentRole === "Admin") {
+                    renderAdminTable(); 
+                    switchTab('admin'); 
+                } else {
+                    renderHistoryTable(); 
+                    calculateInsights(); 
+                    resetForm();
+                    switchTab('history'); 
+                }
+            }, 600);
 
             let payload;
             if (logId) {
@@ -825,10 +875,10 @@
             if (res && res.success) {
                 logsData = res.logs.sort((a, b) => new Date(b.date) - new Date(a.date));
                 localStorage.setItem("tt_logs", JSON.stringify(logsData));
-                if (!silent) {
-                    if (currentRole === "Admin") renderAdminTable();
-                    else { renderHistoryTable(); calculateInsights(); }
-                }
+                
+                if (document.getElementById('nav-history').classList.contains('active')) renderHistoryTable();
+                if (document.getElementById('nav-insights').classList.contains('active')) calculateInsights();
+                if (document.getElementById('nav-admin').classList.contains('active')) renderAdminTable();
             }
         }
 
@@ -862,8 +912,10 @@
         }
 
         function editRecord(log) {
-            switchTab('log');
+            switchTab('log'); 
+            
             document.getElementById("form-title").innerText = `Update Entry: ${formatDateDDMonYY(log.date)}`;
+            document.getElementById("quick-actions-panel").classList.add("hidden");
             document.getElementById("entry-id").value = log.logId;
             document.getElementById("entry-username").value = log.username;
             document.getElementById("entry-from-date").value = cleanDateString(log.date);
