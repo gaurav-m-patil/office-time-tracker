@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#4f46e5" id="theme-color-meta">
     
-    <link rel="manifest" href="manifest.json?v=22.0">
+    <link rel="manifest" href="manifest.json?v=23.0">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2083/2083214.png">
     
     <title>Enterprise Time Tracker</title>
@@ -187,8 +187,9 @@
     <div class="topbar">
         <h1>TimeTracker</h1>
         <div class="topbar-right">
+            <!-- Offline / Sync Indicator -->
             <div id="sync-indicator" class="hidden" style="display:flex; align-items:center; margin-right:4px;">
-                <i class="material-icons-round spinning" style="font-size: 20px;">sync</i>
+                <i class="material-icons-round spinning" id="sync-icon" style="font-size: 20px;">sync</i>
             </div>
             
             <button class="icon-btn" onclick="hardRefresh()" title="Developer Refresh"><i class="material-icons-round" style="font-size:18px;">refresh</i></button>
@@ -327,7 +328,10 @@
             </div>
 
             <div id="tab-admin" class="hidden">
-                <h3 style="margin-bottom: 5px;">Organization Records</h3>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                    <h3 style="margin: 0;">Organization Records</h3>
+                    <button class="action-btn" onclick="exportAdminCSV()"><i class="material-icons-round" style="font-size:14px; vertical-align:middle;">download</i> CSV</button>
+                </div>
                 <div class="table-container">
                     <table>
                         <thead>
@@ -366,13 +370,41 @@
         let isAdminLoginMode = false;
         let isLoggingIn = false; 
         let activeSyncs = 0; 
+        
+        const SESSION_EXPIRY_MS = 30 * 24 * 60 * 60 * 1000; // 30 Days
 
         window.onload = () => {
+            restrictDatesToToday();
+            checkSessionAndInitialize();
+            setupSwipeGestures();
+            setupNetworkListeners();
+            processOfflineQueue(); // Push any offline tasks stored
+            
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                toggleDarkMode(true);
+            }
+        };
+
+        function restrictDatesToToday() {
+            const today = getLocalDateStr();
+            document.getElementById("entry-from-date").max = today;
+            document.getElementById("entry-to-date").max = today;
+        }
+
+        function checkSessionAndInitialize() {
             const savedUser = localStorage.getItem("tt_current_user");
             const savedName = localStorage.getItem("tt_current_name");
             const savedRole = localStorage.getItem("tt_current_role");
+            const loginTime = localStorage.getItem("tt_login_time");
 
-            if (savedUser) {
+            // Session Expiry Check
+            if (savedUser && loginTime) {
+                const timePassed = Date.now() - parseInt(loginTime);
+                if (timePassed > SESSION_EXPIRY_MS) {
+                    logout();
+                    return;
+                }
+                
                 currentUser = savedUser;
                 currentFirstName = savedName || savedUser;
                 currentRole = savedRole || "User";
@@ -412,15 +444,52 @@
                 }
                 fetchUserListForDropdown();
             }
+        }
 
-            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                toggleDarkMode(true);
+        function setupNetworkListeners() {
+            window.addEventListener('online', () => {
+                const icon = document.getElementById("sync-icon");
+                if (icon) { icon.innerText = "cloud_done"; icon.style.color = "var(--accent-green)"; icon.classList.remove("spinning"); }
+                setTimeout(() => { document.getElementById("sync-indicator").classList.add("hidden"); }, 2000);
+                processOfflineQueue();
+            });
+            window.addEventListener('offline', () => {
+                const ind = document.getElementById("sync-indicator");
+                const icon = document.getElementById("sync-icon");
+                if (ind && icon) {
+                    ind.classList.remove("hidden");
+                    icon.innerText = "cloud_off";
+                    icon.style.color = "var(--accent-red)";
+                    icon.classList.remove("spinning");
+                }
+            });
+        }
+
+        // OFFLINE QUEUE LOGIC
+        function saveToOfflineQueue(payload) {
+            let queue = JSON.parse(localStorage.getItem("tt_offline_queue") || "[]");
+            queue.push(payload);
+            localStorage.setItem("tt_offline_queue", JSON.stringify(queue));
+        }
+
+        async function processOfflineQueue() {
+            if (!navigator.onLine) return;
+            let queue = JSON.parse(localStorage.getItem("tt_offline_queue") || "[]");
+            if (queue.length === 0) return;
+
+            let successfulReqs = [];
+            for (let i = 0; i < queue.length; i++) {
+                try {
+                    let res = await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(queue[i]) });
+                    if (res.ok) successfulReqs.push(i);
+                } catch (e) {}
             }
             
-            setupSwipeGestures();
-        };
+            queue = queue.filter((_, idx) => !successfulReqs.includes(idx));
+            localStorage.setItem("tt_offline_queue", JSON.stringify(queue));
+            if (successfulReqs.length > 0) fetchData(true); // Sync fresh data after pushing offline changes
+        }
 
-        // SMART SWIPE GESTURES
         function setupSwipeGestures() {
             const mainContent = document.getElementById('scroll-content');
             let startX = 0, startY = 0;
@@ -437,7 +506,6 @@
                 if (Math.abs(endY - startY) > Math.abs(endX - startX)) return;
                 if (Math.abs(endX - startX) < 60) return;
                 
-                // Allow history table to scroll horizontally without switching tabs 
                 const table = e.target.closest('.table-container');
                 if (table && table.scrollWidth > table.clientWidth) {
                     const isSwipingLeft = startX > endX;
@@ -445,7 +513,6 @@
                     const isAtLeftEdge = table.scrollLeft <= 0;
                     const isAtRightEdge = Math.ceil(table.scrollLeft + table.clientWidth) >= table.scrollWidth;
 
-                    // If they are swiping but the table still has room to scroll in that direction, abort tab switch.
                     if (isSwipingLeft && !isAtRightEdge) return;
                     if (isSwipingRight && !isAtLeftEdge) return;
                 }
@@ -590,7 +657,7 @@
             document.getElementById(`tab-${tabId}`).classList.remove("hidden");
             document.getElementById(`nav-${tabId}`).classList.add("active");
 
-            if (tabId === 'log') resetForm(); // Ensures a clean form when switching back to the Record tab
+            if (tabId === 'log') resetForm(); 
 
             if (tabId === 'history' || tabId === 'insights' || tabId === 'admin') {
                 if (currentRole === "Admin") renderAdminTable();
@@ -599,9 +666,21 @@
         }
 
         async function apiCall(payload, btnId) {
+            // Check offline status first
+            if (!navigator.onLine && ['logTime', 'logTimeRange', 'updateLog'].includes(payload.action)) {
+                saveToOfflineQueue(payload);
+                return { success: true, message: "Saved offline. Will sync when connected." };
+            }
+
             activeSyncs++;
             const syncIndicator = document.getElementById("sync-indicator");
-            if (syncIndicator) syncIndicator.classList.remove("hidden");
+            const syncIcon = document.getElementById("sync-icon");
+            if (syncIndicator && syncIcon) {
+                syncIndicator.classList.remove("hidden");
+                syncIcon.innerText = "sync";
+                syncIcon.style.color = "var(--primary)";
+                syncIcon.classList.add("spinning");
+            }
 
             const btn = document.getElementById(btnId);
             let originalText = "";
@@ -630,7 +709,13 @@
                 activeSyncs--;
                 if (activeSyncs <= 0 && syncIndicator) syncIndicator.classList.add("hidden");
                 
-                return { success: false, message: "Connection timeout." };
+                // If it failed because network dropped during request
+                if (['logTime', 'logTimeRange', 'updateLog'].includes(payload.action)) {
+                    saveToOfflineQueue(payload);
+                    return { success: true, message: "Saved offline. Will sync when connected." };
+                }
+
+                return { success: false, message: "Connection error." };
             }
         }
 
@@ -697,6 +782,7 @@
                 localStorage.setItem("tt_current_user", currentUser);
                 localStorage.setItem("tt_current_name", currentFirstName);
                 localStorage.setItem("tt_current_role", currentRole);
+                localStorage.setItem("tt_login_time", Date.now().toString());
 
                 document.getElementById("auth-section").classList.add("hidden");
                 document.getElementById("user-controls").classList.remove("hidden");
@@ -752,6 +838,7 @@
             localStorage.removeItem("tt_current_user");
             localStorage.removeItem("tt_current_name");
             localStorage.removeItem("tt_current_role");
+            localStorage.removeItem("tt_login_time");
 
             document.getElementById("dashboard-section").classList.add("hidden");
             document.getElementById("app-bottom-nav").classList.add("hidden");
@@ -764,7 +851,7 @@
 
         function resetForm() {
             document.getElementById("form-title").innerText = "Record Attendance";
-            document.getElementById("quick-actions-panel").classList.remove("hidden"); // Allows shortcuts to be visible again
+            document.getElementById("quick-actions-panel").classList.remove("hidden");
             document.getElementById("quick-date-display").innerText = getReadableTodayStr();
             document.getElementById("entry-id").value = "";
             document.getElementById("entry-username").value = currentUser;
@@ -814,6 +901,12 @@
             const msg = document.getElementById("log-msg");
 
             if (!fromDate) return msg.innerText = "From Date is required.";
+            
+            // Validate Date Range
+            if (toDate && new Date(toDate) < new Date(fromDate)) {
+                msg.style.color = "var(--accent-red)";
+                return msg.innerText = "To Date cannot be before From Date.";
+            }
 
             if (status === "Present" && (!inTime || !outTime)) {
                 msg.style.color = "var(--accent-red)";
@@ -835,8 +928,10 @@
             const tempLogId = logId || 'temp_' + Date.now();
             const newEntry = { logId: tempLogId, username: recordUser, date: fromDate, status, inTime: cleanInTime, outTime: cleanOutTime, hours };
             
-            const existingIdx = logsData.findIndex(l => l.logId === logId);
+            // Upsert Locally instantly
+            const existingIdx = logsData.findIndex(l => l.logId === logId || (l.date === fromDate && l.username === recordUser));
             if (existingIdx >= 0) {
+                newEntry.logId = logsData[existingIdx].logId; // Maintain real ID if updating locally
                 logsData[existingIdx] = newEntry;
             } else {
                 logsData.unshift(newEntry);
@@ -921,8 +1016,6 @@
             
             document.getElementById("form-title").innerText = `Update Entry: ${formatDateDDMonYY(log.date)}`;
             
-            // NOTE: The quick actions panel hiding constraint has been removed as requested
-            
             document.getElementById("entry-id").value = log.logId;
             document.getElementById("entry-username").value = log.username;
             document.getElementById("entry-from-date").value = cleanDateString(log.date);
@@ -948,6 +1041,22 @@
             if (ampm === 'PM' && h < 12) h += 12;
             if (ampm === 'AM' && h === 12) h = 0;
             return `${String(h).padStart(2, '0')}:${m}`;
+        }
+
+        // CSV EXPORT FOR ADMIN
+        function exportAdminCSV() {
+            let csv = "User,Date,Status,In,Out,Duration (Formatted),Duration (Decimal)\n";
+            logsData.forEach(l => {
+                csv += `${l.username},${l.date},${l.status},${l.inTime || ''},${l.outTime || ''},${formatDurationDisplay(l.hours)},${l.hours || ''}\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `TimeTracker_Export_${getLocalDateStr()}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
         }
 
         function calculateInsights() {
