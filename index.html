@@ -7,8 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#4f46e5" id="theme-color-meta">
     
-    <link rel="manifest" href="manifest.json?v=24.0">
-    <!-- Updated Icon -->
+    <link rel="manifest" href="manifest.json?v=25.0">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3135/3135695.png">
     
     <title>Enterprise Time Tracker</title>
@@ -54,6 +53,7 @@
             height: 100vh;
             display: flex; flex-direction: column;
             overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .topbar {
@@ -139,7 +139,6 @@
         th { background: var(--secondary); padding: 12px; font-weight: 700; color: var(--text-light); border-bottom: 1px solid var(--border); }
         td { padding: 12px; border-bottom: 1px solid var(--border); color: var(--text-dark); white-space: nowrap; }
         .action-btn { background: var(--secondary); color: var(--primary); border: 1px solid var(--border); padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
-        /* Style for the new delete button */
         .btn-delete { color: var(--accent-red); background: rgba(220, 38, 38, 0.1); border-color: rgba(220, 38, 38, 0.2); }
 
         .quarter-block {
@@ -152,6 +151,10 @@
         .months-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
         .month-circle-card {
             background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 4px; text-align: center; display: flex; flex-direction: column; align-items: center;
+            position: relative; 
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
         }
         .month-name { font-size: 10px; font-weight: 700; color: var(--text-light); margin-bottom: 6px; text-transform: uppercase; }
         .circle-progress {
@@ -163,6 +166,56 @@
         }
         .circle-value { position: relative; font-size: 10px; font-weight: 800; color: var(--text-dark); }
         .month-avg-hours { font-size: 10px; font-weight: 700; color: var(--text-light); margin-top: 6px; text-align: center; width: 100%; }
+
+        /* Floating Tooltip CSS */
+        .month-tooltip {
+            position: absolute;
+            bottom: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%) translateY(10px) scale(0.95);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+            border-radius: 12px;
+            padding: 12px 14px;
+            width: max-content;
+            min-width: 140px;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s cubic-bezier(0.25, 1.2, 0.5, 1);
+            pointer-events: none;
+        }
+        body.dark-mode .month-tooltip { box-shadow: 0 12px 30px rgba(0,0,0,0.6); }
+        .month-tooltip.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0) scale(1);
+        }
+        /* Triangle Pointer */
+        .month-tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -6px;
+            border-width: 6px;
+            border-style: solid;
+            border-color: var(--surface) transparent transparent transparent;
+        }
+        /* Perfectly aligned row structure */
+        .tooltip-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+        }
+        .tooltip-row:last-child { margin-bottom: 0; }
+        .tooltip-label { display: flex; align-items: center; gap: 8px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .tooltip-val { font-weight: 800; font-size: 12px; font-variant-numeric: tabular-nums; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
 
         .status-msg { margin-top: 10px; text-align: center; font-weight: 600; font-size: 14px; min-height: 20px; }
 
@@ -325,7 +378,7 @@
 
             <div id="tab-insights" class="hidden">
                 <h3 style="margin-bottom: 5px;">Financial Year Analytics</h3>
-                <p style="font-size: 11px; color: var(--text-light); margin-top: 0; margin-bottom: 15px;">*Attendance % calculated over net working days (excluding weekends & holidays).</p>
+                <p style="font-size: 11px; color: var(--text-light); margin-top: 0; margin-bottom: 15px;">*Attendance % calculated over net working days. Press & Hold a month to view breakdown.</p>
                 <div id="insights-container"></div>
             </div>
 
@@ -376,7 +429,6 @@
         const SESSION_EXPIRY_MS = 30 * 24 * 60 * 60 * 1000; 
 
         window.onload = () => {
-            // Register Service Worker for True Offline Experience
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.register('./sw.js').then(() => {
                     console.log('Offline Support Ready');
@@ -393,6 +445,25 @@
                 toggleDarkMode(true);
             }
         };
+
+        // Tooltip Event Handlers
+        let tooltipTimer;
+        function showTooltip(el, e) {
+            clearTimeout(tooltipTimer);
+            tooltipTimer = setTimeout(() => {
+                const tt = el.querySelector('.month-tooltip');
+                if (tt) {
+                    tt.classList.add('show');
+                    if (navigator.vibrate) navigator.vibrate(40);
+                }
+            }, 250); 
+        }
+
+        function hideTooltip(el) {
+            clearTimeout(tooltipTimer);
+            const tt = el.querySelector('.month-tooltip');
+            if (tt) tt.classList.remove('show');
+        }
 
         function restrictDatesToToday() {
             const today = getLocalDateStr();
@@ -971,11 +1042,9 @@
             });
         }
 
-        // DELETE RECORD LOGIC
         async function deleteRecord(logId) {
             if (!confirm("Are you sure you want to permanently delete this record? This action cannot be undone.")) return;
             
-            // Instantly remove from local array for "Lightning Fast" feel
             logsData = logsData.filter(l => l.logId !== logId);
             localStorage.setItem("tt_logs", JSON.stringify(logsData));
             
@@ -1130,8 +1199,18 @@
                     let attendedDays = 0;
                     let monthHours = 0;
                     let monthHoursDivisor = 0;
+                    
+                    // Monthly Breakdown Variables
+                    let countPresent = 0, countLeave = 0, countException = 0, countNoShow = 0, countOff = 0;
 
                     logsInMonth.forEach(l => {
+                        // Tally individual statuses for the popup
+                        if (l.status === "Present") countPresent++;
+                        else if (l.status === "Leave") countLeave++;
+                        else if (l.status === "Exception") countException++;
+                        else if (l.status === "No Show") countNoShow++;
+                        else if (l.status === "Weekend" || l.status === "Holiday") countOff++;
+
                         if (l.status !== "Weekend" && l.status !== "Holiday") {
                             validWorkDays++; 
                             
@@ -1163,7 +1242,12 @@
                         name: monthNames[mIdx],
                         pct: pct,
                         avgHrs: monthAvgFormatted,
-                        hasData: logsInMonth.length > 0
+                        hasData: logsInMonth.length > 0,
+                        present: countPresent,
+                        leave: countLeave,
+                        exception: countException,
+                        noshow: countNoShow,
+                        off: countOff
                     });
                 });
 
@@ -1175,6 +1259,8 @@
 
                 let block = document.createElement("div");
                 block.className = "quarter-block";
+                
+                // Construct the HTML for the months, injecting the dynamic tooltips
                 block.innerHTML = `
                     <div class="quarter-header">
                         <span class="quarter-title">${q.name} (${currentFYStartYear}-${String(currentFYStartYear+1).substring(2)})</span>
@@ -1182,12 +1268,24 @@
                     </div>
                     <div class="months-grid">
                         ${qMonthsData.map(m => `
-                            <div class="month-circle-card">
+                            <div class="month-circle-card" 
+                                 onmousedown="showTooltip(this, event)" onmouseup="hideTooltip(this)" onmouseleave="hideTooltip(this)"
+                                 ontouchstart="showTooltip(this, event)" ontouchend="hideTooltip(this)" ontouchcancel="hideTooltip(this)" ontouchmove="hideTooltip(this)">
                                 <div class="month-name">${m.name}</div>
                                 <div class="circle-progress" style="--pct: ${m.hasData ? m.pct : 0};">
                                     <div class="circle-value">${m.hasData ? m.pct + '%' : 'N/A'}</div>
                                 </div>
                                 <div class="month-avg-hours">${m.hasData ? m.avgHrs : '-'}</div>
+                                
+                                ${m.hasData ? `
+                                <div class="month-tooltip">
+                                    <div class="tooltip-row"><span class="tooltip-label"><span class="dot bg-green"></span>Present</span> <span class="tooltip-val">${m.present}</span></div>
+                                    <div class="tooltip-row"><span class="tooltip-label"><span class="dot bg-amber"></span>Leave</span> <span class="tooltip-val">${m.leave}</span></div>
+                                    <div class="tooltip-row"><span class="tooltip-label"><span class="dot bg-purple"></span>Exception</span> <span class="tooltip-val">${m.exception}</span></div>
+                                    <div class="tooltip-row"><span class="tooltip-label"><span class="dot bg-red"></span>No Show</span> <span class="tooltip-val">${m.noshow}</span></div>
+                                    <div class="tooltip-row"><span class="tooltip-label"><span class="dot bg-blue"></span>Off Days</span> <span class="tooltip-val">${m.off}</span></div>
+                                </div>
+                                ` : ''}
                             </div>
                         `).join('')}
                     </div>
