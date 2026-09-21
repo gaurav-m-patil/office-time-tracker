@@ -7,8 +7,9 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#4f46e5" id="theme-color-meta">
     
-    <link rel="manifest" href="manifest.json?v=23.0">
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2083/2083214.png">
+    <link rel="manifest" href="manifest.json?v=24.0">
+    <!-- Updated Icon -->
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3135/3135695.png">
     
     <title>Enterprise Time Tracker</title>
     
@@ -138,6 +139,8 @@
         th { background: var(--secondary); padding: 12px; font-weight: 700; color: var(--text-light); border-bottom: 1px solid var(--border); }
         td { padding: 12px; border-bottom: 1px solid var(--border); color: var(--text-dark); white-space: nowrap; }
         .action-btn { background: var(--secondary); color: var(--primary); border: 1px solid var(--border); padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
+        /* Style for the new delete button */
+        .btn-delete { color: var(--accent-red); background: rgba(220, 38, 38, 0.1); border-color: rgba(220, 38, 38, 0.2); }
 
         .quarter-block {
             background: var(--secondary); border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin-bottom: 20px; width: 100%;
@@ -187,7 +190,6 @@
     <div class="topbar">
         <h1>TimeTracker</h1>
         <div class="topbar-right">
-            <!-- Offline / Sync Indicator -->
             <div id="sync-indicator" class="hidden" style="display:flex; align-items:center; margin-right:4px;">
                 <i class="material-icons-round spinning" id="sync-icon" style="font-size: 20px;">sync</i>
             </div>
@@ -371,14 +373,21 @@
         let isLoggingIn = false; 
         let activeSyncs = 0; 
         
-        const SESSION_EXPIRY_MS = 30 * 24 * 60 * 60 * 1000; // 30 Days
+        const SESSION_EXPIRY_MS = 30 * 24 * 60 * 60 * 1000; 
 
         window.onload = () => {
+            // Register Service Worker for True Offline Experience
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('./sw.js').then(() => {
+                    console.log('Offline Support Ready');
+                });
+            }
+
             restrictDatesToToday();
             checkSessionAndInitialize();
             setupSwipeGestures();
             setupNetworkListeners();
-            processOfflineQueue(); // Push any offline tasks stored
+            processOfflineQueue(); 
             
             if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
                 toggleDarkMode(true);
@@ -397,7 +406,6 @@
             const savedRole = localStorage.getItem("tt_current_role");
             const loginTime = localStorage.getItem("tt_login_time");
 
-            // Session Expiry Check
             if (savedUser && loginTime) {
                 const timePassed = Date.now() - parseInt(loginTime);
                 if (timePassed > SESSION_EXPIRY_MS) {
@@ -465,7 +473,6 @@
             });
         }
 
-        // OFFLINE QUEUE LOGIC
         function saveToOfflineQueue(payload) {
             let queue = JSON.parse(localStorage.getItem("tt_offline_queue") || "[]");
             queue.push(payload);
@@ -487,7 +494,7 @@
             
             queue = queue.filter((_, idx) => !successfulReqs.includes(idx));
             localStorage.setItem("tt_offline_queue", JSON.stringify(queue));
-            if (successfulReqs.length > 0) fetchData(true); // Sync fresh data after pushing offline changes
+            if (successfulReqs.length > 0) fetchData(true);
         }
 
         function setupSwipeGestures() {
@@ -666,8 +673,7 @@
         }
 
         async function apiCall(payload, btnId) {
-            // Check offline status first
-            if (!navigator.onLine && ['logTime', 'logTimeRange', 'updateLog'].includes(payload.action)) {
+            if (!navigator.onLine && ['logTime', 'logTimeRange', 'updateLog', 'deleteLog'].includes(payload.action)) {
                 saveToOfflineQueue(payload);
                 return { success: true, message: "Saved offline. Will sync when connected." };
             }
@@ -709,12 +715,10 @@
                 activeSyncs--;
                 if (activeSyncs <= 0 && syncIndicator) syncIndicator.classList.add("hidden");
                 
-                // If it failed because network dropped during request
-                if (['logTime', 'logTimeRange', 'updateLog'].includes(payload.action)) {
+                if (['logTime', 'logTimeRange', 'updateLog', 'deleteLog'].includes(payload.action)) {
                     saveToOfflineQueue(payload);
                     return { success: true, message: "Saved offline. Will sync when connected." };
                 }
-
                 return { success: false, message: "Connection error." };
             }
         }
@@ -902,7 +906,6 @@
 
             if (!fromDate) return msg.innerText = "From Date is required.";
             
-            // Validate Date Range
             if (toDate && new Date(toDate) < new Date(fromDate)) {
                 msg.style.color = "var(--accent-red)";
                 return msg.innerText = "To Date cannot be before From Date.";
@@ -928,10 +931,9 @@
             const tempLogId = logId || 'temp_' + Date.now();
             const newEntry = { logId: tempLogId, username: recordUser, date: fromDate, status, inTime: cleanInTime, outTime: cleanOutTime, hours };
             
-            // Upsert Locally instantly
             const existingIdx = logsData.findIndex(l => l.logId === logId || (l.date === fromDate && l.username === recordUser));
             if (existingIdx >= 0) {
-                newEntry.logId = logsData[existingIdx].logId; // Maintain real ID if updating locally
+                newEntry.logId = logsData[existingIdx].logId; 
                 logsData[existingIdx] = newEntry;
             } else {
                 logsData.unshift(newEntry);
@@ -969,6 +971,24 @@
             });
         }
 
+        // DELETE RECORD LOGIC
+        async function deleteRecord(logId) {
+            if (!confirm("Are you sure you want to permanently delete this record? This action cannot be undone.")) return;
+            
+            // Instantly remove from local array for "Lightning Fast" feel
+            logsData = logsData.filter(l => l.logId !== logId);
+            localStorage.setItem("tt_logs", JSON.stringify(logsData));
+            
+            if (currentRole === "Admin") renderAdminTable();
+            else { renderHistoryTable(); calculateInsights(); }
+            
+            const payload = { action: "deleteLog", logId: logId };
+            
+            apiCall(payload, null).then(res => {
+                if (res && res.success) fetchData(true); 
+            });
+        }
+
         async function fetchData(silent = false) {
             const action = currentRole === "Admin" ? "getAllData" : "getUserData";
             const res = await apiCall({ action: action, username: currentUser }, null);
@@ -991,7 +1011,12 @@
                     <td>${log.inTime ? formatTimeDisplay(log.inTime) : '-'}</td>
                     <td>${log.outTime ? formatTimeDisplay(log.outTime) : '-'}</td>
                     <td><strong>${formatDurationDisplay(log.hours)}</strong></td>
-                    <td><button class="action-btn" onclick='editRecord(${JSON.stringify(log).replace(/'/g, "&#39;")})'><i class="material-icons-round" style="font-size:14px;">edit</i></button></td>
+                    <td>
+                        <div style="display:flex; gap:4px;">
+                            <button class="action-btn" onclick='editRecord(${JSON.stringify(log).replace(/'/g, "&#39;")})' title="Edit"><i class="material-icons-round" style="font-size:14px;">edit</i></button>
+                            <button class="action-btn btn-delete" onclick='deleteRecord("${log.logId}")' title="Delete"><i class="material-icons-round" style="font-size:14px;">delete</i></button>
+                        </div>
+                    </td>
                 </tr>
             `).join('');
         }
@@ -1006,7 +1031,12 @@
                     <td>${log.inTime ? formatTimeDisplay(log.inTime) : '-'}</td>
                     <td>${log.outTime ? formatTimeDisplay(log.outTime) : '-'}</td>
                     <td><strong>${formatDurationDisplay(log.hours)}</strong></td>
-                    <td><button class="action-btn" onclick='editRecord(${JSON.stringify(log).replace(/'/g, "&#39;")})'><i class="material-icons-round" style="font-size:14px;">edit</i></button></td>
+                    <td>
+                        <div style="display:flex; gap:4px;">
+                            <button class="action-btn" onclick='editRecord(${JSON.stringify(log).replace(/'/g, "&#39;")})' title="Edit"><i class="material-icons-round" style="font-size:14px;">edit</i></button>
+                            <button class="action-btn btn-delete" onclick='deleteRecord("${log.logId}")' title="Delete"><i class="material-icons-round" style="font-size:14px;">delete</i></button>
+                        </div>
+                    </td>
                 </tr>
             `).join('');
         }
@@ -1043,7 +1073,6 @@
             return `${String(h).padStart(2, '0')}:${m}`;
         }
 
-        // CSV EXPORT FOR ADMIN
         function exportAdminCSV() {
             let csv = "User,Date,Status,In,Out,Duration (Formatted),Duration (Decimal)\n";
             logsData.forEach(l => {
