@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#4f46e5" id="theme-color-meta">
     
-    <link rel="manifest" href="manifest.json?v=25.0">
+    <link rel="manifest" href="manifest.json?v=26.0">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3135/3135695.png">
     
     <title>Enterprise Time Tracker</title>
@@ -949,6 +949,7 @@
         }
 
         function quickAction(type) {
+            // FIX: Only alter Status and In/Out Times. Do not overwrite user's selected dates.
             if (type === 'in') { document.getElementById("entry-status").value = "Present"; document.getElementById("entry-in").value = getCurrentTimeStr(); }
             else if (type === 'out') { document.getElementById("entry-status").value = "Present"; document.getElementById("entry-out").value = getCurrentTimeStr(); }
             else if (type === 'leave') { document.getElementById("entry-status").value = "Leave"; }
@@ -993,15 +994,40 @@
             const cleanInTime = formatTimeDisplay(inTime);
             const cleanOutTime = formatTimeDisplay(outTime);
 
-            const tempLogId = logId || 'temp_' + Date.now();
-            const newEntry = { logId: tempLogId, username: recordUser, date: fromDate, status, inTime: cleanInTime, outTime: cleanOutTime, hours };
-            
-            const existingIdx = logsData.findIndex(l => l.logId === logId || (l.date === fromDate && l.username === recordUser));
-            if (existingIdx >= 0) {
-                newEntry.logId = logsData[existingIdx].logId; 
-                logsData[existingIdx] = newEntry;
+            const isRange = toDate && toDate !== fromDate;
+
+            // Upsert Locally Instantly
+            if (isRange) {
+                let curr = new Date(fromDate);
+                let endD = new Date(toDate);
+                while (curr <= endD) {
+                    let y = curr.getFullYear();
+                    let m = String(curr.getMonth() + 1).padStart(2, '0');
+                    let d = String(curr.getDate()).padStart(2, '0');
+                    let loopDate = `${y}-${m}-${d}`;
+
+                    const existingIdx = logsData.findIndex(l => l.date === loopDate && l.username === recordUser);
+                    let tempLogId = existingIdx >= 0 ? logsData[existingIdx].logId : 'temp_' + Date.now() + Math.random();
+                    const newEntry = { logId: tempLogId, username: recordUser, date: loopDate, status, inTime: cleanInTime, outTime: cleanOutTime, hours };
+                    
+                    if (existingIdx >= 0) {
+                        logsData[existingIdx] = newEntry;
+                    } else {
+                        logsData.unshift(newEntry);
+                    }
+                    curr.setDate(curr.getDate() + 1);
+                }
             } else {
-                logsData.unshift(newEntry);
+                const tempLogId = logId || 'temp_' + Date.now();
+                const newEntry = { logId: tempLogId, username: recordUser, date: fromDate, status, inTime: cleanInTime, outTime: cleanOutTime, hours };
+                
+                const existingIdx = logsData.findIndex(l => (logId && l.logId === logId) || (!logId && l.date === fromDate && l.username === recordUser));
+                if (existingIdx >= 0) {
+                    newEntry.logId = logsData[existingIdx].logId; 
+                    logsData[existingIdx] = newEntry;
+                } else {
+                    logsData.unshift(newEntry);
+                }
             }
             
             localStorage.setItem("tt_logs", JSON.stringify(logsData));
@@ -1023,10 +1049,10 @@
             }, 600);
 
             let payload;
-            if (logId) {
+            if (isRange) {
+                payload = { action: "logTimeRange", username: recordUser, fromDate: fromDate, toDate: toDate, status, inTime: cleanInTime, outTime: cleanOutTime, hours };
+            } else if (logId) {
                 payload = { action: "updateLog", logId, username: recordUser, date: fromDate, status, inTime: cleanInTime, outTime: cleanOutTime, hours };
-            } else if (toDate && toDate !== fromDate) {
-                payload = { action: "logTimeRange", username: recordUser, fromDate, toDate, status, inTime: cleanInTime, outTime: cleanOutTime, hours };
             } else {
                 payload = { action: "logTime", username: recordUser, date: fromDate, status, inTime: cleanInTime, outTime: cleanOutTime, hours };
             }
