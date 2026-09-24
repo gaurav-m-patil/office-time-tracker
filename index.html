@@ -167,7 +167,6 @@
         .circle-value { position: relative; font-size: 10px; font-weight: 800; color: var(--text-dark); }
         .month-avg-hours { font-size: 10px; font-weight: 700; color: var(--text-light); margin-top: 6px; text-align: center; width: 100%; }
 
-        /* Floating Tooltip CSS */
         .month-tooltip {
             position: absolute;
             bottom: calc(100% + 8px);
@@ -192,7 +191,6 @@
             visibility: visible;
             transform: translateX(-50%) translateY(0) scale(1);
         }
-        /* Triangle Pointer */
         .month-tooltip::after {
             content: '';
             position: absolute;
@@ -203,7 +201,6 @@
             border-style: solid;
             border-color: var(--surface) transparent transparent transparent;
         }
-        /* Perfectly aligned row structure */
         .tooltip-row {
             display: flex;
             justify-content: space-between;
@@ -446,7 +443,6 @@
             }
         };
 
-        // Tooltip Event Handlers
         let tooltipTimer;
         function showTooltip(el, e) {
             clearTimeout(tooltipTimer);
@@ -953,8 +949,6 @@
         }
 
         function quickAction(type) {
-            document.getElementById("entry-from-date").value = getLocalDateStr();
-            document.getElementById("entry-to-date").value = "";
             if (type === 'in') { document.getElementById("entry-status").value = "Present"; document.getElementById("entry-in").value = getCurrentTimeStr(); }
             else if (type === 'out') { document.getElementById("entry-status").value = "Present"; document.getElementById("entry-out").value = getCurrentTimeStr(); }
             else if (type === 'leave') { document.getElementById("entry-status").value = "Leave"; }
@@ -1200,11 +1194,9 @@
                     let monthHours = 0;
                     let monthHoursDivisor = 0;
                     
-                    // Monthly Breakdown Variables
                     let countPresent = 0, countLeave = 0, countException = 0, countNoShow = 0, countOff = 0;
 
                     logsInMonth.forEach(l => {
-                        // Tally individual statuses for the popup
                         if (l.status === "Present") countPresent++;
                         else if (l.status === "Leave") countLeave++;
                         else if (l.status === "Exception") countException++;
@@ -1260,7 +1252,6 @@
                 let block = document.createElement("div");
                 block.className = "quarter-block";
                 
-                // Construct the HTML for the months, injecting the dynamic tooltips
                 block.innerHTML = `
                     <div class="quarter-header">
                         <span class="quarter-title">${q.name} (${currentFYStartYear}-${String(currentFYStartYear+1).substring(2)})</span>
