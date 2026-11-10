@@ -5,7 +5,7 @@
 
 window.OfficeAnalytics = (function() {
 
-  // 7-8 Hour Company Compliance Calculator & Smart Predictor
+  // 7-8 Hour Company Compliance Calculator & Smart Salary Attendance Predictor
   function calculateComplianceData(logs, customYearMonth = null) {
     // Determine active focus month
     let ymKey = customYearMonth;
@@ -31,109 +31,149 @@ window.OfficeAnalytics = (function() {
     const todayStr = OfficeShifts.getLocalDateStr(now);
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     
-    // 1. Calculate working days in month (Mon-Fri)
-    let totalWorkingDays = 0;
-    let elapsedWorkingDays = 0;
-    let remainingWorkingDays = 0;
+    // 1. Filter logs for this month & calculate exact fiscal aggregates
+    const monthLogs = logs.filter(l => l.date && l.date.startsWith(ymKey));
     
-    for (let d = 1; d <= daysInMonth; d++) {
-      const dateObj = new Date(year, month, d);
-      const dayOfWeek = dateObj.getDay(); // 0 Sun, 6 Sat
-      const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
-      
-      if (!isWeekend) {
-        totalWorkingDays++;
-        const checkDateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-        if (ymKey < currentYM) {
-          // Past month: all days elapsed
-          elapsedWorkingDays++;
-        } else if (ymKey > currentYM) {
-          // Future month: all remaining
-          remainingWorkingDays++;
-        } else {
-          // Current month
-          if (checkDateStr <= todayStr) {
-            elapsedWorkingDays++;
-          } else {
-            remainingWorkingDays++;
+    let countPresent = 0;
+    let countLeave = 0;
+    let countException = 0;
+    let countNoShow = 0;
+    let countOff = 0;
+    let validWorkDaysLogged = 0;
+    let attendedDaysLogged = 0;
+    let totalHours = 0;
+    let hoursDivisor = 0;
+
+    const loggedDates = {};
+
+    monthLogs.forEach(l => {
+      loggedDates[l.date] = l.status;
+      if (l.status === 'Present') countPresent++;
+      else if (l.status === 'Leave') countLeave++;
+      else if (l.status === 'Exception') countException++;
+      else if (l.status === 'No Show') countNoShow++;
+      else if (l.status === 'Weekend' || l.status === 'Holiday') countOff++;
+
+      if (l.status !== 'Weekend' && l.status !== 'Holiday') {
+        validWorkDaysLogged++;
+        if (l.status !== 'No Show') {
+          attendedDaysLogged++;
+        }
+        if (l.status === 'Present') {
+          totalHours += parseFloat(l.hours) || 0;
+          hoursDivisor++;
+        } else if (l.status === 'No Show') {
+          hoursDivisor++; // Exact Fiscal Rule: No-shows dilute working hours average
+        }
+      }
+    });
+
+    // 2. Calculate remaining future workdays (excluding weekends & already logged off days)
+    let futureWorkingDays = 0;
+    if (ymKey >= currentYM) {
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        if (dStr > todayStr && !loggedDates[dStr]) {
+          const dateObj = new Date(year, month, d);
+          const dow = dateObj.getDay();
+          if (dow !== 0 && dow !== 6) { // Mon - Fri
+            futureWorkingDays++;
           }
         }
       }
     }
 
-    // 2. Filter logs for this month
-    const monthLogs = logs.filter(l => l.date && l.date.startsWith(ymKey));
-    
-    let attendedDays = 0;
-    let presentDays = 0;
-    let totalHours = 0;
-    let leaveDays = 0;
-    let exceptionDays = 0;
-    let noshowDays = 0;
+    const totalExpectedWorkDays = validWorkDaysLogged + futureWorkingDays;
 
-    monthLogs.forEach(l => {
-      if (l.status === 'Present') {
-        presentDays++;
-        attendedDays++;
-        totalHours += parseFloat(l.hours) || 0;
-      } else if (l.status === 'Leave') {
-        leaveDays++;
-        attendedDays++;
-      } else if (l.status === 'Exception') {
-        exceptionDays++;
-        attendedDays++;
-      } else if (l.status === 'No Show') {
-        noshowDays++;
-      }
-    });
+    // 3. Exact Fiscal Performance Formulas (Identical across both boxes)
+    const currentAttendancePct = validWorkDaysLogged > 0 
+      ? Math.round((attendedDaysLogged / validWorkDaysLogged) * 100) 
+      : 0;
+      
+    const currentAvgDecimal = hoursDivisor > 0 
+      ? (totalHours / hoursDivisor) 
+      : 0;
 
-    const avgHoursPerPresentDay = presentDays > 0 ? (totalHours / presentDays) : 0;
-    const avgFormatted = OfficeShifts.formatDurationDisplay(avgHoursPerPresentDay);
-    
-    // Company Standards: 7.0 hours minimum, 8.0 hours target
+    const avgFormatted = OfficeShifts.formatDurationDisplay(currentAvgDecimal);
+
+    // 4. Benchmark A: 86% Salary Protection Policy
+    const TARGET_SALARY_PCT = 86;
+    const is86Safe = currentAttendancePct >= TARGET_SALARY_PCT;
+    const requiredAttendedDaysFor86 = Math.ceil(totalExpectedWorkDays * (TARGET_SALARY_PCT / 100));
+    const daysNeededFor86 = Math.max(0, requiredAttendedDaysFor86 - attendedDaysLogged);
+    const maxAllowableNoShows = Math.max(0, (totalExpectedWorkDays - requiredAttendedDaysFor86) - countNoShow);
+
+    // 5. Benchmark B: Company 7.0h Minimum & 8.0h Target Hours Policy
     const MIN_HOURS = 7.0;
     const TARGET_HOURS = 8.0;
-    
-    const isCompliant = avgHoursPerPresentDay >= MIN_HOURS;
-    const isOptimal = avgHoursPerPresentDay >= TARGET_HOURS;
-    
-    // Target calculations
-    const minTargetTotalHours = totalWorkingDays * MIN_HOURS;
-    const optTargetTotalHours = totalWorkingDays * TARGET_HOURS;
-    const deficitForMin = Math.max(0, minTargetTotalHours - totalHours);
-    const deficitForOpt = Math.max(0, optTargetTotalHours - totalHours);
-    
-    let predictorAdvice = "";
-    let reqDailyForMin = 0;
-    let reqDailyForOpt = 0;
-    
-    if (remainingWorkingDays > 0) {
-      reqDailyForMin = parseFloat((deficitForMin / remainingWorkingDays).toFixed(1));
-      reqDailyForOpt = parseFloat((deficitForOpt / remainingWorkingDays).toFixed(1));
-      
-      if (avgHoursPerPresentDay >= TARGET_HOURS) {
-        predictorAdvice = `🌟 Optimal: You're averaging ${avgHoursPerPresentDay.toFixed(1)}h. Maintain ≥ 7.0h on your ${remainingWorkingDays} remaining days to stay compliant.`;
-      } else if (avgHoursPerPresentDay >= MIN_HOURS) {
-        predictorAdvice = `✅ Compliant: Current avg is ${avgHoursPerPresentDay.toFixed(1)}h (≥ 7.0h min). Aim for ~${reqDailyForOpt}h/day across ${remainingWorkingDays} remaining days to reach the 8.0h target.`;
+    const isHoursCompliant = currentAvgDecimal >= MIN_HOURS;
+    const isHoursOptimal = currentAvgDecimal >= TARGET_HOURS;
+
+    let reqDailyHours7h = 0;
+    let reqDailyHours8h = 0;
+    let reqDailyFormatted7h = "0h 00m";
+    let reqDailyFormatted8h = "0h 00m";
+    let surplusHours = 0;
+
+    if (futureWorkingDays > 0) {
+      const projectedDivisor = hoursDivisor + futureWorkingDays;
+      const targetTotal7h = projectedDivisor * MIN_HOURS;
+      const targetTotal8h = projectedDivisor * TARGET_HOURS;
+
+      const deficit7h = targetTotal7h - totalHours;
+      const deficit8h = targetTotal8h - totalHours;
+
+      if (deficit7h > 0) {
+        reqDailyHours7h = parseFloat((deficit7h / futureWorkingDays).toFixed(2));
       } else {
-        predictorAdvice = `⚠️ Action Needed: Average is ${avgHoursPerPresentDay.toFixed(1)}h. You need ~${reqDailyForMin}h/day across ${remainingWorkingDays} remaining days to hit the 7.0h minimum.`;
+        surplusHours = parseFloat((totalHours - (hoursDivisor * MIN_HOURS)).toFixed(1));
       }
+
+      if (deficit8h > 0) {
+        reqDailyHours8h = parseFloat((deficit8h / futureWorkingDays).toFixed(2));
+      }
+
+      reqDailyFormatted7h = OfficeShifts.formatDurationDisplay(reqDailyHours7h > 0 ? reqDailyHours7h : MIN_HOURS);
+      reqDailyFormatted8h = OfficeShifts.formatDurationDisplay(reqDailyHours8h > 0 ? reqDailyHours8h : TARGET_HOURS);
     } else {
-      if (presentDays === 0) {
-        predictorAdvice = "No present attendance recorded for this month.";
-      } else if (isOptimal) {
-        predictorAdvice = `🏆 Excellent: Month completed with ${avgHoursPerPresentDay.toFixed(1)}h/day average (exceeds 8.0h company target).`;
-      } else if (isCompliant) {
-        predictorAdvice = `✅ Compliant: Month completed with ${avgHoursPerPresentDay.toFixed(1)}h/day average (meets 7-8h requirement).`;
-      } else {
-        predictorAdvice = `⚠️ Below Standard: Month finalized at ${avgHoursPerPresentDay.toFixed(1)}h/day (below 7.0h company minimum).`;
-      }
+      surplusHours = parseFloat(Math.max(0, totalHours - (hoursDivisor * MIN_HOURS)).toFixed(1));
     }
 
-    // Monthly compliance percentage (7h = 100%, 8h = 114%)
-    const compliancePct = Math.min(100, Math.round((avgHoursPerPresentDay / MIN_HOURS) * 100));
+    // 6. Dynamic AI Guidance Messages
+    let salaryAdvice = "";
+    let hoursAdvice = "";
 
-    // Get list of all available months in logs for the selector
+    if (futureWorkingDays > 0) {
+      // Active / Current Month Predictions
+      if (daysNeededFor86 === 0) {
+        salaryAdvice = `🎉 <strong>Salary Safe (${currentAttendancePct}% ≥ 86%)</strong>: Quota reached! You can take up to <strong>${maxAllowableNoShows} days off</strong> without any salary deduction.`;
+      } else if (daysNeededFor86 <= futureWorkingDays) {
+        salaryAdvice = `⚠️ <strong>Salary Protection</strong>: You must attend at least <strong>${daysNeededFor86} of your ${futureWorkingDays} remaining workdays</strong> to secure ≥ 86% attendance and protect your salary.`;
+      } else {
+        salaryAdvice = `🚨 <strong>Salary Risk</strong>: Attendance will finish below 86% due to past unexcused absences. Max achievable is ${Math.round(((attendedDaysLogged + futureWorkingDays) / totalExpectedWorkDays) * 100)}%.`;
+      }
+
+      if (isHoursCompliant) {
+        hoursAdvice = surplusHours > 0
+          ? `🌟 <strong>Hours Target (Surplus: +${surplusHours}h)</strong>: Average is ${avgFormatted}. You only need ~<strong>${reqDailyFormatted7h}/day</strong> across ${futureWorkingDays} days to stay compliant.`
+          : `✅ <strong>Hours Target (${avgFormatted})</strong>: Average meets company 7-8h standard. Keep logging ~<strong>${reqDailyFormatted7h}/day</strong>.`;
+      } else {
+        hoursAdvice = `⚠️ <strong>Hours Deficit (${avgFormatted})</strong>: You need to log ~<strong>${reqDailyFormatted7h} / day</strong> across your ${futureWorkingDays} remaining workdays to raise average to 7.0h (or ~${reqDailyFormatted8h}/day for 8.0h optimal).`;
+      }
+    } else {
+      // Completed / Past Month Assessment
+      salaryAdvice = is86Safe 
+        ? `✅ <strong>Salary Safe</strong>: Finalized at ${currentAttendancePct}% attendance (exceeds 86% threshold).`
+        : `⚠️ <strong>Salary Impacted</strong>: Finalized at ${currentAttendancePct}% attendance (fell below 86% threshold).`;
+
+      hoursAdvice = isHoursOptimal
+        ? `🏆 <strong>Optimal Performance</strong>: Finalized at ${avgFormatted} / day (exceeds 8.0h company target).`
+        : (isHoursCompliant
+          ? `✅ <strong>Compliant Standard</strong>: Finalized at ${avgFormatted} / day (meets 7–8h requirement).`
+          : `⚠️ <strong>Below Minimum</strong>: Finalized at ${avgFormatted} / day (below 7.0h company minimum).`);
+    }
+
+    // Available months list for dropdown
     const availableMonths = Array.from(new Set(logs.filter(l => l.date).map(l => l.date.substring(0, 7)))).sort().reverse();
     if (!availableMonths.includes(currentYM)) {
       availableMonths.unshift(currentYM);
@@ -146,26 +186,32 @@ window.OfficeAnalytics = (function() {
       yearMonth: ymKey,
       monthLabel,
       availableMonths,
-      totalWorkingDays,
-      elapsedWorkingDays,
-      remainingWorkingDays,
-      attendedDays,
-      presentDays,
-      leaveDays,
-      exceptionDays,
-      noshowDays,
+      totalExpectedWorkDays,
+      validWorkDaysLogged,
+      futureWorkingDays,
+      attendedDaysLogged,
+      presentDays: countPresent,
+      leaveDays: countLeave,
+      exceptionDays: countException,
+      noshowDays: countNoShow,
+      offDays: countOff,
       totalHours: totalHours.toFixed(1),
-      avgHours: avgHoursPerPresentDay.toFixed(2),
+      hoursDivisor,
+      avgHoursDecimal: currentAvgDecimal.toFixed(2),
       avgFormatted,
-      isCompliant,
-      isOptimal,
-      compliancePct,
-      minTargetTotalHours: minTargetTotalHours.toFixed(1),
-      optTargetTotalHours: optTargetTotalHours.toFixed(1),
-      deficitForMin: deficitForMin.toFixed(1),
-      reqDailyForMin: reqDailyForMin > 0 ? reqDailyForMin : MIN_HOURS,
-      reqDailyForOpt: reqDailyForOpt > 0 ? reqDailyForOpt : TARGET_HOURS,
-      predictorAdvice
+      attendancePct: currentAttendancePct,
+      is86Safe,
+      daysNeededFor86,
+      maxAllowableNoShows,
+      isHoursCompliant,
+      isHoursOptimal,
+      reqDailyHours7h,
+      reqDailyHours8h,
+      reqDailyFormatted7h,
+      reqDailyFormatted8h,
+      surplusHours,
+      salaryAdvice,
+      hoursAdvice
     };
   }
 

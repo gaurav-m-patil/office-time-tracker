@@ -85,6 +85,9 @@ window.OfficeUI = (function() {
     } else if (event.type === 'sync_complete' && dot) {
       dot.className = 'sync-status-dot';
       dot.title = 'Cloud Synced';
+      if (window.OfficeShifts && typeof OfficeShifts.recheckTodayLog === 'function') {
+        OfficeShifts.recheckTodayLog();
+      }
     }
     renderActiveView();
   }
@@ -589,12 +592,34 @@ window.OfficeUI = (function() {
     renderActiveView();
   }
 
+  let activeInsightsSubTab = 'cockpit'; // 'cockpit' | 'fiscal'
+
+  function switchInsightsSubTab(subTabId) {
+    activeInsightsSubTab = subTabId;
+    const btnCockpit = document.getElementById('segBtnCockpit');
+    const btnFiscal = document.getElementById('segBtnFiscal');
+    const subCockpit = document.getElementById('subViewCockpit');
+    const subFiscal = document.getElementById('subViewFiscal');
+
+    if (subTabId === 'cockpit') {
+      if (btnCockpit) btnCockpit.classList.add('active');
+      if (btnFiscal) btnFiscal.classList.remove('active');
+      if (subCockpit) subCockpit.style.display = 'block';
+      if (subFiscal) subFiscal.style.display = 'none';
+    } else {
+      if (btnCockpit) btnCockpit.classList.remove('active');
+      if (btnFiscal) btnFiscal.classList.add('active');
+      if (subCockpit) subCockpit.style.display = 'none';
+      if (subFiscal) subFiscal.style.display = 'block';
+    }
+  }
+
   // Insights View & Company 7-8h Compliance Engine
   function renderInsightsView() {
     const user = OfficeAuth.getCurrentUser();
     const logs = OfficeDB.getLogs(user);
 
-    // 1. Render 7-8 Hour Compliance Engine & Predictor
+    // 1. Render 7-8 Hour Compliance Engine & 86% Salary Attendance Predictor
     const compContainer = document.getElementById('complianceToolContainer');
     if (compContainer) {
       const comp = OfficeAnalytics.calculateComplianceData(logs, activeComplianceMonth);
@@ -608,61 +633,88 @@ window.OfficeUI = (function() {
           return `<option value="${ym}" ${ym === comp.yearMonth ? 'selected' : ''}>${label}</option>`;
         }).join('');
 
-        const statusClass = comp.isOptimal ? 'badge-optimal' : (comp.isCompliant ? 'badge-compliant' : 'badge-deficit');
-        const statusText = comp.isOptimal ? 'Optimal (≥8.0h)' : (comp.isCompliant ? 'Compliant (≥7.0h)' : 'Below 7.0h Min');
+        const statusClass = comp.isHoursOptimal ? 'badge-optimal' : (comp.isHoursCompliant ? 'badge-compliant' : 'badge-deficit');
+        const statusText = comp.isHoursOptimal ? 'Optimal (≥8.0h)' : (comp.isHoursCompliant ? 'Compliant (≥7.0h)' : 'Below 7.0h Min');
 
-        // Circular ring calculation (0-100% based on 8.0h target)
-        const ringPct = Math.min(100, Math.round((parseFloat(comp.avgHours) / 8.0) * 100));
+        const salarySafeClass = comp.is86Safe ? 'badge-salary-safe' : 'badge-salary-risk';
+        const salarySafeText = comp.is86Safe ? '86% Salary Safe' : 'Salary Risk (<86%)';
+        const salarySafeIcon = comp.is86Safe ? 'verified_user' : 'warning';
 
         compContainer.innerHTML = `
           <div class="compliance-cockpit-card">
-            <!-- Cockpit Header -->
+            <!-- Cockpit Header: Month Selector + 86% Salary Badge -->
             <div class="comp-header">
-              <div class="comp-title-group">
-                <span class="comp-badge-pill">7–8h Policy</span>
-                <span class="comp-status-badge ${statusClass}">${statusText}</span>
+              <div class="comp-title-group" style="display:flex; align-items:center; gap:8px;">
+                <select class="comp-month-select" onchange="OfficeUI.setComplianceMonth(this.value)">
+                  ${monthOptions}
+                </select>
+                <span class="tile-pill ${statusClass}">${statusText}</span>
               </div>
-              <select class="comp-month-select" onchange="OfficeUI.setComplianceMonth(this.value)">
-                ${monthOptions}
-              </select>
-            </div>
-
-            <!-- Bento Gauge + Metric Tiles -->
-            <div class="comp-bento-grid">
-              <!-- Radial Progress Gauge Tile -->
-              <div class="comp-gauge-tile">
-                <div class="comp-radial-ring" style="--comp-pct: ${ringPct};">
-                  <div class="comp-ring-center">
-                    <span class="comp-ring-val">${comp.avgHours}h</span>
-                    <span class="comp-ring-lbl">Daily Avg</span>
-                  </div>
-                </div>
-                <div class="comp-target-sub">Standard: 7.0h – 8.0h</div>
-              </div>
-
-              <!-- Metric Tiles -->
-              <div class="comp-stats-col">
-                <div class="comp-mini-metric">
-                  <span class="metric-lbl">Attended Days</span>
-                  <span class="metric-val"><strong>${comp.presentDays}</strong> <small>/ ${comp.totalWorkingDays} Workdays</small></span>
-                </div>
-                <div class="comp-mini-metric">
-                  <span class="metric-lbl">Total Tracked Hours</span>
-                  <span class="metric-val"><strong>${comp.totalHours}h</strong> <small>(Target: ${comp.minTargetTotalHours}h)</small></span>
-                </div>
-                <div class="comp-mini-metric">
-                  <span class="metric-lbl">Remaining Workdays</span>
-                  <span class="metric-val"><strong>${comp.remainingWorkingDays}</strong> days left</span>
-                </div>
+              <div>
+                <span class="comp-salary-badge ${salarySafeClass}">
+                  <i class="material-icons-round" style="font-size:12px; margin-right:3px;">${salarySafeIcon}</i>
+                  ${salarySafeText}
+                </span>
               </div>
             </div>
 
-            <!-- Smart Attendance Predictor Advice -->
+            <!-- Bento 4-Quad Grid -->
+            <div class="comp-bento-quad">
+              <!-- Tile 1: Monthly Average Hours (100% Matching Fiscal Box) -->
+              <div class="comp-bento-tile">
+                <div class="bento-tile-lbl">Monthly Average</div>
+                <div class="bento-tile-main" style="color:var(--primary);">${comp.avgFormatted}</div>
+                <div class="bento-tile-sub">
+                  <span>${comp.totalHours}h / ${comp.hoursDivisor} working days</span>
+                </div>
+              </div>
+
+              <!-- Tile 2: Attendance Rate & 86% Threshold -->
+              <div class="comp-bento-tile">
+                <div class="bento-tile-lbl">Attendance (86% Min)</div>
+                <div class="bento-tile-main" style="color:${comp.is86Safe ? '#10b981' : '#f59e0b'};">${comp.attendancePct}%</div>
+                <div class="bento-tile-sub">
+                  <span>${comp.attendedDaysLogged} of ${comp.totalExpectedWorkDays} total workdays</span>
+                </div>
+              </div>
+
+              <!-- Tile 3: Remaining Workdays & Needed Days -->
+              <div class="comp-bento-tile">
+                <div class="bento-tile-lbl">Remaining Workdays</div>
+                <div class="bento-tile-main">${comp.futureWorkingDays > 0 ? comp.futureWorkingDays + ' Days Left' : 'Completed'}</div>
+                <div class="bento-tile-sub">
+                  <span>${comp.futureWorkingDays > 0 ? (comp.daysNeededFor86 > 0 ? `Need <strong>${comp.daysNeededFor86}d</strong> for 86%` : `<strong>${comp.maxAllowableNoShows}d</strong> safe leaves left`) : 'Month Finalized'}</span>
+                </div>
+              </div>
+
+              <!-- Tile 4: Daily Target / Pace -->
+              <div class="comp-bento-tile">
+                <div class="bento-tile-lbl">Daily Target / Pace</div>
+                <div class="bento-tile-main" style="color:${comp.futureWorkingDays > 0 && comp.surplusHours > 0 ? '#10b981' : 'var(--text-primary)'};">
+                  ${comp.futureWorkingDays > 0 ? (comp.surplusHours > 0 ? '+' + comp.surplusHours + 'h Surplus' : comp.reqDailyFormatted7h) : comp.totalHours + 'h Total'}
+                </div>
+                <div class="bento-tile-sub">
+                  <span>${comp.futureWorkingDays > 0 ? (comp.surplusHours > 0 ? 'Ahead of 7h pace' : 'Needed/day for 7.0h') : (comp.isHoursCompliant ? '7–8h Standard Met' : 'Below 7.0h Standard')}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Micro Month Breakdown Strip -->
+            <div class="comp-breakdown-strip">
+              <span class="breakdown-tag tag-present"><span class="dot"></span> Present: <strong>${comp.presentDays}</strong></span>
+              <span class="breakdown-tag tag-leave"><span class="dot"></span> Leave: <strong>${comp.leaveDays}</strong></span>
+              <span class="breakdown-tag tag-exception"><span class="dot"></span> Exc: <strong>${comp.exceptionDays}</strong></span>
+              <span class="breakdown-tag tag-noshow"><span class="dot"></span> No-Show: <strong>${comp.noshowDays}</strong></span>
+              <span class="breakdown-tag tag-off"><span class="dot"></span> Off: <strong>${comp.offDays}</strong></span>
+            </div>
+
+            <!-- Smart AI Predictor Guidance Box -->
             <div class="comp-predictor-box">
-              <div class="predictor-icon">💡</div>
+              <div class="predictor-icon-circle">🤖</div>
               <div class="predictor-text">
-                <div class="predictor-headline">Attendance Predictor</div>
-                <div class="predictor-advice">${comp.predictorAdvice}</div>
+                <div class="predictor-headline">AI Attendance & Salary Projection</div>
+                <div class="predictor-item">${comp.salaryAdvice}</div>
+                <div class="predictor-item">${comp.hoursAdvice}</div>
               </div>
             </div>
           </div>
@@ -879,6 +931,7 @@ window.OfficeUI = (function() {
     handleSheetCopyToday,
     handleSheetDelete,
     setComplianceMonth,
+    switchInsightsSubTab,
     switchTab,
     renderActiveView,
     handleSmartPunch,

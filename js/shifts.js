@@ -387,6 +387,7 @@ window.OfficeShifts = (function() {
     formatTimeDisplay,
     convertTo24Hour,
     triggerHaptic,
+    recheckTodayLog: loadActiveShift,
     subscribe
   };
 })();

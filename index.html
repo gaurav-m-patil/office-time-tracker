@@ -240,15 +240,34 @@
       <!-- ========================================== -->
       <section id="tab-insights" class="tab-pane">
         <div class="insights-view-container">
-          <!-- 7-8 Hour Compliance & Attendance Predictor Tool -->
-          <div id="complianceToolContainer"></div>
-
-          <!-- Quarterly Fiscal Year Analytics -->
-          <div class="quarterly-header-box">
-            <h4 style="margin: 14px 0 2px 0; font-size:13px; font-weight:800; color:var(--text-primary); text-transform:uppercase; letter-spacing:0.5px;">Fiscal Performance</h4>
-            <p style="font-size: 11px; color: var(--text-muted); margin: 0 0 10px 0;">*Attendance % calculated over net working days. Tap a month to inspect daily metrics.</p>
+          <!-- Sleek Segmented Switcher for 100% Zero-Scroll Mobile Cockpit -->
+          <div class="insights-tab-switcher">
+            <button type="button" class="insights-seg-btn active" id="segBtnCockpit" onclick="OfficeUI.switchInsightsSubTab('cockpit')">
+              <i class="material-icons-round" style="font-size:14px;">psychology</i>
+              <span>AI Predictor</span>
+            </button>
+            <button type="button" class="insights-seg-btn" id="segBtnFiscal" onclick="OfficeUI.switchInsightsSubTab('fiscal')">
+              <i class="material-icons-round" style="font-size:14px;">bar_chart</i>
+              <span>Fiscal Performance</span>
+            </button>
           </div>
-          <div id="insightsContainer"></div>
+
+          <!-- SubView 1: AI Predictor & 86% Salary Cockpit -->
+          <div id="subViewCockpit" class="insights-subview">
+            <div id="complianceToolContainer"></div>
+          </div>
+
+          <!-- SubView 2: Quarterly Fiscal Year Analytics -->
+          <div id="subViewFiscal" class="insights-subview" style="display:none;">
+            <div class="quarterly-header-box">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h4 style="margin: 0; font-size:12px; font-weight:800; color:var(--text-primary); text-transform:uppercase; letter-spacing:0.5px;">Fiscal Performance</h4>
+                <span style="font-size:10px; font-weight:700; color:var(--text-muted);">86% Attn • 7–8h Policy</span>
+              </div>
+              <p style="font-size: 10px; color: var(--text-muted); margin: 3px 0 8px 0;">*Attendance % calculated over net working days. Tap a month to inspect metrics.</p>
+            </div>
+            <div id="insightsContainer"></div>
+          </div>
         </div>
       </section>
 
