@@ -20,6 +20,8 @@ window.OfficeUI = (function() {
         if (timer) timer.innerText = hms;
         const smartBtnTimer = document.getElementById('smartPunchTimer');
         if (smartBtnTimer) smartBtnTimer.innerText = hms;
+        const heroTimer = document.getElementById('heroTimerDisplay');
+        if (heroTimer) heroTimer.innerText = hms;
       }
     });
   }
@@ -245,7 +247,9 @@ window.OfficeUI = (function() {
 
   function renderActiveView() {
     updateSmartPunchUI();
-    if (activeTab === 'history') {
+    if (activeTab === 'record') {
+      renderWeekRadar();
+    } else if (activeTab === 'history') {
       renderHistoryTable();
     } else if (activeTab === 'insights') {
       renderInsightsView();
@@ -269,6 +273,7 @@ window.OfficeUI = (function() {
       
       const res = await OfficeShifts.clockOut(nowStr);
       updateSmartPunchUI();
+      renderWeekRadar();
       showToast(`🏁 Clocked Out! Duration: ${res.formattedDuration}`, 'success');
       
       // Auto-refresh tables
@@ -286,6 +291,7 @@ window.OfficeUI = (function() {
 
       await OfficeShifts.clockIn(today, nowStr);
       updateSmartPunchUI();
+      renderWeekRadar();
       showToast(`⚡ Clocked In at ${OfficeShifts.formatTimeDisplay(nowStr)}!`, 'success');
     }
   }
@@ -298,22 +304,57 @@ window.OfficeUI = (function() {
     const statusSub = document.getElementById('shiftLiveStatusSub');
     const shiftPill = document.getElementById('shiftLiveBadge');
 
-    if (!smartBtn) return;
+    // Hero Cockpit DOM bindings
+    const heroGreeting = document.getElementById('heroGreetingText');
+    const heroDate = document.getElementById('heroTodayDateDisplay');
+    const heroShiftBadge = document.getElementById('heroShiftBadge');
+    const heroShiftBadgeText = document.getElementById('heroShiftBadgeText');
+    const heroTimer = document.getElementById('heroTimerDisplay');
+    const heroTimerSub = document.getElementById('heroTimerSub');
+    const heroInTimeText = document.getElementById('heroShiftInTimeText');
+
+    const currentUser = OfficeAuth.getCurrentUser() || 'gaurav';
+    const hour = new Date().getHours();
+    const greetingWord = hour < 12 ? 'Good Morning' : (hour < 17 ? 'Good Afternoon' : 'Good Evening');
+    const capitalizedUser = currentUser.charAt(0).toUpperCase() + currentUser.slice(1);
+    
+    if (heroGreeting) heroGreeting.innerText = `${greetingWord}, ${capitalizedUser}`;
+    
+    const now = new Date();
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const dateFormatted = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+    if (heroDate) heroDate.innerText = dateFormatted;
 
     if (shift && shift.status === 'CLOCKED_IN') {
-      smartBtn.className = 'btn-smart-punch punch-out';
+      const elapsedSec = OfficeShifts.getElapsedSeconds();
+      const hms = OfficeShifts.formatSecondsToHMS(elapsedSec);
+
+      if (smartBtn) {
+        smartBtn.className = 'btn-smart-punch-hero punch-out';
+      }
       if (smartBtnText) smartBtnText.innerText = 'Clock Out';
       if (timerSpan) {
         timerSpan.classList.remove('hidden');
-        timerSpan.innerText = OfficeShifts.formatSecondsToHMS(OfficeShifts.getElapsedSeconds());
+        timerSpan.innerText = hms;
       }
       if (statusSub) statusSub.innerText = `Shift active since ${shift.inTime || ''}`;
       if (shiftPill) {
         shiftPill.className = 'shift-live-pill active';
         document.getElementById('shiftLiveText').innerText = 'Active';
       }
+
+      if (heroShiftBadge) {
+        heroShiftBadge.className = 'hero-shift-badge active';
+      }
+      if (heroShiftBadgeText) heroShiftBadgeText.innerText = 'Active Shift';
+      if (heroTimer) heroTimer.innerText = hms;
+      if (heroTimerSub) heroTimerSub.innerText = 'Elapsed Work Time';
+      if (heroInTimeText) heroInTimeText.innerText = `Shift started at ${shift.inTime || ''}`;
     } else {
-      smartBtn.className = 'btn-smart-punch punch-in';
+      if (smartBtn) {
+        smartBtn.className = 'btn-smart-punch-hero punch-in';
+      }
       if (smartBtnText) smartBtnText.innerText = 'Clock In';
       if (timerSpan) timerSpan.classList.add('hidden');
       
@@ -325,6 +366,137 @@ window.OfficeUI = (function() {
         shiftPill.className = 'shift-live-pill';
         document.getElementById('shiftLiveText').innerText = lastDur ? 'Done' : 'Ready';
       }
+
+      if (heroShiftBadge) {
+        heroShiftBadge.className = 'hero-shift-badge';
+      }
+      if (heroShiftBadgeText) heroShiftBadgeText.innerText = lastDur ? 'Completed' : 'Shift Ready';
+      if (heroTimer) heroTimer.innerText = lastDur ? lastDur : '00:00:00';
+      if (heroTimerSub) heroTimerSub.innerText = lastDur ? "Today's Tracked Time" : 'Ready to Start Shift';
+      if (heroInTimeText) heroInTimeText.innerText = lastDur ? `Today finalized: ${lastDur}` : 'Ready to start today\'s shift';
+    }
+  }
+
+  // Week-at-a-Glance Attendance Radar
+  function renderWeekRadar(logs = null, user = null) {
+    const radarContainer = document.getElementById('weekRadarContainer');
+    if (!radarContainer) return;
+
+    const currentUser = user || OfficeAuth.getCurrentUser() || 'gaurav';
+    const allLogs = logs || OfficeDB.getLogs(currentUser);
+    const today = OfficeShifts.getLocalDateStr();
+
+    // 1. Calculate Monday date of current week
+    const now = new Date();
+    const dayOfWeek = now.getDay(); // 0 Sun, 1 Mon, ... 6 Sat
+    const diffToMon = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    const monDate = new Date(now);
+    monDate.setDate(now.getDate() + diffToMon);
+
+    const weekDays = [];
+    const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+    let totalWeekHours = 0;
+
+    for (let i = 0; i < 5; i++) {
+      const d = new Date(monDate);
+      d.setDate(monDate.getDate() + i);
+      const dStr = OfficeShifts.getLocalDateStr(d);
+      const isToday = dStr === today;
+      const isPast = dStr < today;
+
+      const log = allLogs.find(l => l.date === dStr && l.username.toLowerCase() === currentUser.toLowerCase());
+      let hoursNum = log && log.hours ? parseFloat(log.hours) : 0;
+      totalWeekHours += hoursNum;
+
+      let statusBadge = 'Sched';
+      let badgeClass = 'badge-sched';
+      let hoursDisplay = '—';
+
+      if (log) {
+        if (log.status === 'Present') {
+          hoursDisplay = OfficeShifts.formatDurationDisplay(hoursNum);
+          statusBadge = hoursNum >= 7.0 ? 'Done ✅' : 'Logged';
+          badgeClass = 'badge-done';
+        } else {
+          hoursDisplay = log.status;
+          statusBadge = log.status;
+          badgeClass = 'badge-sched';
+        }
+      } else if (isToday) {
+        const shift = OfficeShifts.getActiveShift();
+        if (shift && shift.status === 'CLOCKED_IN') {
+          hoursDisplay = 'Active';
+          statusBadge = 'Active 🟢';
+          badgeClass = 'badge-active';
+        } else {
+          hoursDisplay = 'Today';
+          statusBadge = 'Ready';
+          badgeClass = 'badge-sched';
+        }
+      } else if (isPast) {
+        hoursDisplay = 'Off';
+        statusBadge = 'No Log';
+        badgeClass = 'badge-sched';
+      }
+
+      const mNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const dateShort = `${d.getDate()} ${mNames[d.getMonth()]}`;
+
+      weekDays.push({
+        name: dayNames[i],
+        dateStr: dStr,
+        dateShort,
+        isToday,
+        hoursDisplay,
+        statusBadge,
+        badgeClass,
+        log
+      });
+    }
+
+    const TARGET_WEEK_HOURS = 35.0;
+    const weekPct = Math.min(100, Math.round((totalWeekHours / TARGET_WEEK_HOURS) * 100));
+    const weekHoursFormatted = OfficeShifts.formatDurationDisplay(totalWeekHours);
+
+    radarContainer.innerHTML = `
+      <div class="week-radar-header">
+        <span class="radar-title">
+          <i class="material-icons-round" style="font-size:13px; color:var(--primary);">date_range</i>
+          Week-at-a-Glance Attendance Radar
+        </span>
+        <span class="radar-total">${weekHoursFormatted} / 35h (${weekPct}%)</span>
+      </div>
+      <div class="week-radar-track">
+        <div class="week-radar-fill" style="width: ${weekPct}%;"></div>
+      </div>
+      <div class="week-days-grid">
+        ${weekDays.map(wd => `
+          <div class="week-day-chip ${wd.isToday ? 'is-today' : ''}" onclick="OfficeUI.handleDayChipClick('${wd.dateStr}')" title="${wd.name} ${wd.dateShort}">
+            <span class="day-chip-name">${wd.name}</span>
+            <span class="day-chip-date">${wd.dateShort}</span>
+            <span class="day-chip-hours">${wd.hoursDisplay}</span>
+            <span class="day-chip-badge ${wd.badgeClass}">${wd.statusBadge}</span>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  function handleDayChipClick(dateStr) {
+    const user = OfficeAuth.getCurrentUser();
+    const logs = OfficeDB.getLogs(user);
+    const log = logs.find(l => l.date === dateStr);
+    const fromInput = document.getElementById('entryFromDate');
+    const toInput = document.getElementById('entryToDate');
+
+    if (log) {
+      editRecord(log);
+      showToast(`Editing entry for ${OfficeShifts.formatDateDDMonYY(dateStr)}`, 'info');
+    } else {
+      resetRecordForm();
+      if (fromInput) fromInput.value = dateStr;
+      if (toInput) toInput.value = '';
+      showToast(`Selected date: ${OfficeShifts.formatDateDDMonYY(dateStr)}`, 'info');
     }
   }
 
@@ -774,179 +946,151 @@ window.OfficeUI = (function() {
         const salarySafeIcon = comp.is86Safe ? 'verified_user' : 'warning';
 
         const meterAttnPct = Math.min(100, Math.max(0, comp.attendancePct));
-        const meterFillClass = comp.is86Safe ? 'fill-safe' : 'fill-risk';
-        const meterAttnCaption = comp.is86Safe
-          ? `✅ Quota secured! Buffer: +${comp.attendancePct - 86}% above salary threshold.`
-          : `⚠️ Deficit: -${86 - comp.attendancePct}% below target. Attend upcoming workdays to protect salary.`;
-
         const hoursDecimal = parseFloat(comp.avgHoursDecimal) || 0;
         const hoursMeterPct = Math.min(100, Math.round((hoursDecimal / 8.0) * 100));
-        let hoursCaption = '';
-        if (comp.futureWorkingDays > 0) {
-          if (comp.surplusHours > 0) {
-            hoursCaption = `🌟 Pace Surplus: +${comp.surplusHours}h ahead of 7.0h min (~${comp.reqDailyFormatted7h}/day needed)`;
-          } else {
-            hoursCaption = `⏱️ Needed Pace: ~<strong>${comp.reqDailyFormatted7h}/day</strong> across ${comp.futureWorkingDays} remaining workdays (or ~${comp.reqDailyFormatted8h}/day for 8.0h optimal)`;
-          }
-        } else {
-          hoursCaption = comp.isHoursCompliant
-            ? '🏆 Finalized: Met company daily hours requirement.'
-            : '⚠️ Finalized: Fell below 7.0h daily company minimum.';
-        }
+
+        const totalDistCount = comp.presentDays + comp.leaveDays + comp.exceptionDays + comp.noshowDays + comp.offDays;
+        const pPresent = totalDistCount > 0 ? (comp.presentDays / totalDistCount * 100).toFixed(1) : 0;
+        const pLeave = totalDistCount > 0 ? (comp.leaveDays / totalDistCount * 100).toFixed(1) : 0;
+        const pExc = totalDistCount > 0 ? (comp.exceptionDays / totalDistCount * 100).toFixed(1) : 0;
+        const pNoShow = totalDistCount > 0 ? (comp.noshowDays / totalDistCount * 100).toFixed(1) : 0;
+        const pOff = totalDistCount > 0 ? (comp.offDays / totalDistCount * 100).toFixed(1) : 0;
 
         compContainer.innerHTML = `
-          <div class="compliance-cockpit-spacious">
+          <div class="compliance-cockpit-compact">
 
-            <!-- 1. Header: Month Selector + 86% Salary Badge -->
-            <div class="cockpit-top-row">
-              <div class="cockpit-month-wrap">
-                <i class="material-icons-round" style="font-size:16px; color:var(--primary);">calendar_month</i>
-                <select class="comp-month-select-spacious" onchange="OfficeUI.setComplianceMonth(this.value)">
+            <!-- 1. Unified Master Top Bar -->
+            <div class="cockpit-top-bar">
+              <div class="cockpit-month-dropdown-wrap">
+                <i class="material-icons-round" style="font-size:15px; color:var(--primary);">calendar_month</i>
+                <select class="comp-month-select-compact" onchange="OfficeUI.setComplianceMonth(this.value)">
                   ${monthOptions}
                 </select>
               </div>
               <div class="cockpit-badge-wrap">
-                <span class="comp-salary-badge-spacious ${salarySafeClass}">
-                  <i class="material-icons-round" style="font-size:13px;">${salarySafeIcon}</i>
-                  ${salarySafeText}
+                <span class="comp-salary-badge-compact ${salarySafeClass}">
+                  <i class="material-icons-round" style="font-size:12px; margin-right:2px;">${salarySafeIcon}</i>
+                  ${comp.is86Safe ? '86% Salary Safe' : 'Salary Risk (<86%)'}
                 </span>
               </div>
             </div>
 
-            <!-- 2. Dual Hero KPI Cards (Spacious, Clear, Bold) -->
-            <div class="cockpit-hero-grid">
-              <!-- Hero 1: Monthly Average Hours -->
-              <div class="cockpit-hero-card">
-                <div class="hero-card-header">
-                  <span class="hero-lbl">Monthly Average Hours</span>
+            <!-- 2. Dual Bento Duo: Left = Salary Attendance (86% Min), Right = Monthly Average (7-8h) -->
+            <div class="cockpit-bento-duo">
+              <!-- Left Deck: 86% Salary Attendance -->
+              <div class="bento-duo-card">
+                <div class="bento-card-top">
+                  <span class="bento-card-title">Salary Attendance</span>
+                  <span class="tile-pill ${salarySafeClass}">
+                    ${comp.is86Safe ? '≥ 86% Safe' : '< 86% Risk'}
+                  </span>
+                </div>
+                <div class="bento-card-metric-row">
+                  <span class="bento-hero-metric" style="color:${comp.is86Safe ? '#10b981' : '#f59e0b'};">${comp.attendancePct}%</span>
+                  <span class="bento-metric-target">/ 86% Min</span>
+                </div>
+                <!-- Embedded Micro Meter with 86% Marker -->
+                <div class="bento-micro-meter">
+                  <div class="meter-bar-track">
+                    <div class="meter-bar-fill ${comp.is86Safe ? 'fill-safe' : 'fill-risk'}" style="width: ${meterAttnPct}%;"></div>
+                    <div class="meter-tick-marker" style="left: 86%;">
+                      <span class="tick-line"></span>
+                      <span class="tick-lbl">86% Min</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="bento-sub-tags">
+                  <span class="bento-tag tag-muted">${comp.attendedDaysLogged} of ${comp.totalExpectedWorkDays} Workdays</span>
+                  <span class="bento-tag ${comp.maxAllowableNoShows > 0 ? 'tag-safe' : 'tag-neutral'}">
+                    ${comp.maxAllowableNoShows > 0 ? comp.maxAllowableNoShows + ' Safe Leaves Left' : '0 Safe Leaves Left'}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Right Deck: Monthly Average Hours (100% Matches Fiscal Performance) -->
+              <div class="bento-duo-card">
+                <div class="bento-card-top">
+                  <span class="bento-card-title">Monthly Average</span>
                   <span class="tile-pill ${statusClass}">${statusText}</span>
                 </div>
-                <div class="hero-val-row">
-                  <span class="hero-val" style="color:var(--primary);">${comp.avgFormatted}</span>
-                  <span class="hero-sub-unit">/ day</span>
+                <div class="bento-card-metric-row">
+                  <span class="bento-hero-metric" style="color:var(--primary);">${comp.avgFormatted}</span>
+                  <span class="bento-metric-target">/ 7–8h Policy</span>
                 </div>
-                <div class="hero-card-footer">
-                  <span class="footer-target">Company Policy: <strong>7.0h Min – 8.0h Target</strong></span>
-                  <span class="footer-stat">${comp.totalHours}h logged over ${comp.hoursDivisor} workdays</span>
-                </div>
-              </div>
-
-              <!-- Hero 2: Attendance Rate (86% Salary Standard) -->
-              <div class="cockpit-hero-card">
-                <div class="hero-card-header">
-                  <span class="hero-lbl">Salary Attendance Rate</span>
-                  <span class="tile-pill ${comp.is86Safe ? 'badge-salary-safe' : 'badge-salary-risk'}">
-                    ${comp.is86Safe ? '≥ 86% Compliant' : '< 86% Impact Risk'}
-                  </span>
-                </div>
-                <div class="hero-val-row">
-                  <span class="hero-val" style="color:${comp.is86Safe ? '#10b981' : '#f59e0b'};">${comp.attendancePct}%</span>
-                  <span class="hero-sub-unit">current</span>
-                </div>
-                <div class="hero-card-footer">
-                  <span class="footer-target">Salary Rule: <strong>Min 86%</strong> attendance required</span>
-                  <span class="footer-stat">${comp.attendedDaysLogged} of ${comp.totalExpectedWorkDays} total workdays</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- 3. Dual Visual Performance Meters (Attendance & Daily Pace) -->
-            <div class="cockpit-meters-card">
-              <!-- Meter A: Attendance vs 86% Salary Benchmark -->
-              <div class="meter-block" style="margin-bottom:14px;">
-                <div class="meter-header">
-                  <span class="meter-title">
-                    <i class="material-icons-round" style="font-size:14px; color:var(--primary); vertical-align:middle; margin-right:3px;">shield</i>
-                    Salary Attendance Progress
-                  </span>
-                  <span class="meter-metric" style="color:${comp.is86Safe ? '#10b981' : '#f59e0b'};">
-                    ${comp.attendancePct}% <small>/ 86% target</small>
-                  </span>
-                </div>
-                <div class="meter-track-container">
-                  <div class="meter-track">
-                    <div class="meter-fill ${meterFillClass}" style="width: ${meterAttnPct}%;"></div>
-                    <!-- 86% Threshold Marker -->
-                    <div class="meter-marker-86" style="left: 86%;">
-                      <span class="marker-line"></span>
-                      <span class="marker-lbl">86% Min</span>
+                <!-- Embedded Micro Meter with 7h Marker (87.5%) -->
+                <div class="bento-micro-meter">
+                  <div class="meter-bar-track">
+                    <div class="meter-bar-fill fill-primary" style="width: ${hoursMeterPct}%;"></div>
+                    <div class="meter-tick-marker" style="left: 87.5%;">
+                      <span class="tick-line tick-primary"></span>
+                      <span class="tick-lbl lbl-primary">7h Min</span>
                     </div>
                   </div>
                 </div>
-                <div class="meter-caption">
-                  ${meterAttnCaption}
-                </div>
-              </div>
-
-              <!-- Meter B: Hours Standard Pace Gauge -->
-              <div class="meter-block">
-                <div class="meter-header">
-                  <span class="meter-title">
-                    <i class="material-icons-round" style="font-size:14px; color:var(--primary); vertical-align:middle; margin-right:3px;">speed</i>
-                    Daily Hours Pace (7h–8h)
-                  </span>
-                  <span class="meter-metric" style="color:var(--primary);">
-                    ${comp.avgFormatted} <small>/ 8h target</small>
+                <div class="bento-sub-tags">
+                  <span class="bento-tag tag-muted">${comp.totalHours}h / ${comp.hoursDivisor} Workdays</span>
+                  <span class="bento-tag ${comp.isHoursCompliant ? 'tag-safe' : 'tag-risk'}">
+                    ${comp.futureWorkingDays > 0 ? (comp.surplusHours > 0 ? '+' + comp.surplusHours + 'h Surplus' : '~' + comp.reqDailyFormatted7h + '/d Pace') : (comp.isHoursCompliant ? 'Standard Met' : 'Below 7.0h')}
                   </span>
                 </div>
-                <div class="meter-track-container">
-                  <div class="meter-track">
-                    <div class="meter-fill fill-primary" style="width: ${hoursMeterPct}%;"></div>
-                    <!-- 7.0h (87.5%) Marker -->
-                    <div class="meter-marker-7h" style="left: 87.5%;">
-                      <span class="marker-line"></span>
-                      <span class="marker-lbl">7h Min</span>
-                    </div>
-                  </div>
+              </div>
+            </div>
+
+            <!-- 3. Proportional Distribution Strip (Zero Line-Wrap Rigid Grid) -->
+            <div class="proportional-distribution-card">
+              <div class="proportional-bar">
+                <div class="bar-seg seg-present" style="width: ${pPresent}%;" title="Present: ${comp.presentDays}d"></div>
+                <div class="bar-seg seg-leave" style="width: ${pLeave}%;" title="Leave: ${comp.leaveDays}d"></div>
+                <div class="bar-seg seg-exception" style="width: ${pExc}%;" title="Exception: ${comp.exceptionDays}d"></div>
+                <div class="bar-seg seg-noshow" style="width: ${pNoShow}%;" title="No-Show: ${comp.noshowDays}d"></div>
+                <div class="bar-seg seg-off" style="width: ${pOff}%;" title="Weekend/Off: ${comp.offDays}d"></div>
+              </div>
+              <div class="proportional-grid-5col">
+                <div class="col-item">
+                  <span class="col-dot dot-present"></span>
+                  <span class="col-title">Pres</span>
+                  <span class="col-count">${comp.presentDays}d</span>
                 </div>
-                <div class="meter-caption">
-                  ${hoursCaption}
+                <div class="col-item">
+                  <span class="col-dot dot-leave"></span>
+                  <span class="col-title">Leave</span>
+                  <span class="col-count">${comp.leaveDays}d</span>
+                </div>
+                <div class="col-item">
+                  <span class="col-dot dot-exception"></span>
+                  <span class="col-title">Exc</span>
+                  <span class="col-count">${comp.exceptionDays}d</span>
+                </div>
+                <div class="col-item">
+                  <span class="col-dot dot-noshow"></span>
+                  <span class="col-title">No-Show</span>
+                  <span class="col-count">${comp.noshowDays}d</span>
+                </div>
+                <div class="col-item">
+                  <span class="col-dot dot-off"></span>
+                  <span class="col-title">Off</span>
+                  <span class="col-count">${comp.offDays}d</span>
                 </div>
               </div>
             </div>
 
-            <!-- 4. Month Calendar & Leave Intelligence (3-Tile Bento Strip) -->
-            <div class="cockpit-tri-bento">
-              <div class="tri-bento-tile">
-                <span class="tri-lbl">Remaining Workdays</span>
-                <span class="tri-val">${comp.futureWorkingDays > 0 ? comp.futureWorkingDays + ' Days' : '0 Days'}</span>
-                <span class="tri-sub">${comp.futureWorkingDays > 0 ? 'Upcoming weekdays' : 'Month completed'}</span>
-              </div>
-              <div class="tri-bento-tile">
-                <span class="tri-lbl">Safe Off Budget</span>
-                <span class="tri-val" style="color:${comp.maxAllowableNoShows > 0 ? '#10b981' : 'var(--text-muted)'};">${comp.maxAllowableNoShows} Days</span>
-                <span class="tri-sub">${comp.maxAllowableNoShows > 0 ? 'Allowed off (no salary cut)' : 'No safe leaves left'}</span>
-              </div>
-              <div class="tri-bento-tile">
-                <span class="tri-lbl">Workdays Logged</span>
-                <span class="tri-val">${comp.validWorkDaysLogged} Days</span>
-                <span class="tri-sub">${comp.presentDays} Pres • ${comp.leaveDays} Lv • ${comp.noshowDays} NS</span>
-              </div>
-            </div>
-
-            <!-- 5. Month Breakdown Distribution Strip -->
-            <div class="comp-breakdown-strip-spacious">
-              <span class="breakdown-tag tag-present"><span class="dot"></span> Present: <strong>${comp.presentDays}d</strong></span>
-              <span class="breakdown-tag tag-leave"><span class="dot"></span> Leave: <strong>${comp.leaveDays}d</strong></span>
-              <span class="breakdown-tag tag-exception"><span class="dot"></span> Exc: <strong>${comp.exceptionDays}d</strong></span>
-              <span class="breakdown-tag tag-noshow"><span class="dot"></span> No-Show: <strong>${comp.noshowDays}d</strong></span>
-              <span class="breakdown-tag tag-off"><span class="dot"></span> Weekend/Off: <strong>${comp.offDays}d</strong></span>
-            </div>
-
-            <!-- 6. AI Strategic Action Directives (2 Dedicated Cards) -->
-            <div class="cockpit-ai-directives">
-              <div class="directive-card directive-salary">
-                <div class="directive-icon-circle">💼</div>
-                <div class="directive-content">
-                  <div class="directive-title">Salary Protection Directive (86% Threshold)</div>
-                  <div class="directive-text">${comp.salaryAdvice}</div>
+            <!-- 4. Unified AI Copilot Directive Card -->
+            <div class="ai-copilot-briefing-box">
+              <div class="copilot-header">
+                <div class="copilot-title-group">
+                  <span class="copilot-robot-icon">🤖</span>
+                  <span class="copilot-headline">AI Copilot Strategic Directive</span>
                 </div>
+                <span class="copilot-badge">${comp.futureWorkingDays > 0 ? comp.futureWorkingDays + ' Days Left' : 'Finalized'}</span>
               </div>
-              <div class="directive-card directive-hours">
-                <div class="directive-icon-circle">⏱️</div>
-                <div class="directive-content">
-                  <div class="directive-title">Daily Hours Standard Directive (7–8h Standard)</div>
-                  <div class="directive-text">${comp.hoursAdvice}</div>
+              <div class="copilot-directives-list">
+                <div class="directive-bullet">
+                  <span class="bullet-icon">💼</span>
+                  <div class="bullet-text">${comp.salaryAdvice}</div>
+                </div>
+                <div class="directive-bullet">
+                  <span class="bullet-icon">⏱️</span>
+                  <div class="bullet-text">${comp.hoursAdvice}</div>
                 </div>
               </div>
             </div>
@@ -1168,6 +1312,8 @@ window.OfficeUI = (function() {
     switchInsightsSubTab,
     switchTab,
     renderActiveView,
+    renderWeekRadar,
+    handleDayChipClick,
     handleSmartPunch,
     quickAction,
     submitLog,

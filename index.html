@@ -109,106 +109,118 @@
     <div id="dashboardSection" class="hidden" style="width: 100%;">
 
       <!-- ========================================== -->
-      <!-- TAB 1: RECORD ATTENDANCE                   -->
+      <!-- TAB 1: RECORD ATTENDANCE (FULL-SCREEN COCKPIT) -->
       <!-- ========================================== -->
       <section id="tab-record" class="tab-pane active">
-        <div class="container">
-          <div class="form-header-row">
-            <div>
-              <h3 class="form-header-title" id="formTitle">Record Attendance</h3>
-              <div class="form-header-subtitle" id="shiftLiveStatusSub">Ready for shift</div>
-            </div>
-            <div style="display:flex; align-items:center; gap:6px;">
-              <div id="shiftLiveBadge" class="shift-live-pill" style="display:none;">
+        <div class="record-view-container">
+
+          <!-- ZONE 1: LIVE SHIFT CHRONOMETER HERO (TOP) -->
+          <div class="record-hero-card" id="recordHeroCard">
+            <div class="hero-header-row">
+              <div class="hero-user-info">
+                <span class="hero-greeting" id="heroGreetingText">Welcome Back</span>
+                <span class="hero-date-badge" id="heroTodayDateDisplay">--</span>
+              </div>
+              <div id="heroShiftBadge" class="hero-shift-badge">
                 <span class="dot"></span>
-                <span id="shiftLiveText">Ready</span>
-                <span id="shiftLiveTimer" class="shift-live-timer hidden">00:00:00</span>
-              </div>
-              <button type="button" id="btnSmartPunch" class="btn-smart-punch punch-in" onclick="OfficeUI.handleSmartPunch()">
-                <span class="punch-icon-dot"></span>
-                <span id="btnSmartPunchText">Clock In</span>
-                <span id="smartPunchTimer" class="hidden" style="font-variant-numeric:tabular-nums; margin-left:3px;"></span>
-              </button>
-            </div>
-          </div>
-
-          <input type="hidden" id="entryId">
-          <input type="hidden" id="entryUsername">
-
-          <div class="form-row">
-            <div class="form-group">
-              <label>From Date</label>
-              <input type="date" id="entryFromDate" class="compact-input">
-            </div>
-            <div class="form-group">
-              <label>To Date (Optional)</label>
-              <input type="date" id="entryToDate" class="compact-input">
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group" style="width: 100%;">
-              <label>Status</label>
-              <select id="entryStatus" class="compact-input" onchange="OfficeUI.handleStatusChange()">
-                <option value="Present">Present</option>
-                <option value="Leave">Leave</option>
-                <option value="Exception">Exception</option>
-                <option value="No Show">No Show</option>
-                <option value="Weekend">Weekend</option>
-                <option value="Holiday">Holiday</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- SIDE-BY-SIDE IN & OUT TIME ROW -->
-          <div class="form-row">
-            <div class="form-group">
-              <label>In Time</label>
-              <div class="time-input-group">
-                <input type="time" id="entryIn" class="compact-input time-input">
-                <button type="button" class="btn-time-action bg-green" onclick="OfficeUI.quickAction('in')" title="Set Current In Time">In</button>
+                <span id="heroShiftBadgeText">Ready</span>
               </div>
             </div>
-            <div class="form-group">
-              <label>Out Time</label>
-              <div class="time-input-group">
-                <input type="time" id="entryOut" class="compact-input time-input">
-                <button type="button" class="btn-time-action bg-red" onclick="OfficeUI.quickAction('out')" title="Set Current Out Time">Out</button>
+
+            <div class="hero-chronometer-row">
+              <div class="chronometer-dial" id="heroChronometerDial">
+                <span class="chrono-timer" id="heroTimerDisplay">00:00:00</span>
+                <span class="chrono-sub" id="heroTimerSub">Live Shift Timer</span>
+              </div>
+              <div class="hero-actions-col">
+                <button type="button" id="btnSmartPunch" class="btn-smart-punch-hero punch-in" onclick="OfficeUI.handleSmartPunch()">
+                  <span class="punch-icon-dot"></span>
+                  <span id="btnSmartPunchText">Clock In</span>
+                </button>
+                <div class="hero-sub-stats" id="heroShiftStats">
+                  <span id="heroShiftInTimeText">Ready to start today's shift</span>
+                </div>
               </div>
             </div>
           </div>
 
-          <div class="quick-actions-card">
-            <div class="quick-actions-header">
-              <span class="quick-actions-title">⚡ Quick Status Stamps</span>
-              <span class="quick-actions-date" id="quickDateDisplay">--</span>
+          <!-- ZONE 2: ATTENDANCE ENTRY & QUICK STAMP HUB (CENTER) -->
+          <div class="record-form-card">
+            <div class="form-card-header">
+              <div class="form-title-wrap">
+                <i class="material-icons-round" style="font-size:16px; color:var(--primary);">edit_calendar</i>
+                <h3 class="form-card-title" id="formTitle">Manual Entry & Stamps</h3>
+              </div>
+              <span class="form-mode-tag" id="formModeTag">Today's Form</span>
             </div>
-            <div class="quick-buttons-grid">
-              <button type="button" class="btn-quick-large bg-amber" onclick="OfficeUI.quickAction('leave')" title="Mark Leave">
-                <span class="quick-icon">🌴</span>
-                <span class="quick-text">Leave</span>
-              </button>
-              <button type="button" class="btn-quick-large bg-purple" onclick="OfficeUI.quickAction('exception')" title="Mark Exception">
-                <span class="quick-icon">⚡</span>
-                <span class="quick-text">Exception</span>
-              </button>
-              <button type="button" class="btn-quick-large bg-gray" onclick="OfficeUI.quickAction('noshow')" title="Mark No Show">
-                <span class="quick-icon">🚫</span>
-                <span class="quick-text">No Show</span>
-              </button>
-              <button type="button" class="btn-quick-large bg-blue" onclick="OfficeUI.quickAction('weekend')" title="Mark Weekend">
-                <span class="quick-icon">📅</span>
-                <span class="quick-text">Weekend</span>
-              </button>
-              <button type="button" class="btn-quick-large bg-cyan" onclick="OfficeUI.quickAction('holiday')" title="Mark Holiday">
-                <span class="quick-icon">🏖️</span>
-                <span class="quick-text">Holiday</span>
-              </button>
+
+            <input type="hidden" id="entryId">
+            <input type="hidden" id="entryUsername">
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>From Date</label>
+                <input type="date" id="entryFromDate" class="compact-input">
+              </div>
+              <div class="form-group">
+                <label>To Date (Optional)</label>
+                <input type="date" id="entryToDate" class="compact-input">
+              </div>
             </div>
+
+            <div class="form-row">
+              <div class="form-group" style="width: 100%;">
+                <label>Status</label>
+                <select id="entryStatus" class="compact-input" onchange="OfficeUI.handleStatusChange()">
+                  <option value="Present">Present</option>
+                  <option value="Leave">Leave</option>
+                  <option value="Exception">Exception</option>
+                  <option value="No Show">No Show</option>
+                  <option value="Weekend">Weekend</option>
+                  <option value="Holiday">Holiday</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- SIDE-BY-SIDE IN & OUT TIME ROW -->
+            <div class="form-row">
+              <div class="form-group">
+                <label>In Time</label>
+                <div class="time-input-group">
+                  <input type="time" id="entryIn" class="compact-input time-input">
+                  <button type="button" class="btn-time-action bg-green" onclick="OfficeUI.quickAction('in')" title="Set Current In Time">In</button>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Out Time</label>
+                <div class="time-input-group">
+                  <input type="time" id="entryOut" class="compact-input time-input">
+                  <button type="button" class="btn-time-action bg-red" onclick="OfficeUI.quickAction('out')" title="Set Current Out Time">Out</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- QUICK STATUS STAMPS -->
+            <div class="quick-stamps-strip">
+              <span class="stamps-lbl">⚡ Quick Stamps:</span>
+              <div class="stamps-pill-grid">
+                <button type="button" class="btn-stamp-pill bg-amber" onclick="OfficeUI.quickAction('leave')" title="Mark Leave">🌴 Leave</button>
+                <button type="button" class="btn-stamp-pill bg-purple" onclick="OfficeUI.quickAction('exception')" title="Mark Exception">⚡ Exc</button>
+                <button type="button" class="btn-stamp-pill bg-gray" onclick="OfficeUI.quickAction('noshow')" title="Mark No Show">🚫 No-Show</button>
+                <button type="button" class="btn-stamp-pill bg-blue" onclick="OfficeUI.quickAction('weekend')" title="Mark Weekend">📅 Wknd</button>
+                <button type="button" class="btn-stamp-pill bg-cyan" onclick="OfficeUI.quickAction('holiday')" title="Mark Holiday">🏖️ Holiday</button>
+              </div>
+            </div>
+
+            <button type="button" class="btn-submit" id="btnSubmitLog" onclick="OfficeUI.submitLog()">Save Attendance Entry</button>
+            <div id="logMsg" class="status-msg"></div>
           </div>
 
-          <button type="button" class="btn-submit" id="btnSubmitLog" onclick="OfficeUI.submitLog()">Save Attendance Entry</button>
-          <div id="logMsg" class="status-msg"></div>
+          <!-- ZONE 3: WEEK-AT-A-GLANCE ATTENDANCE RADAR (BOTTOM) -->
+          <div class="week-radar-card" id="weekRadarContainer">
+            <!-- Dynamically populated by OfficeUI.renderWeekRadar() -->
+          </div>
+
         </div>
       </section>
 
