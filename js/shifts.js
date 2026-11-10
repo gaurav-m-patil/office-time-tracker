@@ -15,25 +15,55 @@ window.OfficeShifts = (function() {
 
   function loadActiveShift() {
     try {
+      const today = getLocalDateStr();
+      const currentUser = localStorage.getItem(OfficeConfig.STORAGE_KEYS.CURRENT_USER) || "gaurav";
+      
+      // Check if today's log is already completed with an Out Time in OfficeDB
+      let todayLog = null;
+      if (window.OfficeDB && typeof OfficeDB.getLogs === 'function') {
+        const userLogs = OfficeDB.getLogs(currentUser);
+        todayLog = userLogs.find(l => l.date === today && l.username.toLowerCase() === currentUser.toLowerCase());
+      }
+
       const saved = localStorage.getItem(OfficeConfig.STORAGE_KEYS.ACTIVE_SHIFT);
       if (saved) {
         activeShift = JSON.parse(saved);
         
-        // Auto-close check: if shift has been running for > MAX_SHIFT_HOURS_BEFORE_WARN
+        // If today's log already has an Out Time, the shift is already finished! Do not tick!
+        if (todayLog && todayLog.outTime && todayLog.outTime.trim() !== "") {
+          activeShift = {
+            status: "CLOCKED_OUT",
+            clockInTimestamp: null,
+            todayDate: today,
+            breakMinutes: 0,
+            lastDuration: todayLog.hours
+          };
+          saveActiveShift();
+          notify();
+          return;
+        }
+
+        // Auto-close check: if shift has been running for > MAX_SHIFT_HOURS_BEFORE_WARN (14 hours)
         if (activeShift && activeShift.status === "CLOCKED_IN" && activeShift.clockInTimestamp) {
           const hoursPassed = (Date.now() - activeShift.clockInTimestamp) / (1000 * 60 * 60);
-          if (hoursPassed > OfficeConfig.SHIFT_PRESETS.MAX_SHIFT_HOURS_BEFORE_WARN) {
-            console.warn("Unclosed shift detected from previous session:", activeShift);
-            activeShift.isStale = true;
+          if (hoursPassed > (OfficeConfig.SHIFT_PRESETS.MAX_SHIFT_HOURS_BEFORE_WARN || 14)) {
+            console.warn("Unclosed stale shift auto-closed:", activeShift);
+            activeShift = {
+              status: "CLOCKED_OUT",
+              clockInTimestamp: null,
+              todayDate: today,
+              breakMinutes: 0
+            };
+            saveActiveShift();
           }
         }
       } else {
         activeShift = {
           status: "CLOCKED_OUT",
           clockInTimestamp: null,
-          todayDate: getLocalDateStr(),
+          todayDate: today,
           breakMinutes: 0,
-          currentBreakStart: null
+          lastDuration: todayLog ? todayLog.hours : null
         };
       }
     } catch (e) {
@@ -43,7 +73,7 @@ window.OfficeShifts = (function() {
   }
 
   function saveActiveShift() {
-    if (activeShift) {
+    if (activeShift && activeShift.status === "CLOCKED_IN") {
       localStorage.setItem(OfficeConfig.STORAGE_KEYS.ACTIVE_SHIFT, JSON.stringify(activeShift));
     } else {
       localStorage.removeItem(OfficeConfig.STORAGE_KEYS.ACTIVE_SHIFT);
@@ -55,7 +85,7 @@ window.OfficeShifts = (function() {
     return activeShift || { status: "CLOCKED_OUT" };
   }
 
-  // Ticker: Emits elapsed seconds every 1000ms
+  // Ticker: Emits elapsed seconds every 1000ms only when shift is actively running
   function startTicker() {
     if (tickerTimer) clearInterval(tickerTimer);
     tickerTimer = setInterval(() => {
@@ -66,7 +96,7 @@ window.OfficeShifts = (function() {
   }
 
   function getElapsedSeconds() {
-    if (!activeShift || !activeShift.clockInTimestamp || activeShift.status === "CLOCKED_OUT") return 0;
+    if (!activeShift || !activeShift.clockInTimestamp || activeShift.status !== "CLOCKED_IN") return 0;
     const now = Date.now();
     let totalSec = Math.floor((now - activeShift.clockInTimestamp) / 1000);
     let breakSec = (activeShift.breakMinutes || 0) * 60;
@@ -97,24 +127,26 @@ window.OfficeShifts = (function() {
     saveActiveShift();
 
     // Check if an entry for today already exists in OfficeDB
-    const existingLogs = OfficeDB.getLogs(currentUser);
-    let todayLog = existingLogs.find(l => l.date === today && l.username === currentUser);
+    if (window.OfficeDB) {
+      const existingLogs = OfficeDB.getLogs(currentUser);
+      let todayLog = existingLogs.find(l => l.date === today && l.username === currentUser);
 
-    if (todayLog) {
-      todayLog.status = "Present";
-      todayLog.inTime = formattedIn;
-      await OfficeDB.saveLog(todayLog);
-    } else {
-      const newLog = {
-        logId: 'log_' + Date.now(),
-        username: currentUser,
-        date: today,
-        status: "Present",
-        inTime: formattedIn,
-        outTime: "",
-        hours: 0
-      };
-      await OfficeDB.saveLog(newLog);
+      if (todayLog) {
+        todayLog.status = "Present";
+        todayLog.inTime = formattedIn;
+        await OfficeDB.saveLog(todayLog);
+      } else {
+        const newLog = {
+          logId: 'log_' + Date.now(),
+          username: currentUser,
+          date: today,
+          status: "Present",
+          inTime: formattedIn,
+          outTime: "",
+          hours: 0
+        };
+        await OfficeDB.saveLog(newLog);
+      }
     }
 
     triggerHaptic();
@@ -123,55 +155,70 @@ window.OfficeShifts = (function() {
 
   // Clock Out Action
   async function clockOut(customTime = null) {
-    if (!activeShift) return;
-
     const timeStr = customTime || getCurrentTimeStr();
     const formattedOut = formatTimeDisplay(timeStr);
-    const inTime = activeShift.inTime || "09:00 AM";
-    const date = activeShift.todayDate || getLocalDateStr();
-    const currentUser = activeShift.username || localStorage.getItem(OfficeConfig.STORAGE_KEYS.CURRENT_USER) || "gaurav";
+    const inTime = (activeShift && activeShift.inTime) ? activeShift.inTime : "09:00 AM";
+    const date = (activeShift && activeShift.todayDate) ? activeShift.todayDate : getLocalDateStr();
+    const currentUser = (activeShift && activeShift.username) ? activeShift.username : (localStorage.getItem(OfficeConfig.STORAGE_KEYS.CURRENT_USER) || "gaurav");
 
     // End active break if still running
-    if (activeShift.status === "ON_BREAK" && activeShift.currentBreakStart) {
-      const breakMins = Math.round((Date.now() - activeShift.currentBreakStart) / (1000 * 60));
-      activeShift.breakMinutes = (activeShift.breakMinutes || 0) + breakMins;
+    let breakMins = activeShift ? (activeShift.breakMinutes || 0) : 0;
+    if (activeShift && activeShift.status === "ON_BREAK" && activeShift.currentBreakStart) {
+      breakMins += Math.round((Date.now() - activeShift.currentBreakStart) / (1000 * 60));
     }
 
     // Calculate hours with break deduction & overnight support
-    const calc = calculateHours(inTime, formattedOut, activeShift.breakMinutes || 0);
+    const calc = calculateHours(inTime, formattedOut, breakMins);
 
-    const existingLogs = OfficeDB.getLogs(currentUser);
-    let todayLog = existingLogs.find(l => l.date === date && l.username === currentUser);
+    if (window.OfficeDB) {
+      const existingLogs = OfficeDB.getLogs(currentUser);
+      let todayLog = existingLogs.find(l => l.date === date && l.username === currentUser);
 
-    if (todayLog) {
-      todayLog.status = "Present";
-      todayLog.inTime = inTime;
-      todayLog.outTime = formattedOut;
-      todayLog.hours = calc.hoursDecimal;
-      await OfficeDB.saveLog(todayLog);
-    } else {
-      const newLog = {
-        logId: 'log_' + Date.now(),
-        username: currentUser,
-        date: date,
-        status: "Present",
-        inTime: inTime,
-        outTime: formattedOut,
-        hours: calc.hoursDecimal
-      };
-      await OfficeDB.saveLog(newLog);
+      if (todayLog) {
+        todayLog.status = "Present";
+        todayLog.inTime = inTime;
+        todayLog.outTime = formattedOut;
+        todayLog.hours = calc.hoursDecimal;
+        await OfficeDB.saveLog(todayLog);
+      } else {
+        const newLog = {
+          logId: 'log_' + Date.now(),
+          username: currentUser,
+          date: date,
+          status: "Present",
+          inTime: inTime,
+          outTime: formattedOut,
+          hours: calc.hoursDecimal
+        };
+        await OfficeDB.saveLog(newLog);
+      }
     }
 
+    // Mark shift as CLOSED
     activeShift = {
       status: "CLOCKED_OUT",
       clockInTimestamp: null,
       todayDate: date,
-      breakMinutes: 0
+      breakMinutes: 0,
+      lastDuration: calc.hoursDecimal
     };
     saveActiveShift();
 
     triggerHaptic();
     return { success: true, hours: calc.hoursDecimal, formattedDuration: calc.formattedDuration };
+  }
+
+  // Force Close Active Shift (stops all timers immediately)
+  function closeShift(lastDuration = null) {
+    activeShift = {
+      status: "CLOCKED_OUT",
+      clockInTimestamp: null,
+      todayDate: getLocalDateStr(),
+      breakMinutes: 0,
+      lastDuration: lastDuration
+    };
+    saveActiveShift();
+    notify();
   }
 
   // Toggle Break
@@ -303,7 +350,7 @@ window.OfficeShifts = (function() {
 
   function triggerHaptic() {
     if (navigator.vibrate) {
-      try { navigator.vibrate([35, 45, 35]); } catch (e) {}
+      try { navigator.vibrate([30, 40, 30]); } catch (e) {}
     }
   }
 
@@ -328,6 +375,7 @@ window.OfficeShifts = (function() {
     getActiveShift,
     clockIn,
     clockOut,
+    closeShift,
     toggleBreak,
     getElapsedSeconds,
     formatSecondsToHMS,

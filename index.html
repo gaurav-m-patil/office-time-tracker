@@ -66,22 +66,22 @@
 
     <!-- AUTHENTICATION VIEW -->
     <section id="authSection" class="tab-pane active" style="margin-top: 5vh;">
-      <div class="container" style="max-width: 400px; padding: 20px 18px;">
-        <h2 style="text-align: center; margin: 0 0 16px 0; font-size: 18px; color: var(--primary);">Welcome Back</h2>
+      <div class="container" style="max-width: 400px; padding: 18px 16px;">
+        <h2 style="text-align: center; margin: 0 0 14px 0; font-size: 17px; color: var(--primary);">Welcome Back</h2>
 
-        <div id="loginUserGroup" class="form-group" style="margin-bottom: 12px;">
+        <div id="loginUserGroup" class="form-group" style="margin-bottom: 10px;">
           <label>Select Your Name</label>
           <select id="loginUserSelect" class="compact-input">
             <option value="">Loading users...</option>
           </select>
         </div>
 
-        <div id="loginAdminGroup" class="form-group hidden" style="margin-bottom: 12px;">
+        <div id="loginAdminGroup" class="form-group hidden" style="margin-bottom: 10px;">
           <label>Admin Username</label>
           <input type="text" id="loginAdminUsername" class="compact-input" placeholder="e.g. gaurav">
         </div>
 
-        <div class="form-group" style="margin-bottom: 14px;">
+        <div class="form-group" style="margin-bottom: 12px;">
           <label>4-Digit Security PIN</label>
           <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" id="loginPin" class="compact-input"
                  placeholder="••••" style="letter-spacing: 6px; font-size: 18px; text-align: center;"
@@ -90,7 +90,7 @@
 
         <button class="btn-submit" id="btnLogin" onclick="OfficeApp.handleLogin()">Sign In</button>
 
-        <div style="text-align: center; margin-top: 14px; font-size: 12px; color: var(--text-muted);">
+        <div style="text-align: center; margin-top: 12px; font-size: 11px; color: var(--text-muted);">
           <span id="toggleAdminBtn" style="color:var(--primary); font-weight:700; cursor:pointer;" onclick="OfficeApp.toggleAdminMode()">Admin Login?</span>
         </div>
         <div id="authMsg" class="status-msg"></div>
@@ -106,11 +106,21 @@
       <section id="tab-record" class="tab-pane active">
         <div class="container">
           <div class="form-header-row">
-            <h3 id="formTitle">Record Attendance</h3>
-            <div id="shiftLiveBadge" class="shift-live-pill">
-              <span class="dot"></span>
-              <span id="shiftLiveText">Ready</span>
-              <span id="shiftLiveTimer" class="shift-live-timer hidden">00:00:00</span>
+            <div>
+              <h3 id="formTitle">Record Attendance</h3>
+              <span id="shiftLiveStatusSub" style="font-size:10px; font-weight:700; color:var(--text-muted);">Ready for shift</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <div id="shiftLiveBadge" class="shift-live-pill" style="display:none;">
+                <span class="dot"></span>
+                <span id="shiftLiveText">Ready</span>
+                <span id="shiftLiveTimer" class="shift-live-timer hidden">00:00:00</span>
+              </div>
+              <button type="button" id="btnSmartPunch" class="btn-smart-punch punch-in" onclick="OfficeUI.handleSmartPunch()">
+                <span class="punch-icon-dot"></span>
+                <span id="btnSmartPunchText">Clock In</span>
+                <span id="smartPunchTimer" class="hidden" style="font-variant-numeric:tabular-nums; margin-left:3px;"></span>
+              </button>
             </div>
           </div>
 
@@ -142,26 +152,20 @@
             </div>
           </div>
 
+          <!-- SIDE-BY-SIDE IN & OUT TIME ROW (Saves 44px vertical space) -->
           <div class="form-row">
-            <div class="form-group" style="width: 100%;">
+            <div class="form-group">
               <label>In Time</label>
               <div class="time-input-group">
                 <input type="time" id="entryIn" class="compact-input time-input">
-                <button type="button" class="btn-time-action bg-green" onclick="OfficeUI.quickAction('in')">
-                  <i class="material-icons-round" style="font-size:14px;">login</i> In
-                </button>
+                <button type="button" class="btn-time-action bg-green" onclick="OfficeUI.quickAction('in')" title="Set Current In Time">In</button>
               </div>
             </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group" style="width: 100%;">
+            <div class="form-group">
               <label>Out Time</label>
               <div class="time-input-group">
                 <input type="time" id="entryOut" class="compact-input time-input">
-                <button type="button" class="btn-time-action bg-red" onclick="OfficeUI.quickAction('out')">
-                  <i class="material-icons-round" style="font-size:14px;">logout</i> Out
-                </button>
+                <button type="button" class="btn-time-action bg-red" onclick="OfficeUI.quickAction('out')" title="Set Current Out Time">Out</button>
               </div>
             </div>
           </div>
@@ -223,8 +227,8 @@
       <!-- ========================================== -->
       <section id="tab-insights" class="tab-pane">
         <div class="container" style="max-height: calc(100dvh - 120px); overflow-y:auto;">
-          <h3 style="margin: 0 0 4px 0; font-size:15px; color:var(--primary);">Financial Year Analytics</h3>
-          <p style="font-size: 11px; color: var(--text-muted); margin: 0 0 12px 0;">*Attendance % calculated over net working days. Hover/Tap month for breakdown.</p>
+          <h3 style="margin: 0 0 4px 0; font-size:14px; color:var(--primary);">Financial Year Analytics</h3>
+          <p style="font-size: 10px; color: var(--text-muted); margin: 0 0 10px 0;">*Attendance % calculated over net working days. Hover/Tap month for breakdown.</p>
           <div id="insightsContainer"></div>
         </div>
       </section>
@@ -298,13 +302,13 @@
   <div class="modal-backdrop" id="settingsModalBackdrop" onclick="if(event.target===this) OfficeUI.closeSettingsModal()">
     <div class="modal-dialog">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-        <h3 style="font-size:15px; font-weight:800; color:var(--primary); margin:0;">Cloud Database & Settings</h3>
+        <h3 style="font-size:14px; font-weight:800; color:var(--primary); margin:0;">Cloud Database & Settings</h3>
         <button class="icon-btn" onclick="OfficeUI.closeSettingsModal()">
           <i class="material-icons-round">close</i>
         </button>
       </div>
 
-      <div style="background:var(--surface-secondary); padding:10px; border-radius:10px; border:1px solid var(--border); margin-bottom:12px;">
+      <div style="background:var(--surface-secondary); padding:10px; border-radius:10px; border:1px solid var(--border); margin-bottom:10px;">
         <div style="font-size:10px; font-weight:800; text-transform:uppercase; color:var(--text-muted); margin-bottom:4px;">Active Backend</div>
         <div style="display:flex; justify-content:space-between; align-items:center;">
           <span id="settingsActiveBackendLabel" style="font-size:13px; font-weight:800; color:var(--primary);">FIREBASE</span>
@@ -315,10 +319,10 @@
         </div>
       </div>
 
-      <div style="margin-bottom:12px;">
+      <div style="margin-bottom:10px;">
         <label>Firebase Configuration (JSON)</label>
-        <textarea id="settingsFirebaseConfigInput" rows="4" class="compact-input" style="height:auto; font-family:monospace; font-size:11px; padding:8px;" placeholder="Paste Firebase config here..."></textarea>
-        <div style="display:flex; gap:6px; margin-top:8px;">
+        <textarea id="settingsFirebaseConfigInput" rows="4" class="compact-input" style="height:auto; font-family:monospace; font-size:11px; padding:6px;" placeholder="Paste Firebase config here..."></textarea>
+        <div style="display:flex; gap:6px; margin-top:6px;">
           <button class="action-btn" onclick="OfficeUI.handleSaveFirebaseConfig()">Save Config</button>
           <button class="action-btn" id="btnStartMigration" style="background:linear-gradient(135deg, #f97316, #ea580c); color:#ffffff; border:none;" onclick="OfficeUI.handleStartFirebaseMigration()">
             🔥 Re-Sync 134 Records to Firestore
@@ -326,14 +330,14 @@
         </div>
       </div>
 
-      <div style="border-top:1px solid var(--border); padding-top:12px; display:flex; flex-direction:column; gap:8px;">
-        <button class="btn-submit" style="background:#0284c7; height:36px; font-size:12px; margin:0;" onclick="OfficeDB.exportJSONBackup()">
+      <div style="border-top:1px solid var(--border); padding-top:10px; display:flex; flex-direction:column; gap:6px;">
+        <button class="btn-submit" style="background:#0284c7; height:34px; font-size:11px; margin:0;" onclick="OfficeDB.exportJSONBackup()">
           💾 Export Full JSON Database Backup
         </button>
-        <button class="action-btn" style="height:36px; text-align:center;" onclick="OfficeDB.exportCSVBackup()">
+        <button class="action-btn" style="height:34px; text-align:center;" onclick="OfficeDB.exportCSVBackup()">
           📊 Export CSV Attendance Spreadsheet
         </button>
-        <button class="action-btn" style="height:36px; text-align:center; color:var(--status-present);" onclick="OfficeDB.syncWithCloud(); OfficeUI.closeSettingsModal(); OfficeUI.showToast('Syncing with cloud...', 'info');">
+        <button class="action-btn" style="height:34px; text-align:center; color:var(--status-present);" onclick="OfficeDB.syncWithCloud(); OfficeUI.closeSettingsModal(); OfficeUI.showToast('Syncing with cloud...', 'info');">
           🔄 Force Cloud Sync Now
         </button>
       </div>

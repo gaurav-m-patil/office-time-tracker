@@ -1,5 +1,5 @@
 /**
- * Enterprise Time Tracker - UI Controller (Zero-Scroll Mobile Optimized)
+ * Enterprise Time Tracker - UI Controller (Zero-Scroll Mobile Optimized with Smart Punch)
  */
 
 window.OfficeUI = (function() {
@@ -10,13 +10,15 @@ window.OfficeUI = (function() {
     setupNetworkStatusListeners();
     OfficeDB.subscribe(handleDatabaseEvent);
     resetRecordForm();
-    updateLiveShiftPill();
-    
+    updateSmartPunchUI();
+
     // Subscribe to shift ticker
     OfficeShifts.subscribe({
       onTick: (sec, hms) => {
         const timer = document.getElementById('shiftLiveTimer');
         if (timer) timer.innerText = hms;
+        const smartBtnTimer = document.getElementById('smartPunchTimer');
+        if (smartBtnTimer) smartBtnTimer.innerText = hms;
       }
     });
   }
@@ -102,13 +104,87 @@ window.OfficeUI = (function() {
   }
 
   function renderActiveView() {
-    updateLiveShiftPill();
+    updateSmartPunchUI();
     if (activeTab === 'history') {
       renderHistoryTable();
     } else if (activeTab === 'insights') {
       renderInsightsView();
     } else if (activeTab === 'admin') {
       renderAdminTable();
+    }
+  }
+
+  // Smart Punch Header Action (Clock In / Clock Out 1-Tap Toggle)
+  async function handleSmartPunch() {
+    const shift = OfficeShifts.getActiveShift();
+    const inInput = document.getElementById('entryIn');
+    const outInput = document.getElementById('entryOut');
+    const statusSelect = document.getElementById('entryStatus');
+    const fromInput = document.getElementById('entryFromDate');
+
+    if (shift && shift.status === 'CLOCKED_IN') {
+      // User is Clocked In -> CLOCK OUT NOW
+      const nowStr = OfficeShifts.getCurrentTimeStr();
+      if (outInput) outInput.value = nowStr;
+      
+      const res = await OfficeShifts.clockOut(nowStr);
+      updateSmartPunchUI();
+      showToast(`🏁 Clocked Out! Duration: ${res.formattedDuration}`, 'success');
+      
+      // Auto-refresh tables
+      renderActiveView();
+    } else {
+      // User is Clocked Out -> CLOCK IN NOW
+      const nowStr = OfficeShifts.getCurrentTimeStr();
+      const today = OfficeShifts.getLocalDateStr();
+      
+      if (fromInput) fromInput.value = today;
+      if (statusSelect) statusSelect.value = 'Present';
+      if (inInput) inInput.value = nowStr;
+      if (outInput) outInput.value = '';
+      handleStatusChange();
+
+      await OfficeShifts.clockIn(today, nowStr);
+      updateSmartPunchUI();
+      showToast(`⚡ Clocked In at ${OfficeShifts.formatTimeDisplay(nowStr)}!`, 'success');
+    }
+  }
+
+  function updateSmartPunchUI() {
+    const shift = OfficeShifts.getActiveShift();
+    const smartBtn = document.getElementById('btnSmartPunch');
+    const smartBtnText = document.getElementById('btnSmartPunchText');
+    const timerSpan = document.getElementById('smartPunchTimer');
+    const statusSub = document.getElementById('shiftLiveStatusSub');
+    const shiftPill = document.getElementById('shiftLiveBadge');
+
+    if (!smartBtn) return;
+
+    if (shift && shift.status === 'CLOCKED_IN') {
+      smartBtn.className = 'btn-smart-punch punch-out';
+      if (smartBtnText) smartBtnText.innerText = 'Clock Out';
+      if (timerSpan) {
+        timerSpan.classList.remove('hidden');
+        timerSpan.innerText = OfficeShifts.formatSecondsToHMS(OfficeShifts.getElapsedSeconds());
+      }
+      if (statusSub) statusSub.innerText = `Shift active since ${shift.inTime || ''}`;
+      if (shiftPill) {
+        shiftPill.className = 'shift-live-pill active';
+        document.getElementById('shiftLiveText').innerText = 'Active';
+      }
+    } else {
+      smartBtn.className = 'btn-smart-punch punch-in';
+      if (smartBtnText) smartBtnText.innerText = 'Clock In';
+      if (timerSpan) timerSpan.classList.add('hidden');
+      
+      const lastDur = shift.lastDuration != null ? OfficeShifts.formatDurationDisplay(shift.lastDuration) : null;
+      if (statusSub) {
+        statusSub.innerText = lastDur ? `Today completed: ${lastDur}` : 'Ready for shift';
+      }
+      if (shiftPill) {
+        shiftPill.className = 'shift-live-pill';
+        document.getElementById('shiftLiveText').innerText = lastDur ? 'Done' : 'Ready';
+      }
     }
   }
 
@@ -136,6 +212,7 @@ window.OfficeUI = (function() {
     if (quickDate) quickDate.innerText = OfficeShifts.formatDateDDMonYY(today);
 
     handleStatusChange();
+    updateSmartPunchUI();
   }
 
   function handleStatusChange() {
@@ -162,27 +239,43 @@ window.OfficeUI = (function() {
 
     if (type === 'in') {
       if (statusSelect) statusSelect.value = 'Present';
-      if (inInput) inInput.value = OfficeShifts.getCurrentTimeStr();
-      OfficeShifts.clockIn();
+      const nowStr = OfficeShifts.getCurrentTimeStr();
+      if (inInput) inInput.value = nowStr;
+      OfficeShifts.clockIn(OfficeShifts.getLocalDateStr(), nowStr);
       showToast('⚡ In-time registered', 'success');
     } else if (type === 'out') {
       if (statusSelect) statusSelect.value = 'Present';
-      if (outInput) outInput.value = OfficeShifts.getCurrentTimeStr();
+      const nowStr = OfficeShifts.getCurrentTimeStr();
+      if (outInput) outInput.value = nowStr;
+      
+      // Stop the active timer immediately!
+      const inVal = inInput ? inInput.value : "";
+      if (inVal) {
+        const calc = OfficeShifts.calculateHours(inVal, nowStr);
+        OfficeShifts.closeShift(calc.hoursDecimal);
+      } else {
+        OfficeShifts.closeShift();
+      }
       showToast('🏁 Out-time registered', 'info');
     } else if (type === 'leave') {
       if (statusSelect) statusSelect.value = 'Leave';
+      OfficeShifts.closeShift();
     } else if (type === 'exception') {
       if (statusSelect) statusSelect.value = 'Exception';
+      OfficeShifts.closeShift();
     } else if (type === 'noshow') {
       if (statusSelect) statusSelect.value = 'No Show';
+      OfficeShifts.closeShift();
     } else if (type === 'weekend') {
       if (statusSelect) statusSelect.value = 'Weekend';
+      OfficeShifts.closeShift();
     } else if (type === 'holiday') {
       if (statusSelect) statusSelect.value = 'Holiday';
+      OfficeShifts.closeShift();
     }
 
     handleStatusChange();
-    updateLiveShiftPill();
+    updateSmartPunchUI();
   }
 
   async function submitLog() {
@@ -218,6 +311,9 @@ window.OfficeUI = (function() {
       const calc = OfficeShifts.calculateHours(cleanIn, cleanOut);
       calcHours = calc.hoursDecimal;
     }
+
+    // CRITICAL: Close the active shift timer so it stops ticking!
+    OfficeShifts.closeShift(calcHours);
 
     const isRange = toDate && toDate !== fromDate;
 
@@ -256,33 +352,13 @@ window.OfficeUI = (function() {
       msg.style.color = 'var(--status-present)';
     }
 
+    updateSmartPunchUI();
+
     setTimeout(() => {
       if (msg) msg.innerText = '';
       resetRecordForm();
       switchTab('history');
-    }, 500);
-  }
-
-  function updateLiveShiftPill() {
-    const shift = OfficeShifts.getActiveShift();
-    const pill = document.getElementById('shiftLiveBadge');
-    const text = document.getElementById('shiftLiveText');
-    const timer = document.getElementById('shiftLiveTimer');
-
-    if (!pill || !text) return;
-
-    if (shift && shift.status === 'CLOCKED_IN') {
-      pill.className = 'shift-live-pill active';
-      text.innerText = 'Active:';
-      if (timer) {
-        timer.classList.remove('hidden');
-        timer.innerText = OfficeShifts.formatSecondsToHMS(OfficeShifts.getElapsedSeconds());
-      }
-    } else {
-      pill.className = 'shift-live-pill';
-      text.innerText = 'Ready';
-      if (timer) timer.classList.add('hidden');
-    }
+    }, 400);
   }
 
   // History Table
@@ -521,6 +597,7 @@ window.OfficeUI = (function() {
     toggleTheme,
     switchTab,
     renderActiveView,
+    handleSmartPunch,
     quickAction,
     submitLog,
     editRecord,
