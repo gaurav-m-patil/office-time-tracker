@@ -1,1315 +1,452 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#4f46e5" id="theme-color-meta">
-    
-    <link rel="manifest" href="manifest.json?v=26.0">
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3135/3135695.png">
-    
-    <title>Enterprise Time Tracker</title>
-    
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
-    
-    <style>
-        :root {
-            --primary: #4f46e5;
-            --primary-hover: #4338ca;
-            --secondary: #f8fafc;
-            --surface: #ffffff;
-            --text-dark: #0f172a;
-            --text-light: #64748b;
-            --border: #e2e8f0;
-            --input-bg: #ffffff;
-            
-            --accent-green: #059669;
-            --accent-red: #dc2626;
-            --accent-amber: #d97706;
-            --accent-purple: #7c3aed;
-            --accent-gray: #4b5563;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Enterprise Time Tracker</title>
 
-        body.dark-mode {
-            --primary: #818cf8;
-            --primary-hover: #6366f1;
-            --secondary: #090d16;
-            --surface: #1e293b;
-            --text-dark: #f8fafc;
-            --text-light: #94a3b8;
-            --border: #334155;
-            --input-bg: #0f172a;
-        }
+  <!-- PWA & Mobile Web Capabilities -->
+  <link rel="manifest" href="manifest.json?v=2.0">
+  <meta name="theme-color" content="#4f46e5" id="theme-color-meta">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="TimeTracker">
+  <link rel="apple-touch-icon" href="assets/icons/icon.svg">
+  <link rel="icon" type="image/svg+xml" href="assets/icons/icon.svg">
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  <!-- Material Icons Round -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
 
-        body {
-            font-family: "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
-            background-color: var(--secondary);
-            color: var(--text-dark);
-            margin: 0; padding: 0;
-            height: 100vh;
-            display: flex; flex-direction: column;
-            overflow: hidden;
-            -webkit-tap-highlight-color: transparent;
-        }
+  <!-- Core Design System & App Stylesheets -->
+  <link rel="stylesheet" href="css/design-system.css?v=2.0">
+  <link rel="stylesheet" href="css/app.css?v=2.0">
 
-        .topbar {
-            background: var(--surface); color: var(--text-dark);
-            padding: 12px 20px; display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 1px solid var(--border); z-index: 1000;
-        }
-        .topbar h1 { margin: 0; font-size: 18px; font-weight: 700; color: var(--primary); letter-spacing: -0.5px; }
-        .topbar-right { display: flex; align-items: center; gap: 8px; }
-        
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-        .spinning { animation: spin 1s linear infinite; color: var(--primary); }
-        
-        .user-greeting { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
-        .icon-btn { 
-            background: var(--secondary); border: 1px solid var(--border); color: var(--text-dark); 
-            cursor: pointer; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%;
-            flex-shrink: 0;
-        }
-        .icon-btn:hover { background: var(--border); }
-
-        .main-content { flex: 1; overflow-y: auto; padding: 12px; padding-bottom: 90px; width: 100%; transition: transform 0.2s ease-in-out; }
-        
-        .container {
-            background: var(--surface); padding: 16px; border-radius: 16px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03); width: 100%; max-width: 600px; margin: 0 auto;
-            border: 1px solid var(--border);
-        }
-
-        h2, h3 { margin-top: 0; color: var(--primary); }
-        .hidden { display: none !important; }
-
-        .form-row { display: flex; gap: 10px; margin-bottom: 12px; width: 100%; }
-        @media (max-width: 480px) {
-            .form-row { flex-direction: column; gap: 12px; }
-        }
-        .form-group { display: flex; flex-direction: column; flex: 1; min-width: 0; width: 100%; }
-        
-        label { margin-bottom: 4px; font-size: 11px; font-weight: 700; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.5px; }
-        
-        input, select {
-            width: 100%; max-width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 10px;
-            font-size: 15px; color: var(--text-dark); background: var(--input-bg);
-            transition: all 0.2s; -webkit-appearance: none; appearance: none;
-        }
-        input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15); }
-        
-        input[type="date"], input[type="time"] { min-height: 46px; }
-
-        .btn-submit { 
-            background: var(--primary); color: white; border: none; padding: 16px; border-radius: 10px; 
-            cursor: pointer; font-weight: 700; width: 100%; font-size: 16px; margin-top: 10px; 
-            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25); transition: background 0.2s;
-        }
-        .btn-submit:hover { background: var(--primary-hover); }
-
-        .quick-actions-card {
-            background: var(--secondary); border: 1px solid var(--border); border-radius: 12px; padding: 12px; margin: 15px 0; width: 100%;
-        }
-        .quick-actions-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .quick-actions-title { font-size: 12px; font-weight: 700; color: var(--text-light); text-transform: uppercase; }
-        .quick-actions-date { font-size: 12px; font-weight: 600; color: var(--primary); }
-        
-        .quick-buttons-5 { display: flex; flex-wrap: wrap; gap: 8px; width: 100%; }
-        .quick-buttons-5 > button { flex: 1 1 calc(33.333% - 8px); min-height: 42px; }
-        
-        .btn-quick {
-            border: none; padding: 12px 6px; border-radius: 10px; color: white; 
-            font-weight: 700; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.08); transition: transform 0.1s;
-            white-space: nowrap; width: 100%; margin: 0;
-        }
-        .btn-quick:active { transform: scale(0.97); }
-        .bg-green { background: var(--accent-green); } 
-        .bg-red { background: var(--accent-red); }
-        .bg-amber { background: var(--accent-amber); } 
-        .bg-purple { background: var(--accent-purple); } 
-        .bg-gray { background: var(--accent-gray); }
-        .bg-blue { background: #0284c7; }
-
-        .table-container { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; margin-top: 10px; width: 100%; }
-        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; min-width: 450px; }
-        th { background: var(--secondary); padding: 12px; font-weight: 700; color: var(--text-light); border-bottom: 1px solid var(--border); }
-        td { padding: 12px; border-bottom: 1px solid var(--border); color: var(--text-dark); white-space: nowrap; }
-        .action-btn { background: var(--secondary); color: var(--primary); border: 1px solid var(--border); padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
-        .btn-delete { color: var(--accent-red); background: rgba(220, 38, 38, 0.1); border-color: rgba(220, 38, 38, 0.2); }
-
-        .quarter-block {
-            background: var(--secondary); border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin-bottom: 20px; width: 100%;
-        }
-        .quarter-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 8px; flex-wrap: wrap; gap: 6px; }
-        .quarter-title { font-size: 14px; font-weight: 800; color: var(--primary); text-transform: uppercase; }
-        .quarter-stats { font-size: 12px; font-weight: 600; color: var(--text-light); }
-        
-        .months-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        .month-circle-card {
-            background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 4px; text-align: center; display: flex; flex-direction: column; align-items: center;
-            position: relative; 
-            user-select: none;
-            -webkit-user-select: none;
-            -webkit-touch-callout: none;
-        }
-        .month-name { font-size: 10px; font-weight: 700; color: var(--text-light); margin-bottom: 6px; text-transform: uppercase; }
-        .circle-progress {
-            width: 50px; height: 50px; border-radius: 50%; background: conic-gradient(var(--primary) calc(var(--pct, 0) * 1%), var(--border) 0);
-            display: flex; align-items: center; justify-content: center; margin: 0 auto; position: relative;
-        }
-        .circle-progress::before {
-            content: ""; position: absolute; width: 38px; height: 38px; border-radius: 50%; background: var(--surface);
-        }
-        .circle-value { position: relative; font-size: 10px; font-weight: 800; color: var(--text-dark); }
-        .month-avg-hours { font-size: 10px; font-weight: 700; color: var(--text-light); margin-top: 6px; text-align: center; width: 100%; }
-
-        .month-tooltip {
-            position: absolute;
-            bottom: calc(100% + 8px);
-            left: 50%;
-            transform: translateX(-50%) translateY(10px) scale(0.95);
-            background: var(--surface);
-            border: 1px solid var(--border);
-            box-shadow: 0 12px 30px rgba(0,0,0,0.15);
-            border-radius: 12px;
-            padding: 12px 14px;
-            width: max-content;
-            min-width: 140px;
-            z-index: 1000;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.2s cubic-bezier(0.25, 1.2, 0.5, 1);
-            pointer-events: none;
-        }
-        body.dark-mode .month-tooltip { box-shadow: 0 12px 30px rgba(0,0,0,0.6); }
-        .month-tooltip.show {
-            opacity: 1;
-            visibility: visible;
-            transform: translateX(-50%) translateY(0) scale(1);
-        }
-        .month-tooltip::after {
-            content: '';
-            position: absolute;
-            top: 100%;
-            left: 50%;
-            margin-left: -6px;
-            border-width: 6px;
-            border-style: solid;
-            border-color: var(--surface) transparent transparent transparent;
-        }
-        .tooltip-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 11px;
-            color: var(--text-dark);
-            margin-bottom: 8px;
-        }
-        .tooltip-row:last-child { margin-bottom: 0; }
-        .tooltip-label { display: flex; align-items: center; gap: 8px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-        .tooltip-val { font-weight: 800; font-size: 12px; font-variant-numeric: tabular-nums; }
-        .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-
-        .status-msg { margin-top: 10px; text-align: center; font-weight: 600; font-size: 14px; min-height: 20px; }
-
-        .bottom-nav {
-            position: fixed; bottom: 0; left: 0; width: 100%;
-            background: var(--surface); border-top: 1px solid var(--border);
-            display: flex; justify-content: space-around; padding: 10px 0 14px 0; z-index: 1000;
-            box-shadow: 0 -4px 20px rgba(0,0,0,0.03);
-        }
-        .nav-item {
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            background: none; border: none; color: var(--text-light); cursor: pointer;
-            width: 25%; font-size: 11px; font-weight: 700; gap: 4px;
-        }
-        .nav-item.active { color: var(--primary); }
-        .nav-item .material-icons-round { font-size: 24px; }
-        .nav-item.active .material-icons-round { background: rgba(79, 70, 229, 0.12); border-radius: 12px; padding: 2px 12px; }
-
-        .auth-toggle { text-align: center; margin-top: 15px; font-size: 13px; color: var(--text-light); }
-        .auth-toggle span { color: var(--primary); cursor: pointer; font-weight: 700; }
-    </style>
+  <!-- Self-Hosted Firebase Compat Libraries (Zero CDN Latency) -->
+  <script src="vendor/firebase-app-compat.js"></script>
+  <script src="vendor/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
-    <div class="topbar">
-        <h1>TimeTracker</h1>
-        <div class="topbar-right">
-            <div id="sync-indicator" class="hidden" style="display:flex; align-items:center; margin-right:4px;">
-                <i class="material-icons-round spinning" id="sync-icon" style="font-size: 20px;">sync</i>
-            </div>
-            
-            <button class="icon-btn" onclick="hardRefresh()" title="Developer Refresh"><i class="material-icons-round" style="font-size:18px;">refresh</i></button>
-            <button class="icon-btn" onclick="toggleDarkMode()" title="Toggle Theme"><i class="material-icons-round" id="theme-icon">dark_mode</i></button>
-            <div id="user-controls" class="hidden" style="display:flex; align-items:center; gap:8px;">
-                <span class="user-greeting"><i class="material-icons-round" style="font-size:18px; color:var(--primary);">account_circle</i> <span id="display-firstname"></span></span>
-                <button class="icon-btn" onclick="logout()" title="Logout"><i class="material-icons-round" style="font-size:18px;">logout</i></button>
-            </div>
-        </div>
-    </div>
+  <!-- Floating Toast Notifications -->
+  <div id="toastContainer" class="toast-container"></div>
 
-    <div class="main-content" id="scroll-content">
-        
-        <div id="auth-section" class="container" style="max-width: 400px; margin-top: 5vh;">
-            <div id="login-form-div">
-                <h2 style="text-align: center; margin-bottom: 20px;">Welcome Back</h2>
-                
-                <div id="login-dropdown-area" class="form-group" style="margin-bottom: 12px;">
-                    <label>Select Your Name</label>
-                    <select id="login-user-select">
-                        <option value="">Loading users...</option>
+  <div class="app-shell">
+    <div class="ambient-glow"></div>
+
+    <!-- ========================================== -->
+    <!-- TOP NAVIGATION BAR                         -->
+    <!-- ========================================== -->
+    <header class="topbar">
+      <div class="brand-wrapper">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+        </div>
+        <div>
+          <div class="brand-title">TimeTracker</div>
+          <div class="brand-subtitle">Enterprise Suite</div>
+        </div>
+      </div>
+
+      <div class="topbar-actions">
+        <span id="syncIndicator" class="sync-pill"><span class="dot"></span> Online</span>
+        <button class="icon-btn" onclick="OfficeApp.hardRefresh()" title="Developer Refresh">
+          <i class="material-icons-round" style="font-size:18px;">refresh</i>
+        </button>
+        <button class="icon-btn" onclick="OfficeUI.toggleTheme()" title="Toggle Theme">
+          <i class="material-icons-round" id="themeToggleIcon" style="font-size:18px;">dark_mode</i>
+        </button>
+        <button class="icon-btn" onclick="OfficeUI.openSettingsModal()" title="Settings & Firebase Database">
+          <i class="material-icons-round" style="font-size:18px;">settings</i>
+        </button>
+        <div id="userHeaderBadge" class="user-badge" onclick="OfficeAuth.logout()" title="Click to Sign Out" style="cursor:pointer;">
+          <div class="user-avatar" id="topbarUserAvatar">G</div>
+          <span id="topbarUserName" style="font-size:12px;">Gaurav</span>
+          <span id="topbarUserRole" style="font-size:10px; background:var(--primary-light); color:var(--primary); padding:2px 6px; border-radius:var(--radius-sm); font-weight:800;">Admin</span>
+          <i class="material-icons-round" style="font-size:14px; color:var(--text-muted);">logout</i>
+        </div>
+      </div>
+    </header>
+
+    <!-- ========================================== -->
+    <!-- MAIN VIEWPORT CONTAINER                    -->
+    <!-- ========================================== -->
+    <div class="main-viewport" id="mainViewport">
+
+      <!-- AUTHENTICATION VIEW -->
+      <section id="authSection" class="tab-pane active" style="max-width: 380px; margin-top: 8vh;">
+        <div class="cockpit-card" style="text-align: left; padding: 28px 24px;">
+          <div style="text-align: center; margin-bottom: 24px;">
+            <div class="brand-icon" style="margin: 0 auto 12px auto; width: 48px; height: 48px;">
+              <svg viewBox="0 0 24 24" style="width:28px; height:28px;"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+            </div>
+            <h2 style="font-size: 20px; font-weight: 800; color: var(--text-primary); margin-bottom: 4px;">Welcome Back</h2>
+            <p style="font-size: 12px; color: var(--text-muted);">Sign in to log your office attendance</p>
+          </div>
+
+          <div id="loginUserGroup" class="form-group" style="margin-bottom: 14px;">
+            <label class="field-label">Select Employee</label>
+            <select id="loginUserSelect" class="form-select">
+              <option value="">Loading roster...</option>
+            </select>
+          </div>
+
+          <div id="loginAdminGroup" class="form-group hidden" style="margin-bottom: 14px;">
+            <label class="field-label">Admin Username</label>
+            <input type="text" id="loginAdminUsername" class="form-input" placeholder="e.g. gaurav">
+          </div>
+
+          <div class="form-group" style="margin-bottom: 18px;">
+            <label class="field-label">4-Digit Security PIN</label>
+            <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" id="loginPin" class="form-input"
+                   placeholder="••••" style="letter-spacing: 6px; font-size: 20px; text-align: center;"
+                   oninput="OfficeApp.checkAutoLogin(event)">
+          </div>
+
+          <button class="btn-primary" id="btnLogin" onclick="OfficeApp.handleLogin()">Sign In</button>
+
+          <div style="text-align: center; margin-top: 16px; font-size: 12px; color: var(--text-muted);">
+            <span id="toggleAdminBtn" style="color:var(--primary); font-weight:700; cursor:pointer;" onclick="OfficeApp.toggleAdminMode()">Admin Login?</span>
+          </div>
+          <div id="authMsg" style="margin-top: 10px; font-size: 12px; text-align: center; font-weight: 700;"></div>
+        </div>
+      </section>
+
+      <!-- DASHBOARD WRAPPER -->
+      <div id="dashboardSection" class="hidden">
+
+        <!-- ========================================== -->
+        <!-- TAB 1: RECORD ATTENDANCE                   -->
+        <!-- ========================================== -->
+        <section id="tab-record" class="tab-pane active">
+
+          <!-- Hero Punch Cockpit Card -->
+          <div class="cockpit-card">
+            <div class="cockpit-header">
+              <span id="heroLiveBadge" class="live-badge clocked-out">Clocked Out</span>
+              <span class="live-clock-text" id="heroCurrentDateDisplay">Today</span>
+            </div>
+
+            <!-- Big Elapsed Counter -->
+            <div class="elapsed-container">
+              <div class="elapsed-time" id="heroElapsedTime">00:00:00</div>
+              <div class="elapsed-label">Shift Duration Today</div>
+            </div>
+
+            <!-- Primary Interactive Punch Button -->
+            <div class="punch-btn-wrapper">
+              <div class="punch-pulse-ring" id="heroPulseRing" style="display:none;"></div>
+              <button class="punch-btn btn-punch-in" id="heroPunchBtn" onclick="OfficeUI.handleHeroPunch()">
+                <i class="material-icons-round punch-icon" id="heroPunchIcon">login</i>
+                <span class="punch-btn-text" id="heroPunchText">Clock In</span>
+                <span class="punch-btn-subtext" id="heroPunchSubtext">Ready for Shift</span>
+              </button>
+            </div>
+
+            <!-- Secondary Cockpit Actions -->
+            <div class="secondary-cockpit-actions">
+              <button class="action-pill-btn" id="heroBreakBtn" style="display:none;" onclick="OfficeUI.handleHeroBreak()">
+                <i class="material-icons-round" style="font-size:16px;">coffee</i> Take Break
+              </button>
+            </div>
+          </div>
+
+          <!-- Weekly Goals & Punch Strip -->
+          <div class="week-card">
+            <div class="week-header">
+              <span class="week-title">Weekly Work Target</span>
+              <span class="week-stats" id="weekStatsText">0.0h / 40.0h (0%)</span>
+            </div>
+            <div class="progress-track">
+              <div class="progress-fill" id="weekProgressFill" style="width: 0%;"></div>
+            </div>
+            <div class="week-days-strip" id="weekDaysStrip"></div>
+          </div>
+
+          <!-- Quick Manual / Range Adjustment Form -->
+          <div class="manual-card">
+            <div class="manual-header" onclick="document.getElementById('manualFormCollapse').classList.toggle('hidden')">
+              <span class="manual-title">
+                <i class="material-icons-round" style="font-size:18px; color:var(--primary);">edit_calendar</i>
+                Manual Entry / Range Logging
+              </span>
+              <i class="material-icons-round" style="font-size:18px; color:var(--text-muted);">expand_more</i>
+            </div>
+
+            <div id="manualFormCollapse" class="hidden">
+              <!-- Quick Shortcut Pills -->
+              <div class="quick-shortcuts-panel">
+                <button type="button" class="shortcut-btn bg-present" onclick="OfficeUI.applyQuickShortcut('in')">Set In (Now)</button>
+                <button type="button" class="shortcut-btn bg-present" onclick="OfficeUI.applyQuickShortcut('out')">Set Out (Now)</button>
+                <button type="button" class="shortcut-btn bg-leave" onclick="OfficeUI.applyQuickShortcut('Leave')">Leave</button>
+                <button type="button" class="shortcut-btn bg-exception" onclick="OfficeUI.applyQuickShortcut('Exception')">Exception</button>
+                <button type="button" class="shortcut-btn bg-noshow" onclick="OfficeUI.applyQuickShortcut('No Show')">No Show</button>
+                <button type="button" class="shortcut-btn bg-weekend" onclick="OfficeUI.applyQuickShortcut('Weekend')">Weekend</button>
+                <button type="button" class="shortcut-btn bg-holiday" onclick="OfficeUI.applyQuickShortcut('Holiday')">Holiday</button>
+              </div>
+
+              <form onsubmit="OfficeUI.submitManualLog(event)">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="field-label">From Date *</label>
+                    <input type="date" id="manualFromDate" class="form-input" required>
+                  </div>
+                  <div class="form-group">
+                    <label class="field-label">To Date (For Leaves/Holidays)</label>
+                    <input type="date" id="manualToDate" class="form-input">
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="field-label">Status *</label>
+                    <select id="manualStatus" class="form-select" onchange="OfficeUI.handleManualStatusChange()">
+                      <option value="Present">Present</option>
+                      <option value="Leave">Leave</option>
+                      <option value="Exception">Exception</option>
+                      <option value="No Show">No Show</option>
+                      <option value="Weekend">Weekend</option>
+                      <option value="Holiday">Holiday</option>
                     </select>
-                </div>
-
-                <div id="login-admin-area" class="form-group hidden" style="margin-bottom: 12px;">
-                    <label>Admin Username</label>
-                    <input type="text" id="login-admin-username" placeholder="Enter admin username">
-                </div>
-
-                <div class="form-group" style="margin-bottom: 12px;">
-                    <label>4-Digit PIN</label>
-                    <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" id="login-password" placeholder="••••" style="letter-spacing: 4px; font-size: 18px; text-align: center;" oninput="checkAutoLogin(event)">
-                </div>
-                
-                <button class="btn-submit" id="btn-login" onclick="login()">Sign In</button>
-                
-                <div class="auth-toggle">
-                    <span id="toggle-admin-btn" onclick="toggleAdminLogin()">Admin Login?</span> | 
-                    <span onclick="toggleAuthForm('register')">Create Account</span>
-                </div>
-            </div>
-
-            <div id="register-form-div" class="hidden">
-                <h2 style="text-align: center;">Create Account</h2>
-                <div class="form-row">
-                    <div class="form-group"><label>First Name</label><input type="text" id="reg-fname" placeholder="John"></div>
-                    <div class="form-group"><label>Last Name</label><input type="text" id="reg-lname" placeholder="Doe"></div>
-                </div>
-                <div class="form-group" style="margin-bottom: 12px;"><label>Username</label><input type="text" id="reg-username" placeholder="johndoe"></div>
-                <div class="form-group" style="margin-bottom: 12px;"><label>4-Digit PIN</label><input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" id="reg-password" placeholder="••••" style="letter-spacing: 4px; font-size: 18px; text-align: center;" onkeydown="if(event.key==='Enter') register()"></div>
-                <button class="btn-submit" id="btn-register" onclick="register()">Register</button>
-                <div class="auth-toggle">Already registered? <span onclick="toggleAuthForm('login')">Sign In</span></div>
-            </div>
-            <div id="auth-msg" class="status-msg"></div>
-        </div>
-
-        <div id="dashboard-section" class="container hidden">
-            
-            <div id="tab-log">
-                <h3 id="form-title" style="margin-bottom: 12px; font-size:16px;">Record Attendance</h3>
-                <input type="hidden" id="entry-id">
-                <input type="hidden" id="entry-username">
-                
-                <div class="form-row">
-                    <div class="form-group"><label>From Date</label><input type="date" id="entry-from-date"></div>
-                    <div class="form-group"><label>To Date (Optional)</label><input type="date" id="entry-to-date"></div>
+                  </div>
                 </div>
 
                 <div class="form-row">
-                    <div class="form-group" style="width: 100%;">
-                        <label>Status</label>
-                        <select id="entry-status" onchange="handleStatusChange()">
-                            <option value="Present">Present</option>
-                            <option value="Leave">Leave</option>
-                            <option value="Exception">Exception</option>
-                            <option value="No Show">No Show</option>
-                            <option value="Weekend">Weekend</option>
-                            <option value="Holiday">Holiday</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group" style="width: 100%;">
-                        <label>In Time</label>
-                        <div style="display:flex; gap:8px;">
-                            <input type="time" id="entry-in" style="flex: 3;">
-                            <button class="btn-quick bg-green" onclick="quickAction('in')" style="flex: 1;"><i class="material-icons-round" style="font-size:14px;">login</i> In</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group" style="width: 100%;">
-                        <label>Out Time</label>
-                        <div style="display:flex; gap:8px;">
-                            <input type="time" id="entry-out" style="flex: 3;">
-                            <button class="btn-quick bg-red" onclick="quickAction('out')" style="flex: 1;"><i class="material-icons-round" style="font-size:14px;">logout</i> Out</button>
-                        </div>
-                    </div>
+                  <div class="form-group">
+                    <label class="field-label">In Time</label>
+                    <input type="time" id="manualInTime" class="form-input">
+                  </div>
+                  <div class="form-group">
+                    <label class="field-label">Out Time</label>
+                    <input type="time" id="manualOutTime" class="form-input">
+                  </div>
                 </div>
 
-                <div id="quick-actions-panel" class="quick-actions-card">
-                    <div class="quick-actions-header">
-                        <span class="quick-actions-title">⚡ Quick Shortcuts</span>
-                        <span class="quick-actions-date" id="quick-date-display">--</span>
-                    </div>
-                    <div class="quick-buttons-5">
-                        <button class="btn-quick bg-amber" onclick="quickAction('leave')">Leave</button>
-                        <button class="btn-quick bg-purple" onclick="quickAction('exception')">Exception</button>
-                        <button class="btn-quick bg-gray" onclick="quickAction('noshow')">No Show</button>
-                        <button class="btn-quick bg-blue" onclick="quickAction('weekend')">Weekend</button>
-                        <button class="btn-quick bg-blue" onclick="quickAction('holiday')">Holiday</button>
-                    </div>
-                </div>
-
-                <button class="btn-submit" id="btn-submit-log" onclick="submitLog()">Save Entry</button>
-                <div id="log-msg" class="status-msg"></div>
+                <button type="submit" class="btn-primary" style="margin-top:8px;">Save Attendance Record</button>
+              </form>
             </div>
+          </div>
+        </section>
 
-            <div id="tab-history" class="hidden">
-                <h3 style="margin-bottom: 5px;">My History</h3>
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr><th>Date</th><th>Status</th><th>In</th><th>Out</th><th>Duration</th><th></th></tr>
-                        </thead>
-                        <tbody id="history-table-body"></tbody>
-                    </table>
-                </div>
+        <!-- ========================================== -->
+        <!-- TAB 2: MY HISTORY                          -->
+        <!-- ========================================== -->
+        <section id="tab-history" class="tab-pane">
+          <div class="table-toolbar">
+            <div>
+              <h3 style="font-size:16px; font-weight:800; color:var(--text-primary); margin:0;">Attendance History</h3>
+              <span id="historyCountBadge" style="font-size:11px; font-weight:700; color:var(--primary);">134 records</span>
             </div>
+            <div style="display:flex; gap:8px;">
+              <button class="action-pill-btn" onclick="OfficeDB.exportCSVBackup()">
+                <i class="material-icons-round" style="font-size:15px;">download</i> CSV
+              </button>
+            </div>
+          </div>
 
-            <div id="tab-insights" class="hidden">
-                <h3 style="margin-bottom: 5px;">Financial Year Analytics</h3>
-                <p style="font-size: 11px; color: var(--text-light); margin-top: 0; margin-bottom: 15px;">*Attendance % calculated over net working days. Press & Hold a month to view breakdown.</p>
-                <div id="insights-container"></div>
+          <div class="table-card">
+            <div class="data-table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>In</th>
+                    <th>Out</th>
+                    <th>Duration</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="historyTableBody"></tbody>
+              </table>
             </div>
+          </div>
+        </section>
 
-            <div id="tab-admin" class="hidden">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-                    <h3 style="margin: 0;">Organization Records</h3>
-                    <button class="action-btn" onclick="exportAdminCSV()"><i class="material-icons-round" style="font-size:14px; vertical-align:middle;">download</i> CSV</button>
-                </div>
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr><th>User</th><th>Date</th><th>Status</th><th>In</th><th>Out</th><th>Duration</th><th></th></tr>
-                        </thead>
-                        <tbody id="admin-table-body"></tbody>
-                    </table>
-                </div>
+        <!-- ========================================== -->
+        <!-- TAB 3: INSIGHTS (FINANCIAL YEAR)           -->
+        <!-- ========================================== -->
+        <section id="tab-insights" class="tab-pane">
+          <div style="margin-bottom: 14px;">
+            <h3 style="font-size:16px; font-weight:800; color:var(--text-primary); margin-bottom:2px;">Financial Year Analytics</h3>
+            <p style="font-size:11px; color:var(--text-muted); margin:0;">
+              *Attendance calculated over net working days. Hover or tap a month for breakdown.
+            </p>
+          </div>
+          <div id="insightsContainer"></div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- TAB 4: ORGANIZATION ADMIN                  -->
+        <!-- ========================================== -->
+        <section id="tab-admin" class="tab-pane">
+          <div class="table-toolbar">
+            <div>
+              <h3 style="font-size:16px; font-weight:800; color:var(--text-primary); margin:0;">Organization Attendance Logs</h3>
+              <span style="font-size:11px; font-weight:700; color:var(--text-muted);">Admin Consolidated View</span>
             </div>
-        </div>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <select id="adminUserFilter" class="form-select" style="padding:6px 10px; font-size:12px; width:auto;" onchange="OfficeUI.renderActiveView()">
+                <option value="all">All Employees</option>
+              </select>
+              <button class="action-pill-btn" onclick="OfficeDB.exportCSVBackup()">
+                <i class="material-icons-round" style="font-size:15px;">download</i> CSV
+              </button>
+            </div>
+          </div>
+
+          <div class="table-card">
+            <div class="data-table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>User</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>In</th>
+                    <th>Out</th>
+                    <th>Duration</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="adminTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+      </div>
     </div>
 
-    <nav class="bottom-nav hidden" id="app-bottom-nav">
-        <button class="nav-item active" id="nav-log" onclick="switchTab('log')">
-            <i class="material-icons-round">edit_square</i><span>Record</span>
-        </button>
-        <button class="nav-item" id="nav-history" onclick="switchTab('history')">
-            <i class="material-icons-round">history</i><span>History</span>
-        </button>
-        <button class="nav-item" id="nav-insights" onclick="switchTab('insights')">
-            <i class="material-icons-round">insights</i><span>Insights</span>
-        </button>
-        <button class="nav-item hidden" id="nav-admin" onclick="switchTab('admin')">
-            <i class="material-icons-round">admin_panel_settings</i><span>All Logs</span>
-        </button>
+    <!-- ========================================== -->
+    <!-- BOTTOM NAVIGATION BAR                      -->
+    <!-- ========================================== -->
+    <nav class="bottom-nav hidden" id="appBottomNav">
+      <button class="nav-tab-btn active" id="nav-record" onclick="OfficeUI.switchTab('record')">
+        <i class="material-icons-round">edit_calendar</i>
+        <span>Record</span>
+      </button>
+      <button class="nav-tab-btn" id="nav-history" onclick="OfficeUI.switchTab('history')">
+        <i class="material-icons-round">history</i>
+        <span>History</span>
+      </button>
+      <button class="nav-tab-btn" id="nav-insights" onclick="OfficeUI.switchTab('insights')">
+        <i class="material-icons-round">insights</i>
+        <span>Insights</span>
+      </button>
+      <button class="nav-tab-btn hidden" id="nav-admin" onclick="OfficeUI.switchTab('admin')">
+        <i class="material-icons-round">admin_panel_settings</i>
+        <span>Admin</span>
+      </button>
     </nav>
-
-    <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwT77gaKXuTfG6sqef61rgXtZaDqUagDfRX9w4c6Hx-y7ldEKmveTZrwpVAtBXIS60vfw/exec";
-        
-        let currentUser = "";
-        let currentFirstName = "";
-        let currentRole = "";
-        let logsData = [];
-        let cachedUsersList = null;
-        let isAdminLoginMode = false;
-        let isLoggingIn = false; 
-        let activeSyncs = 0; 
-        
-        const SESSION_EXPIRY_MS = 30 * 24 * 60 * 60 * 1000; 
-
-        window.onload = () => {
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('./sw.js').then(() => {
-                    console.log('Offline Support Ready');
-                });
-            }
-
-            restrictDatesToToday();
-            checkSessionAndInitialize();
-            setupSwipeGestures();
-            setupNetworkListeners();
-            processOfflineQueue(); 
-            
-            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                toggleDarkMode(true);
-            }
-        };
-
-        let tooltipTimer;
-        function showTooltip(el, e) {
-            clearTimeout(tooltipTimer);
-            tooltipTimer = setTimeout(() => {
-                const tt = el.querySelector('.month-tooltip');
-                if (tt) {
-                    tt.classList.add('show');
-                    if (navigator.vibrate) navigator.vibrate(40);
-                }
-            }, 250); 
-        }
-
-        function hideTooltip(el) {
-            clearTimeout(tooltipTimer);
-            const tt = el.querySelector('.month-tooltip');
-            if (tt) tt.classList.remove('show');
-        }
-
-        function restrictDatesToToday() {
-            const today = getLocalDateStr();
-            document.getElementById("entry-from-date").max = today;
-            document.getElementById("entry-to-date").max = today;
-        }
-
-        function checkSessionAndInitialize() {
-            const savedUser = localStorage.getItem("tt_current_user");
-            const savedName = localStorage.getItem("tt_current_name");
-            const savedRole = localStorage.getItem("tt_current_role");
-            const loginTime = localStorage.getItem("tt_login_time");
-
-            if (savedUser && loginTime) {
-                const timePassed = Date.now() - parseInt(loginTime);
-                if (timePassed > SESSION_EXPIRY_MS) {
-                    logout();
-                    return;
-                }
-                
-                currentUser = savedUser;
-                currentFirstName = savedName || savedUser;
-                currentRole = savedRole || "User";
-                
-                document.getElementById("auth-section").classList.add("hidden");
-                document.getElementById("user-controls").classList.remove("hidden");
-                document.getElementById("dashboard-section").classList.remove("hidden");
-                document.getElementById("app-bottom-nav").classList.remove("hidden");
-                document.getElementById("display-firstname").innerText = currentFirstName;
-
-                const localLogs = localStorage.getItem("tt_logs");
-                if (localLogs) {
-                    try { logsData = JSON.parse(localLogs); } catch(e) {}
-                }
-
-                if(currentRole === "Admin") {
-                    document.getElementById("nav-history").classList.add("hidden");
-                    document.getElementById("nav-insights").classList.add("hidden");
-                    document.getElementById("nav-admin").classList.remove("hidden");
-                    switchTab('admin');
-                } else {
-                    document.getElementById("nav-history").classList.remove("hidden");
-                    document.getElementById("nav-insights").classList.remove("hidden");
-                    document.getElementById("nav-admin").classList.add("hidden");
-                    resetForm();
-                    switchTab('log');
-                }
-                
-                fetchData(true); 
-            } else {
-                const localUsers = localStorage.getItem("tt_users");
-                if (localUsers) {
-                    try {
-                        cachedUsersList = JSON.parse(localUsers);
-                        renderUserDropdown(cachedUsersList);
-                    } catch(e) {}
-                }
-                fetchUserListForDropdown();
-            }
-        }
-
-        function setupNetworkListeners() {
-            window.addEventListener('online', () => {
-                const icon = document.getElementById("sync-icon");
-                if (icon) { icon.innerText = "cloud_done"; icon.style.color = "var(--accent-green)"; icon.classList.remove("spinning"); }
-                setTimeout(() => { document.getElementById("sync-indicator").classList.add("hidden"); }, 2000);
-                processOfflineQueue();
-            });
-            window.addEventListener('offline', () => {
-                const ind = document.getElementById("sync-indicator");
-                const icon = document.getElementById("sync-icon");
-                if (ind && icon) {
-                    ind.classList.remove("hidden");
-                    icon.innerText = "cloud_off";
-                    icon.style.color = "var(--accent-red)";
-                    icon.classList.remove("spinning");
-                }
-            });
-        }
-
-        function saveToOfflineQueue(payload) {
-            let queue = JSON.parse(localStorage.getItem("tt_offline_queue") || "[]");
-            queue.push(payload);
-            localStorage.setItem("tt_offline_queue", JSON.stringify(queue));
-        }
-
-        async function processOfflineQueue() {
-            if (!navigator.onLine) return;
-            let queue = JSON.parse(localStorage.getItem("tt_offline_queue") || "[]");
-            if (queue.length === 0) return;
-
-            let successfulReqs = [];
-            for (let i = 0; i < queue.length; i++) {
-                try {
-                    let res = await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(queue[i]) });
-                    if (res.ok) successfulReqs.push(i);
-                } catch (e) {}
-            }
-            
-            queue = queue.filter((_, idx) => !successfulReqs.includes(idx));
-            localStorage.setItem("tt_offline_queue", JSON.stringify(queue));
-            if (successfulReqs.length > 0) fetchData(true);
-        }
-
-        function setupSwipeGestures() {
-            const mainContent = document.getElementById('scroll-content');
-            let startX = 0, startY = 0;
-
-            mainContent.addEventListener('touchstart', e => {
-                startX = e.changedTouches[0].screenX;
-                startY = e.changedTouches[0].screenY;
-            }, {passive: true});
-
-            mainContent.addEventListener('touchend', e => {
-                let endX = e.changedTouches[0].screenX;
-                let endY = e.changedTouches[0].screenY;
-                
-                if (Math.abs(endY - startY) > Math.abs(endX - startX)) return;
-                if (Math.abs(endX - startX) < 60) return;
-                
-                const table = e.target.closest('.table-container');
-                if (table && table.scrollWidth > table.clientWidth) {
-                    const isSwipingLeft = startX > endX;
-                    const isSwipingRight = startX < endX;
-                    const isAtLeftEdge = table.scrollLeft <= 0;
-                    const isAtRightEdge = Math.ceil(table.scrollLeft + table.clientWidth) >= table.scrollWidth;
-
-                    if (isSwipingLeft && !isAtRightEdge) return;
-                    if (isSwipingRight && !isAtLeftEdge) return;
-                }
-                
-                if (document.getElementById("dashboard-section").classList.contains("hidden")) return;
-
-                const tabs = currentRole === "Admin" ? ['log', 'admin'] : ['log', 'history', 'insights'];
-                
-                let currentTab = 'log';
-                document.querySelectorAll(".nav-item.active").forEach(el => {
-                    currentTab = el.id.replace('nav-', '');
-                });
-                
-                let currentIndex = tabs.indexOf(currentTab);
-                if (currentIndex === -1) return; 
-
-                if (startX > endX && currentIndex < tabs.length - 1) {
-                    switchTab(tabs[currentIndex + 1]); 
-                } else if (startX < endX && currentIndex > 0) {
-                    switchTab(tabs[currentIndex - 1]); 
-                }
-            }, {passive: true});
-        }
-
-        function hardRefresh() {
-            localStorage.clear();
-            sessionStorage.clear();
-            if ('caches' in window) {
-                caches.keys().then((names) => {
-                    names.forEach((name) => { caches.delete(name); });
-                });
-            }
-            window.location.reload(true);
-        }
-
-        function toggleDarkMode(forceDark = null) {
-            const body = document.body;
-            const icon = document.getElementById("theme-icon");
-            if (forceDark === true || !body.classList.contains("dark-mode")) {
-                body.classList.add("dark-mode");
-                icon.innerText = "light_mode";
-                document.getElementById("theme-color-meta").setAttribute("content", "#1e293b");
-            } else {
-                body.classList.remove("dark-mode");
-                icon.innerText = "dark_mode";
-                document.getElementById("theme-color-meta").setAttribute("content", "#4f46e5");
-            }
-        }
-
-        function cleanDateString(rawDate) {
-            if (!rawDate) return "";
-            return rawDate.toString().substring(0, 10);
-        }
-
-        function getLocalDateStr(dateObj = new Date()) {
-            const year = dateObj.getFullYear();
-            const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-            const day = String(dateObj.getDate()).padStart(2, '0');
-            return `${year}-${month}-${day}`;
-        }
-
-        function getReadableTodayStr() {
-            return formatDateDDMonYY(getLocalDateStr());
-        }
-
-        function formatDateDDMonYY(dateString) {
-            const cleaned = cleanDateString(dateString);
-            if (!cleaned) return '';
-            const parts = cleaned.split('-');
-            if (parts.length !== 3) return cleaned;
-            
-            const year = parts[0];
-            const monthIdx = parseInt(parts[1], 10) - 1;
-            const day = parts[2];
-
-            const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-            const mon = monthNames[monthIdx] || 'Jan';
-            const yy = year.substring(2);
-
-            return `${day}-${mon}-${yy}`;
-        }
-
-        function getCurrentTimeStr() {
-            const now = new Date();
-            return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-        }
-
-        function formatTimeDisplay(timeStr) {
-            if (!timeStr) return '';
-            let clean = timeStr.toString().trim();
-            if (clean.toUpperCase().includes('AM') || clean.toUpperCase().includes('PM')) return clean;
-            
-            let parts = clean.split(':');
-            if (parts.length >= 2) {
-                let h = parseInt(parts[0], 10);
-                let m = parts[1].substring(0, 2);
-                if (!isNaN(h)) {
-                    let ampm = h >= 12 ? 'PM' : 'AM';
-                    h = h % 12; h = h ? h : 12;
-                    return `${String(h).padStart(2, '0')}:${m} ${ampm}`;
-                }
-            }
-            return clean;
-        }
-
-        function formatDurationDisplay(hoursVal) {
-            if (hoursVal === '-' || hoursVal === null || hoursVal === undefined || hoursVal === '') return '-';
-            let num = parseFloat(hoursVal);
-            if (isNaN(num) || num === 0) return '0m';
-            
-            let totalMins = Math.round(num * 60);
-            let hrs = Math.floor(totalMins / 60);
-            let mins = totalMins % 60;
-            
-            if (hrs === 0) {
-                return `${mins}m`;
-            } else if (mins === 0) {
-                return `${hrs}h`;
-            } else {
-                return `${hrs}h ${mins}m`;
-            }
-        }
-
-        function toggleAuthForm(type) {
-            document.getElementById("login-form-div").classList.toggle("hidden", type !== 'login');
-            document.getElementById("register-form-div").classList.toggle("hidden", type !== 'register');
-            document.getElementById("auth-msg").innerText = "";
-        }
-
-        function toggleAdminLogin() {
-            isAdminLoginMode = !isAdminLoginMode;
-            document.getElementById("login-dropdown-area").classList.toggle("hidden", isAdminLoginMode);
-            document.getElementById("login-admin-area").classList.toggle("hidden", !isAdminLoginMode);
-            document.getElementById("toggle-admin-btn").innerText = isAdminLoginMode ? "User Login?" : "Admin Login?";
-            document.getElementById("login-password").value = "";
-        }
-
-        function switchTab(tabId) {
-            document.querySelectorAll("[id^='tab-']").forEach(el => el.classList.add("hidden"));
-            document.querySelectorAll(".nav-item").forEach(el => el.classList.remove("active"));
-            
-            document.getElementById(`tab-${tabId}`).classList.remove("hidden");
-            document.getElementById(`nav-${tabId}`).classList.add("active");
-
-            if (tabId === 'log') resetForm(); 
-
-            if (tabId === 'history' || tabId === 'insights' || tabId === 'admin') {
-                if (currentRole === "Admin") renderAdminTable();
-                else { renderHistoryTable(); calculateInsights(); }
-            }
-        }
-
-        async function apiCall(payload, btnId) {
-            if (!navigator.onLine && ['logTime', 'logTimeRange', 'updateLog', 'deleteLog'].includes(payload.action)) {
-                saveToOfflineQueue(payload);
-                return { success: true, message: "Saved offline. Will sync when connected." };
-            }
-
-            activeSyncs++;
-            const syncIndicator = document.getElementById("sync-indicator");
-            const syncIcon = document.getElementById("sync-icon");
-            if (syncIndicator && syncIcon) {
-                syncIndicator.classList.remove("hidden");
-                syncIcon.innerText = "sync";
-                syncIcon.style.color = "var(--primary)";
-                syncIcon.classList.add("spinning");
-            }
-
-            const btn = document.getElementById(btnId);
-            let originalText = "";
-            if (btn) { originalText = btn.innerHTML; btn.innerText = "Processing..."; btn.disabled = true; }
-            
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 12000);
-
-            try {
-                const response = await fetch(SCRIPT_URL, { 
-                    method: "POST", 
-                    body: JSON.stringify(payload),
-                    signal: controller.signal
-                });
-                clearTimeout(timeoutId);
-                const result = await response.json();
-                
-                if (btn) { btn.innerHTML = originalText; btn.disabled = false; }
-                activeSyncs--;
-                if (activeSyncs <= 0 && syncIndicator) syncIndicator.classList.add("hidden");
-                
-                return result;
-            } catch (error) {
-                clearTimeout(timeoutId);
-                if (btn) { btn.innerHTML = originalText; btn.disabled = false; }
-                activeSyncs--;
-                if (activeSyncs <= 0 && syncIndicator) syncIndicator.classList.add("hidden");
-                
-                if (['logTime', 'logTimeRange', 'updateLog', 'deleteLog'].includes(payload.action)) {
-                    saveToOfflineQueue(payload);
-                    return { success: true, message: "Saved offline. Will sync when connected." };
-                }
-                return { success: false, message: "Connection error." };
-            }
-        }
-
-        async function fetchUserListForDropdown() {
-            const select = document.getElementById("login-user-select");
-            const res = await apiCall({ action: "getUsers" }, null);
-            if (res && res.success && res.users) {
-                cachedUsersList = res.users;
-                localStorage.setItem("tt_users", JSON.stringify(cachedUsersList));
-                renderUserDropdown(cachedUsersList);
-            } else {
-                if (!cachedUsersList) {
-                    select.innerHTML = `<option value="">Network issue. Tap top-right refresh.</option>`;
-                }
-            }
-        }
-
-        function renderUserDropdown(users) {
-            const select = document.getElementById("login-user-select");
-            const currentVal = select.value;
-            select.innerHTML = `<option value="">Select your name...</option>`;
-            users.forEach(u => {
-                const option = document.createElement("option");
-                option.value = u.username;
-                option.innerText = `${u.firstName} ${u.lastName}`.trim();
-                select.appendChild(option);
-            });
-            if (currentVal) select.value = currentVal;
-        }
-
-        function checkAutoLogin(e) {
-            const pinField = document.getElementById("login-password");
-            if (pinField.value.length === 4 && !isLoggingIn) {
-                login();
-            }
-        }
-
-        async function login() {
-            if (isLoggingIn) return;
-            
-            const user = isAdminLoginMode ? document.getElementById("login-admin-username").value : document.getElementById("login-user-select").value;
-            const pass = document.getElementById("login-password").value;
-            const msg = document.getElementById("auth-msg");
-            
-            if(!user || !pass) return msg.innerText = "Please fill all fields.";
-            if(pass.length !== 4 && !isAdminLoginMode) return msg.innerText = "PIN must be 4 digits.";
-
-            isLoggingIn = true;
-            const btn = document.getElementById("btn-login");
-            const originalText = btn.innerHTML;
-            btn.innerText = "Signing in...";
-            btn.disabled = true;
-
-            const res = await apiCall({ action: "login", username: user, password: pass }, null);
-            isLoggingIn = false;
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-            
-            if (res.success) {
-                currentUser = user;
-                currentRole = res.role;
-                currentFirstName = res.firstName;
-                
-                localStorage.setItem("tt_current_user", currentUser);
-                localStorage.setItem("tt_current_name", currentFirstName);
-                localStorage.setItem("tt_current_role", currentRole);
-                localStorage.setItem("tt_login_time", Date.now().toString());
-
-                document.getElementById("auth-section").classList.add("hidden");
-                document.getElementById("user-controls").classList.remove("hidden");
-                document.getElementById("dashboard-section").classList.remove("hidden");
-                document.getElementById("app-bottom-nav").classList.remove("hidden");
-                document.getElementById("display-firstname").innerText = currentFirstName;
-
-                if(currentRole === "Admin") {
-                    document.getElementById("nav-history").classList.add("hidden");
-                    document.getElementById("nav-insights").classList.add("hidden");
-                    document.getElementById("nav-admin").classList.remove("hidden");
-                    switchTab('admin');
-                } else {
-                    document.getElementById("nav-history").classList.remove("hidden");
-                    document.getElementById("nav-insights").classList.remove("hidden");
-                    document.getElementById("nav-admin").classList.add("hidden");
-                    resetForm();
-                    switchTab('log');
-                }
-                
-                fetchData(true);
-            } else {
-                msg.innerText = res.message || "Incorrect PIN / Credentials";
-                msg.style.color = "var(--accent-red)";
-                document.getElementById("login-password").value = "";
-            }
-        }
-
-        async function register() {
-            const fName = document.getElementById("reg-fname").value;
-            const lName = document.getElementById("reg-lname").value;
-            const user = document.getElementById("reg-username").value;
-            const pass = document.getElementById("reg-password").value;
-            const msg = document.getElementById("auth-msg");
-            
-            if(!fName || !lName || !user || !pass) return msg.innerText = "Fill all fields.";
-            if(pass.length !== 4) return msg.innerText = "PIN must be exactly 4 digits.";
-
-            const res = await apiCall({ action: "createUser", newUsername: user, newPassword: pass, firstName: fName, lastName: lName }, "btn-register");
-            
-            msg.innerText = res.message;
-            msg.style.color = res.success ? "var(--accent-green)" : "var(--accent-red)";
-            if(res.success) {
-                cachedUsersList = null;
-                fetchUserListForDropdown();
-                setTimeout(() => toggleAuthForm('login'), 2000);
-            }
-        }
-
-        function logout() {
-            currentUser = ""; currentFirstName = ""; currentRole = ""; logsData = [];
-            localStorage.removeItem("tt_logs");
-            localStorage.removeItem("tt_current_user");
-            localStorage.removeItem("tt_current_name");
-            localStorage.removeItem("tt_current_role");
-            localStorage.removeItem("tt_login_time");
-
-            document.getElementById("dashboard-section").classList.add("hidden");
-            document.getElementById("app-bottom-nav").classList.add("hidden");
-            document.getElementById("user-controls").classList.add("hidden");
-            document.getElementById("auth-section").classList.remove("hidden");
-            document.getElementById("login-password").value = "";
-            document.getElementById("auth-msg").innerText = "";
-            fetchUserListForDropdown();
-        }
-
-        function resetForm() {
-            document.getElementById("form-title").innerText = "Record Attendance";
-            document.getElementById("quick-actions-panel").classList.remove("hidden");
-            document.getElementById("quick-date-display").innerText = getReadableTodayStr();
-            document.getElementById("entry-id").value = "";
-            document.getElementById("entry-username").value = currentUser;
-            document.getElementById("entry-from-date").value = getLocalDateStr();
-            document.getElementById("entry-to-date").value = "";
-            document.getElementById("entry-status").value = "Present";
-            document.getElementById("entry-in").value = "";
-            document.getElementById("entry-out").value = "";
-            document.getElementById("btn-submit-log").innerText = "Save Entry";
-            handleStatusChange();
-        }
-
-        function handleStatusChange() {
-            const status = document.getElementById("entry-status").value;
-            const inTime = document.getElementById("entry-in");
-            const outTime = document.getElementById("entry-out");
-            
-            if (status !== "Present") {
-                inTime.value = ""; outTime.value = "";
-                inTime.disabled = true; outTime.disabled = true;
-            } else {
-                inTime.disabled = false; outTime.disabled = false;
-            }
-        }
-
-        function quickAction(type) {
-            // FIX: Only alter Status and In/Out Times. Do not overwrite user's selected dates.
-            if (type === 'in') { document.getElementById("entry-status").value = "Present"; document.getElementById("entry-in").value = getCurrentTimeStr(); }
-            else if (type === 'out') { document.getElementById("entry-status").value = "Present"; document.getElementById("entry-out").value = getCurrentTimeStr(); }
-            else if (type === 'leave') { document.getElementById("entry-status").value = "Leave"; }
-            else if (type === 'exception') { document.getElementById("entry-status").value = "Exception"; }
-            else if (type === 'noshow') { document.getElementById("entry-status").value = "No Show"; }
-            else if (type === 'weekend') { document.getElementById("entry-status").value = "Weekend"; }
-            else if (type === 'holiday') { document.getElementById("entry-status").value = "Holiday"; }
-            handleStatusChange();
-        }
-
-        async function submitLog() {
-            const logId = document.getElementById("entry-id").value;
-            const recordUser = document.getElementById("entry-username").value || currentUser;
-            const fromDate = document.getElementById("entry-from-date").value;
-            const toDate = document.getElementById("entry-to-date").value;
-            const status = document.getElementById("entry-status").value;
-            const inTime = document.getElementById("entry-in").value;
-            const outTime = document.getElementById("entry-out").value;
-            const msg = document.getElementById("log-msg");
-
-            if (!fromDate) return msg.innerText = "From Date is required.";
-            
-            if (toDate && new Date(toDate) < new Date(fromDate)) {
-                msg.style.color = "var(--accent-red)";
-                return msg.innerText = "To Date cannot be before From Date.";
-            }
-
-            if (status === "Present" && (!inTime || !outTime)) {
-                msg.style.color = "var(--accent-red)";
-                return msg.innerText = "In and Out times are required when Present.";
-            }
-
-            let hours = 0;
-            if (status === "Present" && inTime && outTime) {
-                const [inH, inM] = inTime.split(':').map(Number);
-                const [outH, outM] = outTime.split(':').map(Number);
-                let diffMins = (outH * 60 + outM) - (inH * 60 + inM);
-                if (diffMins < 0) diffMins += 24 * 60; 
-                hours = (diffMins / 60).toFixed(2);
-            }
-
-            const cleanInTime = formatTimeDisplay(inTime);
-            const cleanOutTime = formatTimeDisplay(outTime);
-
-            const isRange = toDate && toDate !== fromDate;
-
-            // Upsert Locally Instantly
-            if (isRange) {
-                let curr = new Date(fromDate);
-                let endD = new Date(toDate);
-                while (curr <= endD) {
-                    let y = curr.getFullYear();
-                    let m = String(curr.getMonth() + 1).padStart(2, '0');
-                    let d = String(curr.getDate()).padStart(2, '0');
-                    let loopDate = `${y}-${m}-${d}`;
-
-                    const existingIdx = logsData.findIndex(l => l.date === loopDate && l.username === recordUser);
-                    let tempLogId = existingIdx >= 0 ? logsData[existingIdx].logId : 'temp_' + Date.now() + Math.random();
-                    const newEntry = { logId: tempLogId, username: recordUser, date: loopDate, status, inTime: cleanInTime, outTime: cleanOutTime, hours };
-                    
-                    if (existingIdx >= 0) {
-                        logsData[existingIdx] = newEntry;
-                    } else {
-                        logsData.unshift(newEntry);
-                    }
-                    curr.setDate(curr.getDate() + 1);
-                }
-            } else {
-                const tempLogId = logId || 'temp_' + Date.now();
-                const newEntry = { logId: tempLogId, username: recordUser, date: fromDate, status, inTime: cleanInTime, outTime: cleanOutTime, hours };
-                
-                const existingIdx = logsData.findIndex(l => (logId && l.logId === logId) || (!logId && l.date === fromDate && l.username === recordUser));
-                if (existingIdx >= 0) {
-                    newEntry.logId = logsData[existingIdx].logId; 
-                    logsData[existingIdx] = newEntry;
-                } else {
-                    logsData.unshift(newEntry);
-                }
-            }
-            
-            localStorage.setItem("tt_logs", JSON.stringify(logsData));
-            
-            msg.innerText = logId ? "Updated successfully!" : "Saved successfully!";
-            msg.style.color = "var(--accent-green)";
-
-            setTimeout(() => {
-                msg.innerText = "";
-                if (currentRole === "Admin") {
-                    renderAdminTable(); 
-                    switchTab('admin'); 
-                } else {
-                    renderHistoryTable(); 
-                    calculateInsights(); 
-                    resetForm();
-                    switchTab('history'); 
-                }
-            }, 600);
-
-            let payload;
-            if (isRange) {
-                payload = { action: "logTimeRange", username: recordUser, fromDate: fromDate, toDate: toDate, status, inTime: cleanInTime, outTime: cleanOutTime, hours };
-            } else if (logId) {
-                payload = { action: "updateLog", logId, username: recordUser, date: fromDate, status, inTime: cleanInTime, outTime: cleanOutTime, hours };
-            } else {
-                payload = { action: "logTime", username: recordUser, date: fromDate, status, inTime: cleanInTime, outTime: cleanOutTime, hours };
-            }
-
-            apiCall(payload, null).then(res => {
-                if (res.success) fetchData(true);
-            });
-        }
-
-        async function deleteRecord(logId) {
-            if (!confirm("Are you sure you want to permanently delete this record? This action cannot be undone.")) return;
-            
-            logsData = logsData.filter(l => l.logId !== logId);
-            localStorage.setItem("tt_logs", JSON.stringify(logsData));
-            
-            if (currentRole === "Admin") renderAdminTable();
-            else { renderHistoryTable(); calculateInsights(); }
-            
-            const payload = { action: "deleteLog", logId: logId };
-            
-            apiCall(payload, null).then(res => {
-                if (res && res.success) fetchData(true); 
-            });
-        }
-
-        async function fetchData(silent = false) {
-            const action = currentRole === "Admin" ? "getAllData" : "getUserData";
-            const res = await apiCall({ action: action, username: currentUser }, null);
-            if (res && res.success) {
-                logsData = res.logs.sort((a, b) => new Date(b.date) - new Date(a.date));
-                localStorage.setItem("tt_logs", JSON.stringify(logsData));
-                
-                if (document.getElementById('nav-history').classList.contains('active')) renderHistoryTable();
-                if (document.getElementById('nav-insights').classList.contains('active')) calculateInsights();
-                if (document.getElementById('nav-admin').classList.contains('active')) renderAdminTable();
-            }
-        }
-
-        function renderHistoryTable() {
-            const tbody = document.getElementById("history-table-body");
-            tbody.innerHTML = logsData.map(log => `
-                <tr>
-                    <td><strong>${formatDateDDMonYY(log.date)}</strong></td>
-                    <td><span style="font-size:10px; padding:3px 6px; border-radius:10px; background:var(--secondary); border:1px solid var(--border);">${log.status}</span></td>
-                    <td>${log.inTime ? formatTimeDisplay(log.inTime) : '-'}</td>
-                    <td>${log.outTime ? formatTimeDisplay(log.outTime) : '-'}</td>
-                    <td><strong>${formatDurationDisplay(log.hours)}</strong></td>
-                    <td>
-                        <div style="display:flex; gap:4px;">
-                            <button class="action-btn" onclick='editRecord(${JSON.stringify(log).replace(/'/g, "&#39;")})' title="Edit"><i class="material-icons-round" style="font-size:14px;">edit</i></button>
-                            <button class="action-btn btn-delete" onclick='deleteRecord("${log.logId}")' title="Delete"><i class="material-icons-round" style="font-size:14px;">delete</i></button>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function renderAdminTable() {
-            const tbody = document.getElementById("admin-table-body");
-            tbody.innerHTML = logsData.map(log => `
-                <tr>
-                    <td style="font-weight:600; color:var(--primary);">${log.username}</td>
-                    <td><strong>${formatDateDDMonYY(log.date)}</strong></td>
-                    <td>${log.status}</td>
-                    <td>${log.inTime ? formatTimeDisplay(log.inTime) : '-'}</td>
-                    <td>${log.outTime ? formatTimeDisplay(log.outTime) : '-'}</td>
-                    <td><strong>${formatDurationDisplay(log.hours)}</strong></td>
-                    <td>
-                        <div style="display:flex; gap:4px;">
-                            <button class="action-btn" onclick='editRecord(${JSON.stringify(log).replace(/'/g, "&#39;")})' title="Edit"><i class="material-icons-round" style="font-size:14px;">edit</i></button>
-                            <button class="action-btn btn-delete" onclick='deleteRecord("${log.logId}")' title="Delete"><i class="material-icons-round" style="font-size:14px;">delete</i></button>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function editRecord(log) {
-            switchTab('log'); 
-            
-            document.getElementById("form-title").innerText = `Update Entry: ${formatDateDDMonYY(log.date)}`;
-            
-            document.getElementById("entry-id").value = log.logId;
-            document.getElementById("entry-username").value = log.username;
-            document.getElementById("entry-from-date").value = cleanDateString(log.date);
-            document.getElementById("entry-to-date").value = "";
-            document.getElementById("entry-status").value = log.status;
-            
-            document.getElementById("entry-in").value = log.inTime ? convertTo24Hour(log.inTime) : "";
-            document.getElementById("entry-out").value = log.outTime ? convertTo24Hour(log.outTime) : "";
-            
-            document.getElementById("btn-submit-log").innerText = "Update Entry";
-            handleStatusChange();
-        }
-
-        function convertTo24Hour(timeStr) {
-            let clean = timeStr.toString().trim();
-            if (!clean.toUpperCase().includes('AM') && !clean.toUpperCase().includes('PM')) return clean;
-            
-            let parts = clean.split(' ');
-            let timeParts = parts[0].split(':');
-            let h = parseInt(timeParts[0], 10);
-            let m = timeParts[1];
-            let ampm = parts[1].toUpperCase();
-            if (ampm === 'PM' && h < 12) h += 12;
-            if (ampm === 'AM' && h === 12) h = 0;
-            return `${String(h).padStart(2, '0')}:${m}`;
-        }
-
-        function exportAdminCSV() {
-            let csv = "User,Date,Status,In,Out,Duration (Formatted),Duration (Decimal)\n";
-            logsData.forEach(l => {
-                csv += `${l.username},${l.date},${l.status},${l.inTime || ''},${l.outTime || ''},${formatDurationDisplay(l.hours)},${l.hours || ''}\n`;
-            });
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = `TimeTracker_Export_${getLocalDateStr()}.csv`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-        }
-
-        function calculateInsights() {
-            const container = document.getElementById("insights-container");
-            container.innerHTML = "";
-
-            const now = new Date();
-            const currentYear = now.getFullYear();
-            const currentMonth = now.getMonth();
-            const currentFYStartYear = currentMonth >= 3 ? currentYear : currentYear - 1;
-
-            let monthlyMap = {};
-            logsData.forEach(log => {
-                const ym = cleanDateString(log.date).substring(0, 7);
-                if (!monthlyMap[ym]) monthlyMap[ym] = [];
-                monthlyMap[ym].push(log);
-            });
-
-            const fyQuarters = [
-                { name: "Q1: Apr – Jun", months: [3, 4, 5], yearOffset: 0 },
-                { name: "Q2: Jul – Sep", months: [6, 7, 8], yearOffset: 0 },
-                { name: "Q3: Oct – Dec", months: [9, 10, 11], yearOffset: 0 },
-                { name: "Q4: Jan – Mar", months: [0, 1, 2], yearOffset: 1 }
-            ];
-
-            const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-            fyQuarters.forEach(q => {
-                let qMonthsData = [];
-                let qAttended = 0, qValidDays = 0, qTotalHours = 0, qHoursDivisor = 0;
-                let hasDataInQuarter = false;
-
-                q.months.forEach(mIdx => {
-                    let mYear = (mIdx < 3 && q.name.includes("Q4")) ? currentFYStartYear + 1 : currentFYStartYear;
-                    let ymKey = `${mYear}-${String(mIdx + 1).padStart(2, '0')}`;
-                    
-                    if (new Date(mYear, mIdx, 1) > now) return;
-
-                    let logsInMonth = monthlyMap[ymKey] || [];
-                    
-                    let validWorkDays = 0;
-                    let attendedDays = 0;
-                    let monthHours = 0;
-                    let monthHoursDivisor = 0;
-                    
-                    let countPresent = 0, countLeave = 0, countException = 0, countNoShow = 0, countOff = 0;
-
-                    logsInMonth.forEach(l => {
-                        if (l.status === "Present") countPresent++;
-                        else if (l.status === "Leave") countLeave++;
-                        else if (l.status === "Exception") countException++;
-                        else if (l.status === "No Show") countNoShow++;
-                        else if (l.status === "Weekend" || l.status === "Holiday") countOff++;
-
-                        if (l.status !== "Weekend" && l.status !== "Holiday") {
-                            validWorkDays++; 
-                            
-                            if (l.status !== "No Show") {
-                                attendedDays++;
-                            }
-
-                            if (l.status === "Present") {
-                                monthHours += parseFloat(l.hours) || 0;
-                                monthHoursDivisor++;
-                            } else if (l.status === "No Show") {
-                                monthHoursDivisor++;
-                            }
-                        }
-                    });
-
-                    let pct = validWorkDays > 0 ? Math.round((attendedDays / validWorkDays) * 100) : 0;
-                    let monthAvgDecimal = monthHoursDivisor > 0 ? (monthHours / monthHoursDivisor) : 0;
-                    let monthAvgFormatted = formatDurationDisplay(monthAvgDecimal);
-                    
-                    if (logsInMonth.length > 0) hasDataInQuarter = true;
-
-                    qAttended += attendedDays;
-                    qValidDays += validWorkDays;
-                    qTotalHours += monthHours;
-                    qHoursDivisor += monthHoursDivisor;
-
-                    qMonthsData.push({
-                        name: monthNames[mIdx],
-                        pct: pct,
-                        avgHrs: monthAvgFormatted,
-                        hasData: logsInMonth.length > 0,
-                        present: countPresent,
-                        leave: countLeave,
-                        exception: countException,
-                        noshow: countNoShow,
-                        off: countOff
-                    });
-                });
-
-                if (!hasDataInQuarter && qMonthsData.length === 0) return;
-
-                let quarterPct = qValidDays > 0 ? Math.round((qAttended / qValidDays) * 100) : 0;
-                let quarterAvgDecimal = qHoursDivisor > 0 ? (qTotalHours / qHoursDivisor) : 0;
-                let quarterAvgFormatted = formatDurationDisplay(quarterAvgDecimal);
-
-                let block = document.createElement("div");
-                block.className = "quarter-block";
-                
-                block.innerHTML = `
-                    <div class="quarter-header">
-                        <span class="quarter-title">${q.name} (${currentFYStartYear}-${String(currentFYStartYear+1).substring(2)})</span>
-                        <span class="quarter-stats">Attendance: <strong>${quarterPct}%</strong> | Avg: <strong>${quarterAvgFormatted}</strong></span>
-                    </div>
-                    <div class="months-grid">
-                        ${qMonthsData.map(m => `
-                            <div class="month-circle-card" 
-                                 onmousedown="showTooltip(this, event)" onmouseup="hideTooltip(this)" onmouseleave="hideTooltip(this)"
-                                 ontouchstart="showTooltip(this, event)" ontouchend="hideTooltip(this)" ontouchcancel="hideTooltip(this)" ontouchmove="hideTooltip(this)">
-                                <div class="month-name">${m.name}</div>
-                                <div class="circle-progress" style="--pct: ${m.hasData ? m.pct : 0};">
-                                    <div class="circle-value">${m.hasData ? m.pct + '%' : 'N/A'}</div>
-                                </div>
-                                <div class="month-avg-hours">${m.hasData ? m.avgHrs : '-'}</div>
-                                
-                                ${m.hasData ? `
-                                <div class="month-tooltip">
-                                    <div class="tooltip-row"><span class="tooltip-label"><span class="dot bg-green"></span>Present</span> <span class="tooltip-val">${m.present}</span></div>
-                                    <div class="tooltip-row"><span class="tooltip-label"><span class="dot bg-amber"></span>Leave</span> <span class="tooltip-val">${m.leave}</span></div>
-                                    <div class="tooltip-row"><span class="tooltip-label"><span class="dot bg-purple"></span>Exception</span> <span class="tooltip-val">${m.exception}</span></div>
-                                    <div class="tooltip-row"><span class="tooltip-label"><span class="dot bg-red"></span>No Show</span> <span class="tooltip-val">${m.noshow}</span></div>
-                                    <div class="tooltip-row"><span class="tooltip-label"><span class="dot bg-blue"></span>Off Days</span> <span class="tooltip-val">${m.off}</span></div>
-                                </div>
-                                ` : ''}
-                            </div>
-                        `).join('')}
-                    </div>
-                `;
-                container.appendChild(block);
-            });
-        }
-    </script>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- SLIDE-OVER QUICK EDIT DRAWER               -->
+  <!-- ========================================== -->
+  <div class="drawer-backdrop" id="quickEditDrawerBackdrop" onclick="if(event.target===this) OfficeUI.closeQuickEditModal()">
+    <div class="drawer-sheet">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <h3 style="font-size:16px; font-weight:800; color:var(--text-primary); margin:0;">Edit Attendance Entry</h3>
+        <button class="icon-btn" onclick="OfficeUI.closeQuickEditModal()">
+          <i class="material-icons-round">close</i>
+        </button>
+      </div>
+
+      <input type="hidden" id="editLogId">
+      <input type="hidden" id="editUsername">
+
+      <div class="form-group" style="margin-bottom:12px;">
+        <label class="field-label">Date</label>
+        <input type="date" id="editDate" class="form-input" required>
+      </div>
+
+      <div class="form-group" style="margin-bottom:12px;">
+        <label class="field-label">Status</label>
+        <select id="editStatus" class="form-select">
+          <option value="Present">Present</option>
+          <option value="Leave">Leave</option>
+          <option value="Exception">Exception</option>
+          <option value="No Show">No Show</option>
+          <option value="Weekend">Weekend</option>
+          <option value="Holiday">Holiday</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="field-label">In Time</label>
+          <input type="time" id="editInTime" class="form-input">
+        </div>
+        <div class="form-group">
+          <label class="field-label">Out Time</label>
+          <input type="time" id="editOutTime" class="form-input">
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px; margin-top:20px;">
+        <button class="btn-primary" style="flex:2;" onclick="OfficeUI.saveQuickEdit()">Save Changes</button>
+        <button class="action-pill-btn" style="flex:1; justify-content:center;" onclick="OfficeUI.closeQuickEditModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- SETTINGS & FIREBASE MIGRATION MODAL        -->
+  <!-- ========================================== -->
+  <div class="modal-backdrop" id="settingsModalBackdrop" onclick="if(event.target===this) OfficeUI.closeSettingsModal()">
+    <div class="modal-dialog">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <h3 style="font-size:16px; font-weight:800; color:var(--text-primary); margin:0;">Cloud Database & Settings</h3>
+        <button class="icon-btn" onclick="OfficeUI.closeSettingsModal()">
+          <i class="material-icons-round">close</i>
+        </button>
+      </div>
+
+      <div style="margin-bottom:14px; background:var(--surface-secondary); padding:12px; border-radius:var(--radius-md); border:1px solid var(--border);">
+        <div style="font-size:11px; font-weight:800; text-transform:uppercase; color:var(--text-muted); margin-bottom:4px;">Active Backend Engine</div>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span id="settingsActiveBackendLabel" style="font-size:14px; font-weight:800; color:var(--primary);">FIREBASE</span>
+          <div style="display:flex; gap:6px;">
+            <button class="action-row-btn" onclick="OfficeUI.handleSwitchBackend('sheets')">Sheets</button>
+            <button class="action-row-btn" onclick="OfficeUI.handleSwitchBackend('firebase')">Firebase</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Firebase Configuration -->
+      <div style="margin-bottom:14px;">
+        <label class="field-label">Firebase Configuration (JSON)</label>
+        <textarea id="settingsFirebaseConfigInput" rows="5" class="form-input" style="font-family:monospace; font-size:11px;" placeholder="Paste Firebase config here..."></textarea>
+        <div style="display:flex; gap:8px; margin-top:8px;">
+          <button class="action-pill-btn" onclick="OfficeUI.handleSaveFirebaseConfig()">Save Config</button>
+          <button class="action-pill-btn" id="btnStartMigration" style="background:linear-gradient(135deg, #f97316, #ea580c); color:#ffffff; border:none;" onclick="OfficeUI.handleStartFirebaseMigration()">
+            🔥 Migrate 134 Records to Firestore
+          </button>
+        </div>
+      </div>
+
+      <!-- Data Backup & Redundancy -->
+      <div style="border-top:1px solid var(--border); padding-top:14px; display:flex; flex-direction:column; gap:8px;">
+        <button class="btn-primary" style="background:#0284c7; padding:10px; font-size:13px;" onclick="OfficeDB.exportJSONBackup()">
+          💾 Export Full JSON Database Backup
+        </button>
+        <button class="action-pill-btn" style="justify-content:center; padding:10px;" onclick="OfficeDB.exportCSVBackup()">
+          📊 Export CSV Attendance Spreadsheet
+        </button>
+        <button class="action-pill-btn" style="justify-content:center; padding:10px; color:var(--status-present);" onclick="OfficeDB.syncWithCloud(); OfficeUI.closeSettingsModal(); OfficeUI.showToast('Syncing with cloud...', 'info');">
+          🔄 Force Cloud Sync Now
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Application Modules -->
+  <script src="js/config.js?v=2.0"></script>
+  <script src="js/db.js?v=2.0"></script>
+  <script src="js/shifts.js?v=2.0"></script>
+  <script src="js/auth.js?v=2.0"></script>
+  <script src="js/analytics.js?v=2.0"></script>
+  <script src="js/ui.js?v=2.0"></script>
+  <script src="js/app.js?v=2.0"></script>
 </body>
 </html>

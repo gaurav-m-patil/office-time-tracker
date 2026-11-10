@@ -1,0 +1,143 @@
+/**
+ * Enterprise Time Tracker - Design System
+ * Sleek Dark & Light Themes with Frosted Glassmorphism
+ */
+
+:root {
+  /* Brand Tokens */
+  --primary: #4f46e5;
+  --primary-hover: #4338ca;
+  --primary-rgb: 79, 70, 229;
+  --primary-light: rgba(79, 70, 229, 0.12);
+  --primary-glow: rgba(79, 70, 229, 0.35);
+
+  /* Neutrals (Light Theme Default) */
+  --bg-app: #f8fafc;
+  --surface: #ffffff;
+  --surface-secondary: #f1f5f9;
+  --surface-hover: #e2e8f0;
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --input-bg: #ffffff;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+
+  /* Glassmorphism Tokens */
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.4);
+  --glass-shadow: 0 8px 32px rgba(15, 23, 42, 0.06);
+
+  /* Status Tokens */
+  --status-present: #059669;
+  --status-present-bg: rgba(5, 150, 105, 0.12);
+  --status-leave: #d97706;
+  --status-leave-bg: rgba(217, 119, 6, 0.12);
+  --status-exception: #7c3aed;
+  --status-exception-bg: rgba(124, 58, 237, 0.12);
+  --status-noshow: #dc2626;
+  --status-noshow-bg: rgba(220, 38, 38, 0.12);
+  --status-weekend: #0284c7;
+  --status-weekend-bg: rgba(2, 132, 199, 0.12);
+  --status-holiday: #0891b2;
+  --status-holiday-bg: rgba(8, 145, 178, 0.12);
+
+  /* Elevation Shadows */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.12);
+  --shadow-glow-emerald: 0 0 25px rgba(16, 185, 129, 0.4);
+  --shadow-glow-primary: 0 0 25px rgba(79, 70, 229, 0.4);
+
+  /* Layout Constants */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --radius-full: 9999px;
+
+  --trans-fast: 0.15s ease;
+  --trans-normal: 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  --trans-bounce: 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* OLED / Sleek Dark Mode Overrides */
+body.dark-mode {
+  --primary: #818cf8;
+  --primary-hover: #6366f1;
+  --primary-rgb: 129, 140, 248;
+  --primary-light: rgba(129, 140, 248, 0.15);
+  --primary-glow: rgba(99, 102, 241, 0.45);
+
+  --bg-app: #0b0f19;
+  --surface: #131b2e;
+  --surface-secondary: #1a243b;
+  --surface-hover: #24314e;
+  --border: #222f49;
+  --border-strong: #334466;
+  --input-bg: #0d1424;
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+
+  --glass-bg: rgba(19, 27, 46, 0.78);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+
+  --status-present: #10b981;
+  --status-present-bg: rgba(16, 185, 129, 0.18);
+  --status-leave: #f59e0b;
+  --status-leave-bg: rgba(245, 158, 11, 0.18);
+  --status-exception: #a855f7;
+  --status-exception-bg: rgba(168, 85, 247, 0.18);
+  --status-noshow: #f43f5e;
+  --status-noshow-bg: rgba(244, 63, 94, 0.18);
+  --status-weekend: #38bdf8;
+  --status-weekend-bg: rgba(56, 189, 248, 0.18);
+  --status-holiday: #22d3ee;
+  --status-holiday-bg: rgba(34, 211, 238, 0.18);
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.6);
+}
+
+/* Base Normalizations */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+input, textarea, select {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: var(--radius-full);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
