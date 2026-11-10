@@ -38,20 +38,33 @@ window.OfficeApp = (function() {
     if (nameEl) nameEl.innerText = session.name || session.username;
 
     const roleBadge = document.getElementById('topbarUserRole');
-    if (roleBadge) roleBadge.innerText = session.role || 'User';
-
-    const adminNav = document.getElementById('nav-admin');
-    if (adminNav) {
+    if (roleBadge) {
       if (session.role === 'Admin') {
-        adminNav.classList.remove('hidden');
+        roleBadge.innerText = 'Admin';
+        roleBadge.style.display = 'inline-block';
       } else {
-        adminNav.classList.add('hidden');
+        roleBadge.style.display = 'none'; // Strictly hide in user mode
       }
     }
 
-    // Initialize UI and render default tab
-    OfficeUI.init();
-    OfficeUI.switchTab('record');
+    const adminNav = document.getElementById('nav-admin');
+    const historyNav = document.getElementById('nav-history');
+    const insightsNav = document.getElementById('nav-insights');
+
+    // Role-based Navigation enforcement
+    if (session.role === 'Admin') {
+      if (adminNav) adminNav.classList.remove('hidden');
+      if (historyNav) historyNav.classList.add('hidden');
+      if (insightsNav) insightsNav.classList.add('hidden');
+      OfficeUI.init();
+      OfficeUI.switchTab('admin');
+    } else {
+      if (adminNav) adminNav.classList.add('hidden'); // Strictly hidden for standard users
+      if (historyNav) historyNav.classList.remove('hidden');
+      if (insightsNav) insightsNav.classList.remove('hidden');
+      OfficeUI.init();
+      OfficeUI.switchTab('record');
+    }
   }
 
   function showAuthScreen() {
@@ -86,7 +99,7 @@ window.OfficeApp = (function() {
 
     if (!username || !pin) {
       if (msg) {
-        msg.innerText = "Please select user and enter 4-digit PIN.";
+        msg.innerText = "Please select your name and enter 4-digit PIN.";
         msg.style.color = "var(--status-noshow)";
       }
       return;
@@ -96,7 +109,7 @@ window.OfficeApp = (function() {
       const btn = document.getElementById('btnLogin');
       if (btn) { btn.innerText = "Verifying..."; btn.disabled = true; }
 
-      const session = await OfficeAuth.login(username, pin);
+      const session = await OfficeAuth.login(username, pin, isAdminMode);
       showDashboard(session);
       OfficeUI.showToast(`Welcome back, ${session.name}!`, 'success');
     } catch (err) {
@@ -133,10 +146,11 @@ window.OfficeApp = (function() {
       userGroup.classList.add('hidden');
       toggleBtn.innerText = "Employee Login?";
     }
+    document.getElementById('loginPin').value = "";
   }
 
   function hardRefresh() {
-    if (confirm("Reset local cache and reload fresh version? Your attendance data is safely preserved.")) {
+    if (confirm("Reload fresh version and clear local cache? Data is safely preserved.")) {
       if ('caches' in window) {
         caches.keys().then(names => {
           names.forEach(name => caches.delete(name));

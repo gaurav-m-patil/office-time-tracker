@@ -1,6 +1,6 @@
 /**
- * Enterprise Time Tracker - Ultra-Clean Single-Screen Stylesheet
- * Strict Zero-Scroll Mobile Optimization, Integrated Smart Punch
+ * Enterprise Time Tracker - Dynamic Professional Stylesheet
+ * Fluid Adaptive Viewport Scaling (Zero-Scroll on Any Phone Display)
  */
 
 html, body {
@@ -19,17 +19,17 @@ html, body {
 }
 
 /* ========================================================
-   TOPBAR (Fixed 48px Header)
+   TOPBAR (Fixed 50px Professional Header)
    ======================================================== */
 .topbar {
-  height: 48px;
-  min-height: 48px;
+  height: 50px;
+  min-height: 50px;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 14px;
+  padding: 0 16px;
   z-index: 1000;
   box-sizing: border-box;
 }
@@ -40,29 +40,26 @@ html, body {
   gap: 8px;
 }
 
+.brand-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--primary);
+  box-shadow: 0 0 10px var(--primary-glow);
+}
+
 .topbar-brand h1 {
   margin: 0;
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 800;
   color: var(--primary);
   letter-spacing: -0.4px;
 }
 
-.topbar-brand .brand-badge {
-  font-size: 9px;
-  font-weight: 800;
-  background: var(--primary-light);
-  color: var(--primary);
-  padding: 2px 6px;
-  border-radius: var(--radius-sm);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
 .topbar-right {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 .sync-status-dot {
@@ -70,7 +67,6 @@ html, body {
   height: 8px;
   border-radius: 50%;
   background: var(--status-present);
-  margin-right: 2px;
   transition: background 0.2s ease;
 }
 
@@ -96,8 +92,8 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   flex-shrink: 0;
   padding: 0;
@@ -110,7 +106,7 @@ html, body {
 }
 
 .icon-btn .material-icons-round {
-  font-size: 16px;
+  font-size: 17px;
 }
 
 .user-greeting {
@@ -118,34 +114,33 @@ html, body {
   font-weight: 700;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   background: var(--surface-secondary);
-  padding: 4px 8px;
+  padding: 5px 10px;
   border-radius: var(--radius-full);
   border: 1px solid var(--border);
   cursor: pointer;
 }
 
 /* ========================================================
-   MAIN CONTENT VIEWPORT (Strict Zero-Scroll Fitted)
+   MAIN CONTENT VIEWPORT (Fluid Dynamic Adaptation)
    ======================================================== */
 .main-content {
   flex: 1;
   width: 100%;
-  height: calc(100dvh - 104px);
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 8px 12px;
+  height: calc(100dvh - 108px);
+  overflow: hidden;
+  padding: clamp(8px, 1.8vh, 16px) clamp(10px, 3vw, 16px);
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
 }
 
 .tab-pane {
   width: 100%;
-  max-width: 500px;
+  max-width: 480px;
   display: none;
   margin: 0 auto;
 }
@@ -153,88 +148,96 @@ html, body {
 .tab-pane.active {
   display: flex;
   flex-direction: column;
+  width: 100%;
 }
 
 .container {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 12px 14px;
+  border-radius: 16px;
+  padding: clamp(14px, 2.4vh, 20px);
   width: 100%;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
   box-sizing: border-box;
 }
 
 /* ========================================================
-   RECORD ATTENDANCE (Compact Single-Screen Cockpit)
+   RECORD ATTENDANCE (Spacious & Clean Cockpit)
    ======================================================== */
 .form-header-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
-  padding-bottom: 6px;
+  margin-bottom: clamp(6px, 1.4vh, 12px);
+  padding-bottom: clamp(6px, 1.2vh, 10px);
   border-bottom: 1px solid var(--border);
 }
 
-.form-header-row h3 {
+.form-header-title {
   margin: 0;
-  font-size: 14px;
+  font-size: clamp(15px, 2.2vh, 18px);
   font-weight: 800;
   color: var(--primary);
   letter-spacing: -0.3px;
+  line-height: 1.2;
 }
 
-/* Smart Punch Header Button */
+.form-header-subtitle {
+  font-size: clamp(10px, 1.4vh, 11px);
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* Smart Punch Button */
 .btn-smart-punch {
-  height: 30px;
-  padding: 0 10px;
+  height: clamp(34px, 4.6vh, 40px);
+  padding: 0 clamp(10px, 2.5vw, 16px);
   border-radius: var(--radius-full);
   border: none;
-  font-size: 11px;
+  font-size: clamp(11px, 1.5vh, 12px);
   font-weight: 800;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  transition: all 0.15s ease;
+  gap: 6px;
+  transition: all 0.2s ease;
   user-select: none;
+  box-shadow: var(--shadow-sm);
 }
 
 .btn-smart-punch.punch-in {
-  background: var(--status-present);
+  background: linear-gradient(135deg, #10b981, #059669);
   color: #ffffff;
-  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.35);
+  box-shadow: 0 2px 10px rgba(16, 185, 129, 0.35);
 }
 
 .btn-smart-punch.punch-out {
-  background: var(--status-noshow);
+  background: linear-gradient(135deg, #ef4444, #dc2626);
   color: #ffffff;
-  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.35);
-  animation: pulse-punch 1.4s infinite alternate;
+  box-shadow: 0 2px 10px rgba(239, 68, 68, 0.35);
+  animation: pulse-punch 1.5s infinite alternate;
 }
 
 @keyframes pulse-punch {
-  from { opacity: 0.9; }
+  from { opacity: 0.92; }
   to { opacity: 1; transform: scale(1.02); }
 }
 
 .btn-smart-punch .punch-icon-dot {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   background: #ffffff;
 }
 
-.btn-smart-punch:active {
-  transform: scale(0.95);
-}
+.btn-smart-punch:active { transform: scale(0.96); }
 
-/* Form Row Layout */
+/* Form Field Groups */
 .form-row {
   display: flex;
-  gap: 8px;
-  margin-bottom: 6px;
+  gap: clamp(8px, 1.8vw, 12px);
+  margin-bottom: clamp(6px, 1.5vh, 12px);
   width: 100%;
 }
 
@@ -246,9 +249,9 @@ html, body {
 }
 
 label {
-  margin-bottom: 2px;
-  font-size: 9px;
-  font-weight: 800;
+  margin-bottom: clamp(3px, 0.8vh, 5px);
+  font-size: clamp(10px, 1.3vh, 11px);
+  font-weight: 700;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -256,12 +259,11 @@ label {
 
 .compact-input {
   width: 100%;
-  height: 34px;
-  min-height: 34px;
-  padding: 0 8px;
+  height: clamp(38px, 5vh, 44px);
+  padding: 0 12px;
   border: 1px solid var(--border);
-  border-radius: 7px;
-  font-size: 13px;
+  border-radius: 10px;
+  font-size: clamp(13px, 1.8vh, 15px);
   color: var(--text-primary);
   background: var(--input-bg);
   box-sizing: border-box;
@@ -271,12 +273,12 @@ label {
 
 .compact-input:focus {
   border-color: var(--primary);
-  box-shadow: 0 0 0 2px var(--primary-light);
+  box-shadow: 0 0 0 3px var(--primary-light);
 }
 
 .time-input-group {
   display: flex;
-  gap: 4px;
+  gap: 6px;
   width: 100%;
 }
 
@@ -286,10 +288,10 @@ label {
 }
 
 .btn-time-action {
-  width: 38px;
-  height: 34px;
+  width: clamp(38px, 9vw, 44px);
+  height: clamp(38px, 5vh, 44px);
   border: none;
-  border-radius: 7px;
+  border-radius: 10px;
   color: #ffffff;
   font-size: 11px;
   font-weight: 800;
@@ -310,9 +312,9 @@ label {
 .quick-actions-card {
   background: var(--surface-secondary);
   border: 1px solid var(--border);
-  border-radius: 9px;
-  padding: 6px 8px;
-  margin: 6px 0;
+  border-radius: 12px;
+  padding: clamp(6px, 1.2vh, 10px);
+  margin: clamp(4px, 1vh, 8px) 0;
   width: 100%;
   box-sizing: border-box;
 }
@@ -321,11 +323,11 @@ label {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 5px;
+  margin-bottom: clamp(4px, 0.8vh, 6px);
 }
 
 .quick-actions-title {
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 800;
   color: var(--text-muted);
   text-transform: uppercase;
@@ -333,7 +335,7 @@ label {
 }
 
 .quick-actions-date {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   color: var(--primary);
 }
@@ -341,16 +343,16 @@ label {
 .quick-buttons-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 5px;
+  gap: 6px;
   width: 100%;
 }
 
 .btn-quick {
   border: none;
-  height: 28px;
-  border-radius: 6px;
+  height: clamp(30px, 4.2vh, 36px);
+  border-radius: 8px;
   color: #ffffff;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 800;
   cursor: pointer;
   display: flex;
@@ -369,21 +371,21 @@ label {
 
 /* Primary Submit Button */
 .btn-submit {
-  background: var(--primary);
+  background: linear-gradient(135deg, var(--primary), var(--primary-hover));
   color: #ffffff;
   border: none;
-  height: 38px;
-  border-radius: 7px;
+  height: clamp(40px, 5.5vh, 46px);
+  border-radius: 10px;
   cursor: pointer;
   font-weight: 800;
   width: 100%;
-  font-size: 13px;
-  margin-top: 4px;
-  box-shadow: 0 4px 12px var(--primary-glow);
+  font-size: clamp(13px, 1.8vh, 15px);
+  margin-top: clamp(4px, 1vh, 8px);
+  box-shadow: 0 4px 14px var(--primary-glow);
   transition: all var(--trans-fast);
 }
 
-.btn-submit:hover { background: var(--primary-hover); }
+.btn-submit:hover { opacity: 0.95; }
 .btn-submit:active { transform: scale(0.98); }
 
 .status-msg {
@@ -401,12 +403,12 @@ label {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
 .table-header-bar h3 {
   margin: 0;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 800;
   color: var(--primary);
 }
@@ -415,9 +417,9 @@ label {
   overflow-x: auto;
   overflow-y: auto;
   border: 1px solid var(--border);
-  border-radius: 9px;
+  border-radius: 12px;
   width: 100%;
-  max-height: calc(100dvh - 170px);
+  max-height: calc(100dvh - 180px);
   box-sizing: border-box;
 }
 
@@ -425,15 +427,15 @@ table {
   width: 100%;
   border-collapse: collapse;
   text-align: left;
-  font-size: 12px;
-  min-width: 420px;
+  font-size: 13px;
+  min-width: 440px;
 }
 
 th {
   background: var(--surface-secondary);
-  padding: 8px 10px;
+  padding: 10px 12px;
   font-weight: 800;
-  font-size: 10px;
+  font-size: 11px;
   color: var(--text-muted);
   text-transform: uppercase;
   border-bottom: 1px solid var(--border);
@@ -443,7 +445,7 @@ th {
 }
 
 td {
-  padding: 8px 10px;
+  padding: 10px 12px;
   border-bottom: 1px solid var(--border);
   color: var(--text-primary);
   white-space: nowrap;
@@ -452,9 +454,9 @@ td {
 tr:hover { background: var(--surface-secondary); }
 
 .status-pill {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
-  padding: 2px 6px;
+  padding: 3px 8px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border);
 }
@@ -463,9 +465,9 @@ tr:hover { background: var(--surface-secondary); }
   background: var(--surface-secondary);
   color: var(--primary);
   border: 1px solid var(--border);
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-size: 11px;
+  padding: 5px 10px;
+  border-radius: 7px;
+  font-size: 12px;
   font-weight: 700;
   cursor: pointer;
 }
@@ -482,9 +484,9 @@ tr:hover { background: var(--surface-secondary); }
 .quarter-block {
   background: var(--surface-secondary);
   border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 10px;
-  margin-bottom: 10px;
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 12px;
   width: 100%;
   box-sizing: border-box;
 }
@@ -493,20 +495,20 @@ tr:hover { background: var(--surface-secondary); }
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
   border-bottom: 1px solid var(--border);
-  padding-bottom: 4px;
+  padding-bottom: 6px;
 }
 
 .quarter-title {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
   color: var(--primary);
   text-transform: uppercase;
 }
 
 .quarter-stats {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   color: var(--text-muted);
 }
@@ -514,30 +516,30 @@ tr:hover { background: var(--surface-secondary); }
 .months-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 6px;
+  gap: 8px;
 }
 
 .month-circle-card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 7px;
-  padding: 6px 3px;
+  border-radius: 10px;
+  padding: 8px 4px;
   text-align: center;
   position: relative;
   user-select: none;
 }
 
 .month-name {
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 800;
   color: var(--text-muted);
   text-transform: uppercase;
-  margin-bottom: 3px;
+  margin-bottom: 4px;
 }
 
 .circle-progress {
-  width: 40px;
-  height: 40px;
+  width: 46px;
+  height: 46px;
   border-radius: 50%;
   background: conic-gradient(var(--primary) calc(var(--pct, 0) * 1%), var(--border) 0);
   display: flex;
@@ -550,38 +552,38 @@ tr:hover { background: var(--surface-secondary); }
 .circle-progress::before {
   content: "";
   position: absolute;
-  width: 28px;
-  height: 28px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   background: var(--surface);
 }
 
 .circle-value {
   position: relative;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 900;
   color: var(--text-primary);
 }
 
 .month-avg-hours {
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
   color: var(--text-secondary);
-  margin-top: 3px;
+  margin-top: 4px;
 }
 
 /* Tooltip inspection */
 .month-tooltip {
   position: absolute;
-  bottom: calc(100% + 6px);
+  bottom: calc(100% + 8px);
   left: 50%;
   transform: translateX(-50%) translateY(6px);
   background: var(--surface);
   border: 1px solid var(--border);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-  border-radius: 8px;
-  padding: 8px;
-  width: 130px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+  padding: 10px;
+  width: 140px;
   z-index: 1000;
   opacity: 0;
   visibility: hidden;
@@ -600,20 +602,20 @@ tr:hover { background: var(--surface-secondary); }
 .tooltip-row {
   display: flex;
   justify-content: space-between;
-  font-size: 9px;
-  margin-bottom: 2px;
+  font-size: 10px;
+  margin-bottom: 3px;
   font-weight: 700;
 }
 
 /* ========================================================
-   BOTTOM NAVIGATION BAR (Fixed 56px Bar)
+   BOTTOM NAVIGATION BAR (Fixed 58px Bar)
    ======================================================== */
 .bottom-nav {
   position: fixed;
   bottom: 0;
   left: 0;
   width: 100%;
-  height: 54px;
+  height: 58px;
   background: var(--surface);
   border-top: 1px solid var(--border);
   display: flex;
@@ -633,18 +635,19 @@ tr:hover { background: var(--surface-secondary); }
   border: none;
   color: var(--text-muted);
   cursor: pointer;
-  width: 25%;
-  font-size: 10px;
+  flex: 1;
+  font-size: 11px;
   font-weight: 700;
-  gap: 2px;
+  gap: 3px;
+  padding: 4px 0;
 }
 
 .nav-item.active { color: var(--primary); }
-.nav-item .material-icons-round { font-size: 20px; }
+.nav-item .material-icons-round { font-size: 22px; }
 .nav-item.active .material-icons-round {
   background: var(--primary-light);
-  border-radius: 8px;
-  padding: 2px 8px;
+  border-radius: 10px;
+  padding: 2px 12px;
 }
 
 /* ========================================================
@@ -662,52 +665,52 @@ tr:hover { background: var(--surface-secondary); }
   display: none;
   align-items: center;
   justify-content: center;
-  padding: 14px;
+  padding: 16px;
 }
 
 .modal-backdrop.active { display: flex; }
 
 .modal-dialog {
   background: var(--surface);
-  border-radius: 12px;
+  border-radius: 16px;
   border: 1px solid var(--border);
   width: 100%;
-  max-width: 440px;
+  max-width: 460px;
   max-height: 85dvh;
   overflow-y: auto;
-  padding: 16px;
+  padding: 20px;
   box-sizing: border-box;
 }
 
 .toast-container {
   position: fixed;
-  top: 10px;
+  top: 12px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 9999;
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 6px;
   pointer-events: none;
 }
 
 .toast {
   background: var(--surface);
   border: 1px solid var(--border);
-  padding: 6px 12px;
+  padding: 8px 14px;
   border-radius: var(--radius-full);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
-  font-size: 11px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+  font-size: 12px;
   font-weight: 700;
   color: var(--text-primary);
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   animation: toastPop 0.25s ease;
 }
 
 @keyframes toastPop {
-  from { opacity: 0; transform: translateY(-6px); }
+  from { opacity: 0; transform: translateY(-8px); }
   to { opacity: 1; transform: translateY(0); }
 }
 

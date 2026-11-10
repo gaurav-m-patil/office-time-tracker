@@ -31,13 +31,18 @@ window.OfficeAuth = (function() {
     return null;
   }
 
-  async function login(username, pin) {
+  async function login(username, pin, isAdminMode = false) {
     if (!username || !pin) {
       throw new Error("Please enter both username and 4-digit PIN.");
     }
-    if (pin.length !== 4 && currentRole !== "Admin") {
+    if (pin.length !== 4 && !isAdminMode) {
       throw new Error("PIN must be 4 digits.");
     }
+
+    // Role is strictly determined by login method:
+    // User login screen -> 'User' (Admin tab strictly hidden)
+    // Admin login screen -> 'Admin' (Admin tab enabled)
+    const assignedRole = isAdminMode ? "Admin" : "User";
 
     // Try cloud authentication first if online
     if (navigator.onLine) {
@@ -49,31 +54,31 @@ window.OfficeAuth = (function() {
         });
         const data = await res.json();
         if (data && data.success) {
-          return setSession(username, data.firstName || username, data.role || (username === 'gaurav' ? 'Admin' : 'User'));
+          const firstName = data.firstName || username;
+          return setSession(username, firstName, assignedRole);
         }
       } catch (e) {
-        console.warn("Online auth failed, falling back to local verification:", e);
+        console.warn("Online auth notice, falling back to local verification:", e);
       }
     }
 
-    // Local / Offline fallback authentication
-    const users = OfficeDB.getUsers();
-    const foundUser = users.find(u => u.username.toLowerCase() === username.toLowerCase());
-
-    if (foundUser) {
-      const role = foundUser.role || (username.toLowerCase() === 'gaurav' ? 'Admin' : 'User');
-      const name = `${foundUser.firstName || ''} ${foundUser.lastName || ''}`.trim() || username;
-      return setSession(foundUser.username, name, role);
+    // Local / Offline verification
+    let displayName = username;
+    if (window.OfficeDB && typeof OfficeDB.getUsers === 'function') {
+      const users = OfficeDB.getUsers();
+      const foundUser = users.find(u => u.username.toLowerCase() === username.toLowerCase());
+      if (foundUser) {
+        displayName = `${foundUser.firstName || ''} ${foundUser.lastName || ''}`.trim() || username;
+      }
     }
 
-    // If username is gaurav or Jebel, allow login
     if (username.toLowerCase() === 'gaurav') {
-      return setSession('gaurav', 'Gaurav Patil', 'Admin');
+      displayName = 'Gaurav Patil';
     } else if (username.toLowerCase() === 'jebel') {
-      return setSession('Jebel', 'Jebelste Sj', 'User');
+      displayName = 'Jebelste Sj';
     }
 
-    throw new Error("Invalid username or PIN.");
+    return setSession(username, displayName, assignedRole);
   }
 
   function setSession(username, name, role) {
@@ -116,7 +121,7 @@ window.OfficeAuth = (function() {
   }
 
   function isAdmin() {
-    return currentRole === "Admin" || (currentUser && currentUser.toLowerCase() === 'gaurav');
+    return currentRole === "Admin";
   }
 
   return {
