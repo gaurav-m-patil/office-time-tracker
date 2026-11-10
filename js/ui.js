@@ -11,6 +11,7 @@ window.OfficeUI = (function() {
     OfficeDB.subscribe(handleDatabaseEvent);
     resetRecordForm();
     updateSmartPunchUI();
+    setupSwipeNavigation();
 
     // Subscribe to shift ticker
     OfficeShifts.subscribe({
@@ -92,15 +93,26 @@ window.OfficeUI = (function() {
     renderActiveView();
   }
 
-  // Tab Navigation
-  function switchTab(tabId) {
+  // Tab Navigation with Optional Smooth Swipe Animation
+  function switchTab(tabId, direction = null) {
+    if (activeTab === tabId && !direction) return;
     activeTab = tabId;
-    document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
+
+    document.querySelectorAll('.tab-pane').forEach(el => {
+      el.classList.remove('active', 'anim-slide-left', 'anim-slide-right');
+    });
     document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
 
     const targetPane = document.getElementById(`tab-${tabId}`);
     const targetNav = document.getElementById(`nav-${tabId}`);
-    if (targetPane) targetPane.classList.add('active');
+    if (targetPane) {
+      targetPane.classList.add('active');
+      if (direction === 'left') {
+        targetPane.classList.add('anim-slide-left');
+      } else if (direction === 'right') {
+        targetPane.classList.add('anim-slide-right');
+      }
+    }
     if (targetNav) targetNav.classList.add('active');
 
     if (tabId === 'record' && !document.getElementById('entryId').value) {
@@ -108,6 +120,127 @@ window.OfficeUI = (function() {
     }
 
     renderActiveView();
+  }
+
+  // WhatsApp / Instagram-Grade Touch Swipe Navigation
+  function setupSwipeNavigation() {
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchStartTime = 0;
+    let isHorizontalGesture = null;
+
+    const container = document.getElementById('dashboardSection');
+    if (!container) return;
+
+    container.addEventListener('touchstart', (e) => {
+      // Single finger touches only
+      if (e.touches.length !== 1) return;
+
+      // Reject swipe if any modal, drawer, or action sheet is active
+      const hasOverlay = document.querySelector(
+        '.drawer-backdrop.active, .modal-backdrop.active, .action-sheet-backdrop.active'
+      );
+      if (hasOverlay) {
+        touchStartX = 0;
+        return;
+      }
+
+      // Ignore if touch originates on form controls, buttons, or interactive action items
+      const target = e.target;
+      if (
+        target.closest('input') ||
+        target.closest('select') ||
+        target.closest('textarea') ||
+        target.closest('button') ||
+        target.closest('.action-btn') ||
+        target.closest('.interactive-chip')
+      ) {
+        touchStartX = 0;
+        return;
+      }
+
+      const touch = e.touches[0];
+      // System Edge Swipe Rejection: ignore touches within 25px of screen boundaries
+      if (touch.clientX < 25 || touch.clientX > window.innerWidth - 25) {
+        touchStartX = 0;
+        return;
+      }
+
+      touchStartX = touch.clientX;
+      touchStartY = touch.clientY;
+      touchStartTime = Date.now();
+      isHorizontalGesture = null;
+    }, { passive: true });
+
+    container.addEventListener('touchmove', (e) => {
+      if (!touchStartX || e.touches.length !== 1) return;
+
+      const touch = e.touches[0];
+      const deltaX = touch.clientX - touchStartX;
+      const deltaY = touch.clientY - touchStartY;
+
+      // Classify gesture intention once displacement passes 10px
+      if (isHorizontalGesture === null) {
+        if (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10) {
+          // If vertical movement dominates, this is a page scroll: cancel tab swipe
+          if (Math.abs(deltaY) >= Math.abs(deltaX)) {
+            isHorizontalGesture = false;
+            touchStartX = 0;
+          } else {
+            isHorizontalGesture = true;
+          }
+        }
+      }
+    }, { passive: true });
+
+    container.addEventListener('touchend', (e) => {
+      if (!touchStartX || isHorizontalGesture === false) {
+        touchStartX = 0;
+        return;
+      }
+
+      const touch = e.changedTouches[0];
+      const deltaX = touch.clientX - touchStartX;
+      const deltaY = touch.clientY - touchStartY;
+      const duration = Date.now() - touchStartTime;
+
+      touchStartX = 0;
+
+      // Robust gesture verification:
+      // 1. Must be a rapid swipe (< 550ms) unless distance is wide (> 90px)
+      if (duration > 550 && Math.abs(deltaX) < 90) return;
+
+      // 2. Strict angle filter: horizontal displacement must exceed vertical by 1.6x
+      if (Math.abs(deltaX) < Math.abs(deltaY) * 1.6) return;
+
+      // 3. Minimum distance threshold: 45px for normal swipe, 30px for quick flick (< 250ms)
+      const minDistance = duration < 250 ? 30 : 45;
+      if (Math.abs(deltaX) < minDistance) return;
+
+      // Resolve currently visible navigation tabs dynamically
+      const navItems = Array.from(document.querySelectorAll('#appBottomNav .nav-item:not(.hidden)'));
+      const visibleTabs = navItems.map(btn => btn.id.replace('nav-', ''));
+      if (!visibleTabs.length) return;
+
+      const currentIndex = visibleTabs.indexOf(activeTab);
+      if (currentIndex === -1) return;
+
+      if (deltaX < 0) {
+        // Swiped Left (finger moved ←) -> Next tab in sequence
+        if (currentIndex < visibleTabs.length - 1) {
+          const nextTab = visibleTabs[currentIndex + 1];
+          switchTab(nextTab, 'left');
+          OfficeShifts.triggerHaptic();
+        }
+      } else {
+        // Swiped Right (finger moved →) -> Previous tab in sequence
+        if (currentIndex > 0) {
+          const prevTab = visibleTabs[currentIndex - 1];
+          switchTab(prevTab, 'right');
+          OfficeShifts.triggerHaptic();
+        }
+      }
+    }, { passive: true });
   }
 
   function renderActiveView() {
@@ -640,83 +773,184 @@ window.OfficeUI = (function() {
         const salarySafeText = comp.is86Safe ? '86% Salary Safe' : 'Salary Risk (<86%)';
         const salarySafeIcon = comp.is86Safe ? 'verified_user' : 'warning';
 
+        const meterAttnPct = Math.min(100, Math.max(0, comp.attendancePct));
+        const meterFillClass = comp.is86Safe ? 'fill-safe' : 'fill-risk';
+        const meterAttnCaption = comp.is86Safe
+          ? `✅ Quota secured! Buffer: +${comp.attendancePct - 86}% above salary threshold.`
+          : `⚠️ Deficit: -${86 - comp.attendancePct}% below target. Attend upcoming workdays to protect salary.`;
+
+        const hoursDecimal = parseFloat(comp.avgHoursDecimal) || 0;
+        const hoursMeterPct = Math.min(100, Math.round((hoursDecimal / 8.0) * 100));
+        let hoursCaption = '';
+        if (comp.futureWorkingDays > 0) {
+          if (comp.surplusHours > 0) {
+            hoursCaption = `🌟 Pace Surplus: +${comp.surplusHours}h ahead of 7.0h min (~${comp.reqDailyFormatted7h}/day needed)`;
+          } else {
+            hoursCaption = `⏱️ Needed Pace: ~<strong>${comp.reqDailyFormatted7h}/day</strong> across ${comp.futureWorkingDays} remaining workdays (or ~${comp.reqDailyFormatted8h}/day for 8.0h optimal)`;
+          }
+        } else {
+          hoursCaption = comp.isHoursCompliant
+            ? '🏆 Finalized: Met company daily hours requirement.'
+            : '⚠️ Finalized: Fell below 7.0h daily company minimum.';
+        }
+
         compContainer.innerHTML = `
-          <div class="compliance-cockpit-card">
-            <!-- Cockpit Header: Month Selector + 86% Salary Badge -->
-            <div class="comp-header">
-              <div class="comp-title-group" style="display:flex; align-items:center; gap:8px;">
-                <select class="comp-month-select" onchange="OfficeUI.setComplianceMonth(this.value)">
+          <div class="compliance-cockpit-spacious">
+
+            <!-- 1. Header: Month Selector + 86% Salary Badge -->
+            <div class="cockpit-top-row">
+              <div class="cockpit-month-wrap">
+                <i class="material-icons-round" style="font-size:16px; color:var(--primary);">calendar_month</i>
+                <select class="comp-month-select-spacious" onchange="OfficeUI.setComplianceMonth(this.value)">
                   ${monthOptions}
                 </select>
-                <span class="tile-pill ${statusClass}">${statusText}</span>
               </div>
-              <div>
-                <span class="comp-salary-badge ${salarySafeClass}">
-                  <i class="material-icons-round" style="font-size:12px; margin-right:3px;">${salarySafeIcon}</i>
+              <div class="cockpit-badge-wrap">
+                <span class="comp-salary-badge-spacious ${salarySafeClass}">
+                  <i class="material-icons-round" style="font-size:13px;">${salarySafeIcon}</i>
                   ${salarySafeText}
                 </span>
               </div>
             </div>
 
-            <!-- Bento 4-Quad Grid -->
-            <div class="comp-bento-quad">
-              <!-- Tile 1: Monthly Average Hours (100% Matching Fiscal Box) -->
-              <div class="comp-bento-tile">
-                <div class="bento-tile-lbl">Monthly Average</div>
-                <div class="bento-tile-main" style="color:var(--primary);">${comp.avgFormatted}</div>
-                <div class="bento-tile-sub">
-                  <span>${comp.totalHours}h / ${comp.hoursDivisor} working days</span>
+            <!-- 2. Dual Hero KPI Cards (Spacious, Clear, Bold) -->
+            <div class="cockpit-hero-grid">
+              <!-- Hero 1: Monthly Average Hours -->
+              <div class="cockpit-hero-card">
+                <div class="hero-card-header">
+                  <span class="hero-lbl">Monthly Average Hours</span>
+                  <span class="tile-pill ${statusClass}">${statusText}</span>
+                </div>
+                <div class="hero-val-row">
+                  <span class="hero-val" style="color:var(--primary);">${comp.avgFormatted}</span>
+                  <span class="hero-sub-unit">/ day</span>
+                </div>
+                <div class="hero-card-footer">
+                  <span class="footer-target">Company Policy: <strong>7.0h Min – 8.0h Target</strong></span>
+                  <span class="footer-stat">${comp.totalHours}h logged over ${comp.hoursDivisor} workdays</span>
                 </div>
               </div>
 
-              <!-- Tile 2: Attendance Rate & 86% Threshold -->
-              <div class="comp-bento-tile">
-                <div class="bento-tile-lbl">Attendance (86% Min)</div>
-                <div class="bento-tile-main" style="color:${comp.is86Safe ? '#10b981' : '#f59e0b'};">${comp.attendancePct}%</div>
-                <div class="bento-tile-sub">
-                  <span>${comp.attendedDaysLogged} of ${comp.totalExpectedWorkDays} total workdays</span>
+              <!-- Hero 2: Attendance Rate (86% Salary Standard) -->
+              <div class="cockpit-hero-card">
+                <div class="hero-card-header">
+                  <span class="hero-lbl">Salary Attendance Rate</span>
+                  <span class="tile-pill ${comp.is86Safe ? 'badge-salary-safe' : 'badge-salary-risk'}">
+                    ${comp.is86Safe ? '≥ 86% Compliant' : '< 86% Impact Risk'}
+                  </span>
                 </div>
-              </div>
-
-              <!-- Tile 3: Remaining Workdays & Needed Days -->
-              <div class="comp-bento-tile">
-                <div class="bento-tile-lbl">Remaining Workdays</div>
-                <div class="bento-tile-main">${comp.futureWorkingDays > 0 ? comp.futureWorkingDays + ' Days Left' : 'Completed'}</div>
-                <div class="bento-tile-sub">
-                  <span>${comp.futureWorkingDays > 0 ? (comp.daysNeededFor86 > 0 ? `Need <strong>${comp.daysNeededFor86}d</strong> for 86%` : `<strong>${comp.maxAllowableNoShows}d</strong> safe leaves left`) : 'Month Finalized'}</span>
+                <div class="hero-val-row">
+                  <span class="hero-val" style="color:${comp.is86Safe ? '#10b981' : '#f59e0b'};">${comp.attendancePct}%</span>
+                  <span class="hero-sub-unit">current</span>
                 </div>
-              </div>
-
-              <!-- Tile 4: Daily Target / Pace -->
-              <div class="comp-bento-tile">
-                <div class="bento-tile-lbl">Daily Target / Pace</div>
-                <div class="bento-tile-main" style="color:${comp.futureWorkingDays > 0 && comp.surplusHours > 0 ? '#10b981' : 'var(--text-primary)'};">
-                  ${comp.futureWorkingDays > 0 ? (comp.surplusHours > 0 ? '+' + comp.surplusHours + 'h Surplus' : comp.reqDailyFormatted7h) : comp.totalHours + 'h Total'}
-                </div>
-                <div class="bento-tile-sub">
-                  <span>${comp.futureWorkingDays > 0 ? (comp.surplusHours > 0 ? 'Ahead of 7h pace' : 'Needed/day for 7.0h') : (comp.isHoursCompliant ? '7–8h Standard Met' : 'Below 7.0h Standard')}</span>
+                <div class="hero-card-footer">
+                  <span class="footer-target">Salary Rule: <strong>Min 86%</strong> attendance required</span>
+                  <span class="footer-stat">${comp.attendedDaysLogged} of ${comp.totalExpectedWorkDays} total workdays</span>
                 </div>
               </div>
             </div>
 
-            <!-- Micro Month Breakdown Strip -->
-            <div class="comp-breakdown-strip">
-              <span class="breakdown-tag tag-present"><span class="dot"></span> Present: <strong>${comp.presentDays}</strong></span>
-              <span class="breakdown-tag tag-leave"><span class="dot"></span> Leave: <strong>${comp.leaveDays}</strong></span>
-              <span class="breakdown-tag tag-exception"><span class="dot"></span> Exc: <strong>${comp.exceptionDays}</strong></span>
-              <span class="breakdown-tag tag-noshow"><span class="dot"></span> No-Show: <strong>${comp.noshowDays}</strong></span>
-              <span class="breakdown-tag tag-off"><span class="dot"></span> Off: <strong>${comp.offDays}</strong></span>
-            </div>
+            <!-- 3. Dual Visual Performance Meters (Attendance & Daily Pace) -->
+            <div class="cockpit-meters-card">
+              <!-- Meter A: Attendance vs 86% Salary Benchmark -->
+              <div class="meter-block" style="margin-bottom:14px;">
+                <div class="meter-header">
+                  <span class="meter-title">
+                    <i class="material-icons-round" style="font-size:14px; color:var(--primary); vertical-align:middle; margin-right:3px;">shield</i>
+                    Salary Attendance Progress
+                  </span>
+                  <span class="meter-metric" style="color:${comp.is86Safe ? '#10b981' : '#f59e0b'};">
+                    ${comp.attendancePct}% <small>/ 86% target</small>
+                  </span>
+                </div>
+                <div class="meter-track-container">
+                  <div class="meter-track">
+                    <div class="meter-fill ${meterFillClass}" style="width: ${meterAttnPct}%;"></div>
+                    <!-- 86% Threshold Marker -->
+                    <div class="meter-marker-86" style="left: 86%;">
+                      <span class="marker-line"></span>
+                      <span class="marker-lbl">86% Min</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="meter-caption">
+                  ${meterAttnCaption}
+                </div>
+              </div>
 
-            <!-- Smart AI Predictor Guidance Box -->
-            <div class="comp-predictor-box">
-              <div class="predictor-icon-circle">🤖</div>
-              <div class="predictor-text">
-                <div class="predictor-headline">AI Attendance & Salary Projection</div>
-                <div class="predictor-item">${comp.salaryAdvice}</div>
-                <div class="predictor-item">${comp.hoursAdvice}</div>
+              <!-- Meter B: Hours Standard Pace Gauge -->
+              <div class="meter-block">
+                <div class="meter-header">
+                  <span class="meter-title">
+                    <i class="material-icons-round" style="font-size:14px; color:var(--primary); vertical-align:middle; margin-right:3px;">speed</i>
+                    Daily Hours Pace (7h–8h)
+                  </span>
+                  <span class="meter-metric" style="color:var(--primary);">
+                    ${comp.avgFormatted} <small>/ 8h target</small>
+                  </span>
+                </div>
+                <div class="meter-track-container">
+                  <div class="meter-track">
+                    <div class="meter-fill fill-primary" style="width: ${hoursMeterPct}%;"></div>
+                    <!-- 7.0h (87.5%) Marker -->
+                    <div class="meter-marker-7h" style="left: 87.5%;">
+                      <span class="marker-line"></span>
+                      <span class="marker-lbl">7h Min</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="meter-caption">
+                  ${hoursCaption}
+                </div>
               </div>
             </div>
+
+            <!-- 4. Month Calendar & Leave Intelligence (3-Tile Bento Strip) -->
+            <div class="cockpit-tri-bento">
+              <div class="tri-bento-tile">
+                <span class="tri-lbl">Remaining Workdays</span>
+                <span class="tri-val">${comp.futureWorkingDays > 0 ? comp.futureWorkingDays + ' Days' : '0 Days'}</span>
+                <span class="tri-sub">${comp.futureWorkingDays > 0 ? 'Upcoming weekdays' : 'Month completed'}</span>
+              </div>
+              <div class="tri-bento-tile">
+                <span class="tri-lbl">Safe Off Budget</span>
+                <span class="tri-val" style="color:${comp.maxAllowableNoShows > 0 ? '#10b981' : 'var(--text-muted)'};">${comp.maxAllowableNoShows} Days</span>
+                <span class="tri-sub">${comp.maxAllowableNoShows > 0 ? 'Allowed off (no salary cut)' : 'No safe leaves left'}</span>
+              </div>
+              <div class="tri-bento-tile">
+                <span class="tri-lbl">Workdays Logged</span>
+                <span class="tri-val">${comp.validWorkDaysLogged} Days</span>
+                <span class="tri-sub">${comp.presentDays} Pres • ${comp.leaveDays} Lv • ${comp.noshowDays} NS</span>
+              </div>
+            </div>
+
+            <!-- 5. Month Breakdown Distribution Strip -->
+            <div class="comp-breakdown-strip-spacious">
+              <span class="breakdown-tag tag-present"><span class="dot"></span> Present: <strong>${comp.presentDays}d</strong></span>
+              <span class="breakdown-tag tag-leave"><span class="dot"></span> Leave: <strong>${comp.leaveDays}d</strong></span>
+              <span class="breakdown-tag tag-exception"><span class="dot"></span> Exc: <strong>${comp.exceptionDays}d</strong></span>
+              <span class="breakdown-tag tag-noshow"><span class="dot"></span> No-Show: <strong>${comp.noshowDays}d</strong></span>
+              <span class="breakdown-tag tag-off"><span class="dot"></span> Weekend/Off: <strong>${comp.offDays}d</strong></span>
+            </div>
+
+            <!-- 6. AI Strategic Action Directives (2 Dedicated Cards) -->
+            <div class="cockpit-ai-directives">
+              <div class="directive-card directive-salary">
+                <div class="directive-icon-circle">💼</div>
+                <div class="directive-content">
+                  <div class="directive-title">Salary Protection Directive (86% Threshold)</div>
+                  <div class="directive-text">${comp.salaryAdvice}</div>
+                </div>
+              </div>
+              <div class="directive-card directive-hours">
+                <div class="directive-icon-circle">⏱️</div>
+                <div class="directive-content">
+                  <div class="directive-title">Daily Hours Standard Directive (7–8h Standard)</div>
+                  <div class="directive-text">${comp.hoursAdvice}</div>
+                </div>
+              </div>
+            </div>
+
           </div>
         `;
       }
