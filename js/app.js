@@ -37,13 +37,18 @@ window.OfficeApp = (function() {
     const nameEl = document.getElementById('topbarUserName');
     if (nameEl) nameEl.innerText = session.name || session.username;
 
+    const avatarLetter = document.getElementById('topbarAvatarLetter');
+    if (avatarLetter) {
+      avatarLetter.innerText = (session.name || session.username || 'U')[0].toUpperCase();
+    }
+
     const roleBadge = document.getElementById('topbarUserRole');
     if (roleBadge) {
       if (session.role === 'Admin') {
         roleBadge.innerText = 'Admin';
-        roleBadge.style.display = 'inline-block';
+        roleBadge.classList.remove('hidden');
       } else {
-        roleBadge.style.display = 'none'; // Strictly hide in user mode
+        roleBadge.classList.add('hidden'); // Strictly hide in user mode
       }
     }
 

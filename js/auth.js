@@ -120,6 +120,14 @@ window.OfficeAuth = (function() {
     return currentRole || "User";
   }
 
+  function getSession() {
+    return {
+      username: currentUser,
+      name: currentName || currentUser || "Employee",
+      role: currentRole || "User"
+    };
+  }
+
   function isAdmin() {
     return currentRole === "Admin";
   }
@@ -132,6 +140,7 @@ window.OfficeAuth = (function() {
     getCurrentUser,
     getCurrentName,
     getCurrentRole,
+    getSession,
     isAdmin
   };
 })();

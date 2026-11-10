@@ -31,7 +31,7 @@
   <div id="toastContainer" class="toast-container"></div>
 
   <!-- ========================================== -->
-  <!-- TOPBAR (Clean Fixed 50px Header)           -->
+  <!-- TOPBAR (Clean Sleek Header with Control Avatar) -->
   <!-- ========================================== -->
   <header class="topbar">
     <div class="topbar-brand">
@@ -41,21 +41,12 @@
 
     <div class="topbar-right">
       <div id="syncIndicator" class="sync-status-dot" title="Cloud Synced"></div>
-      <button class="icon-btn" onclick="OfficeApp.hardRefresh()" title="Developer Refresh">
-        <i class="material-icons-round">refresh</i>
+      <button id="btnControlAvatar" class="avatar-pill-btn" onclick="OfficeUI.openControlDrawer()" title="Open Control Center">
+        <span id="topbarAvatarLetter" class="avatar-letter">G</span>
+        <span id="topbarUserName" class="avatar-name">Gaurav</span>
+        <span id="topbarUserRole" class="avatar-role-badge hidden">Admin</span>
+        <i class="material-icons-round avatar-arrow">expand_more</i>
       </button>
-      <button class="icon-btn" onclick="OfficeUI.toggleTheme()" title="Toggle Theme">
-        <i class="material-icons-round" id="themeToggleIcon">dark_mode</i>
-      </button>
-      <button class="icon-btn" onclick="OfficeUI.openSettingsModal()" title="Firebase Settings">
-        <i class="material-icons-round">settings</i>
-      </button>
-      <div id="userHeaderBadge" class="user-greeting" onclick="OfficeAuth.logout()" title="Click to Sign Out">
-        <i class="material-icons-round" style="font-size:16px; color:var(--primary);">account_circle</i>
-        <span id="topbarUserName">Gaurav</span>
-        <span id="topbarUserRole" class="brand-badge" style="font-size:8px; padding:1px 4px; display:none;">Admin</span>
-        <i class="material-icons-round" style="font-size:14px; opacity:0.5;">logout</i>
-      </div>
     </div>
   </header>
 
@@ -172,15 +163,30 @@
 
           <div class="quick-actions-card">
             <div class="quick-actions-header">
-              <span class="quick-actions-title">⚡ Quick Shortcuts</span>
+              <span class="quick-actions-title">⚡ Quick Status Stamps</span>
               <span class="quick-actions-date" id="quickDateDisplay">--</span>
             </div>
             <div class="quick-buttons-grid">
-              <button type="button" class="btn-quick bg-amber" onclick="OfficeUI.quickAction('leave')">Leave</button>
-              <button type="button" class="btn-quick bg-purple" onclick="OfficeUI.quickAction('exception')">Exception</button>
-              <button type="button" class="btn-quick bg-gray" onclick="OfficeUI.quickAction('noshow')">No Show</button>
-              <button type="button" class="btn-quick bg-blue" onclick="OfficeUI.quickAction('weekend')">Weekend</button>
-              <button type="button" class="btn-quick bg-cyan" onclick="OfficeUI.quickAction('holiday')">Holiday</button>
+              <button type="button" class="btn-quick-large bg-amber" onclick="OfficeUI.quickAction('leave')" title="Mark Leave">
+                <span class="quick-icon">🌴</span>
+                <span class="quick-text">Leave</span>
+              </button>
+              <button type="button" class="btn-quick-large bg-purple" onclick="OfficeUI.quickAction('exception')" title="Mark Exception">
+                <span class="quick-icon">⚡</span>
+                <span class="quick-text">Exception</span>
+              </button>
+              <button type="button" class="btn-quick-large bg-gray" onclick="OfficeUI.quickAction('noshow')" title="Mark No Show">
+                <span class="quick-icon">🚫</span>
+                <span class="quick-text">No Show</span>
+              </button>
+              <button type="button" class="btn-quick-large bg-blue" onclick="OfficeUI.quickAction('weekend')" title="Mark Weekend">
+                <span class="quick-icon">📅</span>
+                <span class="quick-text">Weekend</span>
+              </button>
+              <button type="button" class="btn-quick-large bg-cyan" onclick="OfficeUI.quickAction('holiday')" title="Mark Holiday">
+                <span class="quick-icon">🏖️</span>
+                <span class="quick-text">Holiday</span>
+              </button>
             </div>
           </div>
 
@@ -190,45 +196,41 @@
       </section>
 
       <!-- ========================================== -->
-      <!-- TAB 2: MY HISTORY                          -->
+      <!-- TAB 2: MY HISTORY (Zero Horizontal Scroll) -->
       <!-- ========================================== -->
       <section id="tab-history" class="tab-pane">
-        <div class="container" style="max-height: calc(100dvh - 120px); display:flex; flex-direction:column;">
+        <div class="history-view-container">
           <div class="table-header-bar">
             <div>
               <h3 style="display:inline; margin-right:6px;">My History</h3>
-              <span id="historyCountBadge" style="font-size:11px; font-weight:700; color:var(--primary);">134 records</span>
+              <span id="historyCountBadge" class="history-count-badge">134 records</span>
             </div>
-            <button class="action-btn" onclick="OfficeDB.exportCSVBackup()">
+            <button class="action-btn" onclick="OfficeDB.exportCSVBackup()" title="Download CSV Backup">
               <i class="material-icons-round" style="font-size:13px; vertical-align:middle;">download</i> CSV
             </button>
           </div>
 
-          <div class="table-container">
-            <table>
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Status</th>
-                  <th>In</th>
-                  <th>Out</th>
-                  <th>Duration</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody id="historyTableBody"></tbody>
-            </table>
-          </div>
+          <!-- Responsive Vertical Cards Feed (Zero Horizontal Overflow) -->
+          <div id="historyCardsFeed" class="attendance-cards-feed"></div>
+
+          <!-- Hidden table tbody for fallback -->
+          <table style="display:none;"><tbody id="historyTableBody"></tbody></table>
         </div>
       </section>
 
       <!-- ========================================== -->
-      <!-- TAB 3: INSIGHTS                            -->
+      <!-- TAB 3: INSIGHTS & 7-8H COMPLIANCE ENGINE   -->
       <!-- ========================================== -->
       <section id="tab-insights" class="tab-pane">
-        <div class="container" style="max-height: calc(100dvh - 120px); overflow-y:auto;">
-          <h3 style="margin: 0 0 4px 0; font-size:15px; color:var(--primary);">Financial Year Analytics</h3>
-          <p style="font-size: 11px; color: var(--text-muted); margin: 0 0 12px 0;">*Attendance % calculated over net working days. Hover/Tap month for breakdown.</p>
+        <div class="insights-view-container">
+          <!-- 7-8 Hour Compliance & Attendance Predictor Tool -->
+          <div id="complianceToolContainer"></div>
+
+          <!-- Quarterly Fiscal Year Analytics -->
+          <div class="quarterly-header-box">
+            <h4 style="margin: 14px 0 2px 0; font-size:13px; font-weight:800; color:var(--text-primary); text-transform:uppercase; letter-spacing:0.5px;">Fiscal Performance</h4>
+            <p style="font-size: 11px; color: var(--text-muted); margin: 0 0 10px 0;">*Attendance % calculated over net working days. Tap a month to inspect daily metrics.</p>
+          </div>
           <div id="insightsContainer"></div>
         </div>
       </section>
@@ -295,6 +297,72 @@
       <span>Admin</span>
     </button>
   </nav>
+
+  <!-- ========================================== -->
+  <!-- CONTROL CENTER SLIDE-UP DRAWER (Option C)   -->
+  <!-- ========================================== -->
+  <div class="drawer-backdrop" id="controlCenterDrawerBackdrop" onclick="if(event.target===this) OfficeUI.closeControlDrawer()">
+    <div class="drawer-sheet">
+      <div class="drawer-drag-handle"></div>
+      
+      <div class="drawer-user-header">
+        <div class="drawer-avatar-badge" id="drawerAvatarBadge">G</div>
+        <div class="drawer-user-meta">
+          <div class="drawer-user-fullname" id="drawerUserName">Gaurav</div>
+          <div class="drawer-user-sub" id="drawerUserSub">Employee • Active Shift Ready</div>
+        </div>
+        <button class="drawer-close-circle" onclick="OfficeUI.closeControlDrawer()" title="Close Menu">
+          <i class="material-icons-round">close</i>
+        </button>
+      </div>
+
+      <div class="drawer-actions-grid">
+        <!-- Theme Toggle -->
+        <button class="drawer-tile" onclick="OfficeUI.toggleTheme()">
+          <div class="drawer-tile-icon bg-indigo">
+            <i class="material-icons-round" id="drawerThemeIcon">dark_mode</i>
+          </div>
+          <div class="drawer-tile-content">
+            <span class="drawer-tile-title">Theme Mode</span>
+            <span class="drawer-tile-desc" id="drawerThemeDesc">Dark / Light</span>
+          </div>
+        </button>
+
+        <!-- Fast Refresh & Clear Cache -->
+        <button class="drawer-tile" onclick="OfficeApp.hardRefresh()">
+          <div class="drawer-tile-icon bg-emerald">
+            <i class="material-icons-round">autorenew</i>
+          </div>
+          <div class="drawer-tile-content">
+            <span class="drawer-tile-title">Instant Refresh</span>
+            <span class="drawer-tile-desc">Clear Cache & Reload</span>
+          </div>
+        </button>
+
+        <!-- Cloud & Database Settings -->
+        <button class="drawer-tile" onclick="OfficeUI.closeControlDrawer(); OfficeUI.openSettingsModal();">
+          <div class="drawer-tile-icon bg-amber">
+            <i class="material-icons-round">cloud_sync</i>
+          </div>
+          <div class="drawer-tile-content">
+            <span class="drawer-tile-title">Cloud Settings</span>
+            <span class="drawer-tile-desc">Firebase & Backups</span>
+          </div>
+        </button>
+
+        <!-- Sign Out -->
+        <button class="drawer-tile tile-danger" onclick="OfficeUI.closeControlDrawer(); OfficeAuth.logout();">
+          <div class="drawer-tile-icon bg-rose">
+            <i class="material-icons-round">logout</i>
+          </div>
+          <div class="drawer-tile-content">
+            <span class="drawer-tile-title">Sign Out</span>
+            <span class="drawer-tile-desc">Switch Account</span>
+          </div>
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- ========================================== -->
   <!-- CLOUD DATABASE & SETTINGS MODAL            -->

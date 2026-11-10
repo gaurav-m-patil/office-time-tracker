@@ -1,9 +1,173 @@
 /**
- * Enterprise Time Tracker - Analytics & Financial Year Engine
- * Fast Memoized Calculations for Fiscal Quarters, Attendance %, and Weekly Targets
+ * Enterprise Time Tracker - Analytics & Compliance Engine
+ * Fast Memoized Calculations for Fiscal Quarters, 7-8h Company Compliance & Predictive Attendance
  */
 
 window.OfficeAnalytics = (function() {
+
+  // 7-8 Hour Company Compliance Calculator & Smart Predictor
+  function calculateComplianceData(logs, customYearMonth = null) {
+    // Determine active focus month
+    let ymKey = customYearMonth;
+    const now = new Date();
+    const currentYM = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    
+    if (!ymKey) {
+      const hasCurrent = logs.some(l => l.date && l.date.startsWith(currentYM));
+      if (hasCurrent) {
+        ymKey = currentYM;
+      } else if (logs.length > 0) {
+        const sorted = [...logs].filter(l => l.date).sort((a, b) => b.date.localeCompare(a.date));
+        ymKey = sorted[0].date.substring(0, 7);
+      } else {
+        ymKey = currentYM;
+      }
+    }
+
+    const [yStr, mStr] = ymKey.split('-');
+    const year = parseInt(yStr, 10);
+    const month = parseInt(mStr, 10) - 1; // 0-indexed
+    
+    const todayStr = OfficeShifts.getLocalDateStr(now);
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    
+    // 1. Calculate working days in month (Mon-Fri)
+    let totalWorkingDays = 0;
+    let elapsedWorkingDays = 0;
+    let remainingWorkingDays = 0;
+    
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateObj = new Date(year, month, d);
+      const dayOfWeek = dateObj.getDay(); // 0 Sun, 6 Sat
+      const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+      
+      if (!isWeekend) {
+        totalWorkingDays++;
+        const checkDateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        if (ymKey < currentYM) {
+          // Past month: all days elapsed
+          elapsedWorkingDays++;
+        } else if (ymKey > currentYM) {
+          // Future month: all remaining
+          remainingWorkingDays++;
+        } else {
+          // Current month
+          if (checkDateStr <= todayStr) {
+            elapsedWorkingDays++;
+          } else {
+            remainingWorkingDays++;
+          }
+        }
+      }
+    }
+
+    // 2. Filter logs for this month
+    const monthLogs = logs.filter(l => l.date && l.date.startsWith(ymKey));
+    
+    let attendedDays = 0;
+    let presentDays = 0;
+    let totalHours = 0;
+    let leaveDays = 0;
+    let exceptionDays = 0;
+    let noshowDays = 0;
+
+    monthLogs.forEach(l => {
+      if (l.status === 'Present') {
+        presentDays++;
+        attendedDays++;
+        totalHours += parseFloat(l.hours) || 0;
+      } else if (l.status === 'Leave') {
+        leaveDays++;
+        attendedDays++;
+      } else if (l.status === 'Exception') {
+        exceptionDays++;
+        attendedDays++;
+      } else if (l.status === 'No Show') {
+        noshowDays++;
+      }
+    });
+
+    const avgHoursPerPresentDay = presentDays > 0 ? (totalHours / presentDays) : 0;
+    const avgFormatted = OfficeShifts.formatDurationDisplay(avgHoursPerPresentDay);
+    
+    // Company Standards: 7.0 hours minimum, 8.0 hours target
+    const MIN_HOURS = 7.0;
+    const TARGET_HOURS = 8.0;
+    
+    const isCompliant = avgHoursPerPresentDay >= MIN_HOURS;
+    const isOptimal = avgHoursPerPresentDay >= TARGET_HOURS;
+    
+    // Target calculations
+    const minTargetTotalHours = totalWorkingDays * MIN_HOURS;
+    const optTargetTotalHours = totalWorkingDays * TARGET_HOURS;
+    const deficitForMin = Math.max(0, minTargetTotalHours - totalHours);
+    const deficitForOpt = Math.max(0, optTargetTotalHours - totalHours);
+    
+    let predictorAdvice = "";
+    let reqDailyForMin = 0;
+    let reqDailyForOpt = 0;
+    
+    if (remainingWorkingDays > 0) {
+      reqDailyForMin = parseFloat((deficitForMin / remainingWorkingDays).toFixed(1));
+      reqDailyForOpt = parseFloat((deficitForOpt / remainingWorkingDays).toFixed(1));
+      
+      if (avgHoursPerPresentDay >= TARGET_HOURS) {
+        predictorAdvice = `🌟 Optimal: You're averaging ${avgHoursPerPresentDay.toFixed(1)}h. Maintain ≥ 7.0h on your ${remainingWorkingDays} remaining days to stay compliant.`;
+      } else if (avgHoursPerPresentDay >= MIN_HOURS) {
+        predictorAdvice = `✅ Compliant: Current avg is ${avgHoursPerPresentDay.toFixed(1)}h (≥ 7.0h min). Aim for ~${reqDailyForOpt}h/day across ${remainingWorkingDays} remaining days to reach the 8.0h target.`;
+      } else {
+        predictorAdvice = `⚠️ Action Needed: Average is ${avgHoursPerPresentDay.toFixed(1)}h. You need ~${reqDailyForMin}h/day across ${remainingWorkingDays} remaining days to hit the 7.0h minimum.`;
+      }
+    } else {
+      if (presentDays === 0) {
+        predictorAdvice = "No present attendance recorded for this month.";
+      } else if (isOptimal) {
+        predictorAdvice = `🏆 Excellent: Month completed with ${avgHoursPerPresentDay.toFixed(1)}h/day average (exceeds 8.0h company target).`;
+      } else if (isCompliant) {
+        predictorAdvice = `✅ Compliant: Month completed with ${avgHoursPerPresentDay.toFixed(1)}h/day average (meets 7-8h requirement).`;
+      } else {
+        predictorAdvice = `⚠️ Below Standard: Month finalized at ${avgHoursPerPresentDay.toFixed(1)}h/day (below 7.0h company minimum).`;
+      }
+    }
+
+    // Monthly compliance percentage (7h = 100%, 8h = 114%)
+    const compliancePct = Math.min(100, Math.round((avgHoursPerPresentDay / MIN_HOURS) * 100));
+
+    // Get list of all available months in logs for the selector
+    const availableMonths = Array.from(new Set(logs.filter(l => l.date).map(l => l.date.substring(0, 7)))).sort().reverse();
+    if (!availableMonths.includes(currentYM)) {
+      availableMonths.unshift(currentYM);
+    }
+
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const monthLabel = `${monthNames[month]} ${year}`;
+
+    return {
+      yearMonth: ymKey,
+      monthLabel,
+      availableMonths,
+      totalWorkingDays,
+      elapsedWorkingDays,
+      remainingWorkingDays,
+      attendedDays,
+      presentDays,
+      leaveDays,
+      exceptionDays,
+      noshowDays,
+      totalHours: totalHours.toFixed(1),
+      avgHours: avgHoursPerPresentDay.toFixed(2),
+      avgFormatted,
+      isCompliant,
+      isOptimal,
+      compliancePct,
+      minTargetTotalHours: minTargetTotalHours.toFixed(1),
+      optTargetTotalHours: optTargetTotalHours.toFixed(1),
+      deficitForMin: deficitForMin.toFixed(1),
+      reqDailyForMin: reqDailyForMin > 0 ? reqDailyForMin : MIN_HOURS,
+      reqDailyForOpt: reqDailyForOpt > 0 ? reqDailyForOpt : TARGET_HOURS,
+      predictorAdvice
+    };
+  }
 
   function calculateFiscalYearData(logs, targetYear = null) {
     const now = new Date();
@@ -110,58 +274,8 @@ window.OfficeAnalytics = (function() {
     return results;
   }
 
-  function calculateWeeklySummary(logs) {
-    const now = new Date();
-    // Find Monday of current week
-    const day = now.getDay();
-    const diffToMon = now.getDate() - day + (day === 0 ? -6 : 1);
-    const monday = new Date(now.setDate(diffToMon));
-    monday.setHours(0, 0, 0, 0);
-
-    const weekDates = [];
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(monday);
-      d.setDate(monday.getDate() + i);
-      weekDates.push(OfficeShifts.getLocalDateStr(d));
-    }
-
-    const dayLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-    let totalWeekHours = 0;
-    const daysData = [];
-
-    weekDates.forEach((dateStr, idx) => {
-      const log = logs.find(l => l.date === dateStr);
-      let status = "none";
-      let hours = 0;
-
-      if (log) {
-        status = log.status.toLowerCase().replace(/\s+/g, '-');
-        hours = parseFloat(log.hours) || 0;
-        totalWeekHours += hours;
-      }
-
-      daysData.push({
-        label: dayLabels[idx],
-        date: dateStr,
-        status: status,
-        hours: hours,
-        isToday: dateStr === OfficeShifts.getLocalDateStr()
-      });
-    });
-
-    const target = OfficeConfig.SHIFT_PRESETS.WEEKLY_TARGET_HOURS || 40.0;
-    const progressPct = Math.min(100, Math.round((totalWeekHours / target) * 100));
-
-    return {
-      totalHours: totalWeekHours.toFixed(1),
-      targetHours: target,
-      progressPct: progressPct,
-      days: daysData
-    };
-  }
-
   return {
-    calculateFiscalYearData,
-    calculateWeeklySummary
+    calculateComplianceData,
+    calculateFiscalYearData
   };
 })();

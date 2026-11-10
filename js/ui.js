@@ -41,6 +41,10 @@ window.OfficeUI = (function() {
     updateThemeMeta(isDark ? '#0b0f19' : '#4f46e5');
     const icon = document.getElementById('themeToggleIcon');
     if (icon) icon.innerText = isDark ? 'light_mode' : 'dark_mode';
+    const drawerIcon = document.getElementById('drawerThemeIcon');
+    if (drawerIcon) drawerIcon.innerText = isDark ? 'light_mode' : 'dark_mode';
+    const drawerDesc = document.getElementById('drawerThemeDesc');
+    if (drawerDesc) drawerDesc.innerText = isDark ? 'Dark Mode (Active)' : 'Light Mode (Active)';
   }
 
   function updateThemeMeta(color) {
@@ -361,43 +365,126 @@ window.OfficeUI = (function() {
     }, 400);
   }
 
-  // History Table
+  let activeComplianceMonth = null;
+
+  function setComplianceMonth(ym) {
+    activeComplianceMonth = ym;
+    renderInsightsView();
+  }
+
+  // History View (Zero Horizontal Scroll - Responsive Attendance Cards Feed)
   function renderHistoryTable() {
     const user = OfficeAuth.getCurrentUser();
     const logs = OfficeDB.getLogs(user);
+    const feed = document.getElementById('historyCardsFeed');
     const tbody = document.getElementById('historyTableBody');
     const countBadge = document.getElementById('historyCountBadge');
 
     if (countBadge) countBadge.innerText = `${logs.length} records`;
-    if (!tbody) return;
 
     if (logs.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:24px; color:var(--text-muted);">No records found.</td></tr>`;
+      if (feed) {
+        feed.innerHTML = `
+          <div class="empty-state-card">
+            <i class="material-icons-round empty-icon">event_busy</i>
+            <div class="empty-title">No attendance records yet</div>
+            <div class="empty-sub">Your attendance records and shift punches will appear here.</div>
+          </div>
+        `;
+      }
+      if (tbody) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:24px; color:var(--text-muted);">No records found.</td></tr>`;
+      }
       return;
     }
 
-    tbody.innerHTML = logs.map(log => {
-      const safeLog = JSON.stringify(log).replace(/'/g, "&#39;");
-      return `
-        <tr>
-          <td><strong>${OfficeShifts.formatDateDDMonYY(log.date)}</strong></td>
-          <td><span class="status-pill">${log.status}</span></td>
-          <td>${log.inTime ? OfficeShifts.formatTimeDisplay(log.inTime) : '-'}</td>
-          <td>${log.outTime ? OfficeShifts.formatTimeDisplay(log.outTime) : '-'}</td>
-          <td><strong>${OfficeShifts.formatDurationDisplay(log.hours)}</strong></td>
-          <td>
-            <div style="display:flex; gap:4px;">
-              <button class="action-btn" onclick='OfficeUI.editRecord(${safeLog})' title="Edit">
-                <i class="material-icons-round" style="font-size:14px; vertical-align:middle;">edit</i>
+    if (feed) {
+      feed.innerHTML = logs.map(log => {
+        const safeLog = JSON.stringify(log).replace(/'/g, "&#39;");
+        const statusKey = (log.status || 'present').toLowerCase().replace(/\s+/g, '-');
+        const parsedDate = new Date(log.date + 'T00:00:00');
+        const dayNum = parsedDate.getDate();
+        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+        const monthStr = monthNames[parsedDate.getMonth()] || '';
+        const weekdayStr = dayNames[parsedDate.getDay()] || '';
+
+        const hoursNum = parseFloat(log.hours) || 0;
+        const isOptimal = hoursNum >= 8.0;
+        const isCompliant = hoursNum >= 7.0;
+
+        let timeSpanText = '—';
+        if (log.inTime && log.outTime) {
+          timeSpanText = `${OfficeShifts.formatTimeDisplay(log.inTime)} → ${OfficeShifts.formatTimeDisplay(log.outTime)}`;
+        } else if (log.inTime) {
+          timeSpanText = `In: ${OfficeShifts.formatTimeDisplay(log.inTime)}`;
+        } else {
+          timeSpanText = log.status;
+        }
+
+        return `
+          <div class="attendance-card">
+            <div class="card-date-badge">
+              <span class="card-date-day">${dayNum}</span>
+              <span class="card-date-month">${monthStr}</span>
+              <span class="card-date-weekday">${weekdayStr}</span>
+            </div>
+            
+            <div class="card-middle">
+              <div class="card-middle-top">
+                <span class="status-pill status-${statusKey}">${log.status}</span>
+                ${log.status === 'Present' ? `
+                  <span class="card-hours-tag ${isOptimal ? 'hours-optimal' : (isCompliant ? 'hours-compliant' : 'hours-sub')}">
+                    <i class="material-icons-round" style="font-size:12px; margin-right:2px;">timer</i>
+                    ${OfficeShifts.formatDurationDisplay(log.hours)}
+                  </span>
+                ` : `
+                  <span class="card-hours-tag hours-neutral">—</span>
+                `}
+              </div>
+              <div class="card-middle-bottom">
+                <i class="material-icons-round time-clock-icon">schedule</i>
+                <span class="time-range-text">${timeSpanText}</span>
+              </div>
+            </div>
+
+            <div class="card-actions-col">
+              <button class="card-action-btn btn-edit" onclick='OfficeUI.editRecord(${safeLog})' title="Edit record">
+                <i class="material-icons-round">edit</i>
               </button>
-              <button class="action-btn btn-delete" onclick="OfficeUI.deleteRecord('${log.logId}')" title="Delete">
-                <i class="material-icons-round" style="font-size:14px; vertical-align:middle;">delete</i>
+              <button class="card-action-btn btn-del" onclick="OfficeUI.deleteRecord('${log.logId}')" title="Delete record">
+                <i class="material-icons-round">delete_outline</i>
               </button>
             </div>
-          </td>
-        </tr>
-      `;
-    }).join('');
+          </div>
+        `;
+      }).join('');
+    }
+
+    if (tbody) {
+      tbody.innerHTML = logs.map(log => {
+        const safeLog = JSON.stringify(log).replace(/'/g, "&#39;");
+        return `
+          <tr>
+            <td><strong>${OfficeShifts.formatDateDDMonYY(log.date)}</strong></td>
+            <td><span class="status-pill">${log.status}</span></td>
+            <td>${log.inTime ? OfficeShifts.formatTimeDisplay(log.inTime) : '-'}</td>
+            <td>${log.outTime ? OfficeShifts.formatTimeDisplay(log.outTime) : '-'}</td>
+            <td><strong>${OfficeShifts.formatDurationDisplay(log.hours)}</strong></td>
+            <td>
+              <div style="display:flex; gap:4px;">
+                <button class="action-btn" onclick='OfficeUI.editRecord(${safeLog})' title="Edit">
+                  <i class="material-icons-round" style="font-size:14px; vertical-align:middle;">edit</i>
+                </button>
+                <button class="action-btn btn-delete" onclick="OfficeUI.deleteRecord('${log.logId}')" title="Delete">
+                  <i class="material-icons-round" style="font-size:14px; vertical-align:middle;">delete</i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
   }
 
   function editRecord(log) {
@@ -421,10 +508,88 @@ window.OfficeUI = (function() {
     renderActiveView();
   }
 
-  // Insights View
+  // Insights View & Company 7-8h Compliance Engine
   function renderInsightsView() {
     const user = OfficeAuth.getCurrentUser();
     const logs = OfficeDB.getLogs(user);
+
+    // 1. Render 7-8 Hour Compliance Engine & Predictor
+    const compContainer = document.getElementById('complianceToolContainer');
+    if (compContainer) {
+      const comp = OfficeAnalytics.calculateComplianceData(logs, activeComplianceMonth);
+      if (comp) {
+        activeComplianceMonth = comp.yearMonth;
+
+        const monthOptions = (comp.availableMonths || []).map(ym => {
+          const [y, m] = ym.split('-');
+          const mNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+          const label = `${mNames[parseInt(m, 10) - 1]} ${y}`;
+          return `<option value="${ym}" ${ym === comp.yearMonth ? 'selected' : ''}>${label}</option>`;
+        }).join('');
+
+        const statusClass = comp.isOptimal ? 'badge-optimal' : (comp.isCompliant ? 'badge-compliant' : 'badge-deficit');
+        const statusText = comp.isOptimal ? 'Optimal (≥8.0h)' : (comp.isCompliant ? 'Compliant (≥7.0h)' : 'Below 7.0h Min');
+
+        // Circular ring calculation (0-100% based on 8.0h target)
+        const ringPct = Math.min(100, Math.round((parseFloat(comp.avgHours) / 8.0) * 100));
+
+        compContainer.innerHTML = `
+          <div class="compliance-cockpit-card">
+            <!-- Cockpit Header -->
+            <div class="comp-header">
+              <div class="comp-title-group">
+                <span class="comp-badge-pill">7–8h Policy</span>
+                <span class="comp-status-badge ${statusClass}">${statusText}</span>
+              </div>
+              <select class="comp-month-select" onchange="OfficeUI.setComplianceMonth(this.value)">
+                ${monthOptions}
+              </select>
+            </div>
+
+            <!-- Bento Gauge + Metric Tiles -->
+            <div class="comp-bento-grid">
+              <!-- Radial Progress Gauge Tile -->
+              <div class="comp-gauge-tile">
+                <div class="comp-radial-ring" style="--comp-pct: ${ringPct};">
+                  <div class="comp-ring-center">
+                    <span class="comp-ring-val">${comp.avgHours}h</span>
+                    <span class="comp-ring-lbl">Daily Avg</span>
+                  </div>
+                </div>
+                <div class="comp-target-sub">Standard: 7.0h – 8.0h</div>
+              </div>
+
+              <!-- Metric Tiles -->
+              <div class="comp-stats-col">
+                <div class="comp-mini-metric">
+                  <span class="metric-lbl">Attended Days</span>
+                  <span class="metric-val"><strong>${comp.presentDays}</strong> <small>/ ${comp.totalWorkingDays} Workdays</small></span>
+                </div>
+                <div class="comp-mini-metric">
+                  <span class="metric-lbl">Total Tracked Hours</span>
+                  <span class="metric-val"><strong>${comp.totalHours}h</strong> <small>(Target: ${comp.minTargetTotalHours}h)</small></span>
+                </div>
+                <div class="comp-mini-metric">
+                  <span class="metric-lbl">Remaining Workdays</span>
+                  <span class="metric-val"><strong>${comp.remainingWorkingDays}</strong> days left</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Smart Attendance Predictor Advice -->
+            <div class="comp-predictor-box">
+              <div class="predictor-icon">💡</div>
+              <div class="predictor-text">
+                <div class="predictor-headline">Attendance Predictor</div>
+                <div class="predictor-advice">${comp.predictorAdvice}</div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    // 2. Render Fiscal Year Analytics
     const quarters = OfficeAnalytics.calculateFiscalYearData(logs);
     const container = document.getElementById('insightsContainer');
     if (!container) return;
@@ -576,6 +741,35 @@ window.OfficeUI = (function() {
     }
   }
 
+  // Control Center Slide-Up Sheet
+  function openControlDrawer() {
+    const session = OfficeAuth.getSession ? OfficeAuth.getSession() : { username: OfficeAuth.getCurrentUser(), name: OfficeAuth.getCurrentName(), role: OfficeAuth.getCurrentRole() };
+    const drawer = document.getElementById('controlCenterDrawerBackdrop');
+    if (!drawer) return;
+
+    const avatar = document.getElementById('drawerAvatarBadge');
+    const nameEl = document.getElementById('drawerUserName');
+    const subEl = document.getElementById('drawerUserSub');
+    const themeDesc = document.getElementById('drawerThemeDesc');
+    const themeIcon = document.getElementById('drawerThemeIcon');
+
+    const firstLetter = (session.name || session.username || 'U')[0].toUpperCase();
+    if (avatar) avatar.innerText = firstLetter;
+    if (nameEl) nameEl.innerText = session.name || session.username;
+    if (subEl) subEl.innerText = `${session.role === 'Admin' ? 'Administrator' : 'Employee'} • Cloud Connected`;
+
+    const isDark = document.body.classList.contains('dark-mode');
+    if (themeDesc) themeDesc.innerText = isDark ? 'Dark Mode (Active)' : 'Light Mode (Active)';
+    if (themeIcon) themeIcon.innerText = isDark ? 'light_mode' : 'dark_mode';
+
+    drawer.classList.add('active');
+  }
+
+  function closeControlDrawer() {
+    const drawer = document.getElementById('controlCenterDrawerBackdrop');
+    if (drawer) drawer.classList.remove('active');
+  }
+
   // Toast
   function showToast(msg, type = 'info') {
     const container = document.getElementById('toastContainer');
@@ -595,6 +789,9 @@ window.OfficeUI = (function() {
   return {
     init,
     toggleTheme,
+    openControlDrawer,
+    closeControlDrawer,
+    setComplianceMonth,
     switchTab,
     renderActiveView,
     handleSmartPunch,
