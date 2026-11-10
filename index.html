@@ -17,7 +17,7 @@
   <!-- Material Icons Round -->
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
 
-  <!-- Core Design System & App Stylesheets -->
+  <!-- Core Stylesheets -->
   <link rel="stylesheet" href="css/design-system.css?v=2.0">
   <link rel="stylesheet" href="css/app.css?v=2.0">
 
@@ -30,410 +30,310 @@
   <!-- Floating Toast Notifications -->
   <div id="toastContainer" class="toast-container"></div>
 
-  <div class="app-shell">
-    <div class="ambient-glow"></div>
+  <!-- ========================================== -->
+  <!-- TOPBAR (Compact Fixed 48px Header)         -->
+  <!-- ========================================== -->
+  <header class="topbar">
+    <div class="topbar-brand">
+      <span class="brand-badge">v2.0</span>
+      <h1>TimeTracker</h1>
+    </div>
 
-    <!-- ========================================== -->
-    <!-- TOP NAVIGATION BAR                         -->
-    <!-- ========================================== -->
-    <header class="topbar">
-      <div class="brand-wrapper">
-        <div class="brand-icon">
-          <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
-        </div>
-        <div>
-          <div class="brand-title">TimeTracker</div>
-          <div class="brand-subtitle">Enterprise Suite</div>
-        </div>
+    <div class="topbar-right">
+      <div id="syncIndicator" class="sync-status-dot" title="Cloud Synced"></div>
+      <button class="icon-btn" onclick="OfficeApp.hardRefresh()" title="Developer Refresh">
+        <i class="material-icons-round">refresh</i>
+      </button>
+      <button class="icon-btn" onclick="OfficeUI.toggleTheme()" title="Toggle Theme">
+        <i class="material-icons-round" id="themeToggleIcon">dark_mode</i>
+      </button>
+      <button class="icon-btn" onclick="OfficeUI.openSettingsModal()" title="Firebase Settings">
+        <i class="material-icons-round">settings</i>
+      </button>
+      <div id="userHeaderBadge" class="user-greeting" onclick="OfficeAuth.logout()" title="Click to Sign Out">
+        <i class="material-icons-round" style="font-size:16px; color:var(--primary);">account_circle</i>
+        <span id="topbarUserName">Gaurav</span>
+        <span id="topbarUserRole" class="brand-badge" style="font-size:8px; padding:1px 4px;">Admin</span>
+        <i class="material-icons-round" style="font-size:14px; opacity:0.5;">logout</i>
       </div>
+    </div>
+  </header>
 
-      <div class="topbar-actions">
-        <span id="syncIndicator" class="sync-pill"><span class="dot"></span> Online</span>
-        <button class="icon-btn" onclick="OfficeApp.hardRefresh()" title="Developer Refresh">
-          <i class="material-icons-round" style="font-size:18px;">refresh</i>
-        </button>
-        <button class="icon-btn" onclick="OfficeUI.toggleTheme()" title="Toggle Theme">
-          <i class="material-icons-round" id="themeToggleIcon" style="font-size:18px;">dark_mode</i>
-        </button>
-        <button class="icon-btn" onclick="OfficeUI.openSettingsModal()" title="Settings & Firebase Database">
-          <i class="material-icons-round" style="font-size:18px;">settings</i>
-        </button>
-        <div id="userHeaderBadge" class="user-badge" onclick="OfficeAuth.logout()" title="Click to Sign Out" style="cursor:pointer;">
-          <div class="user-avatar" id="topbarUserAvatar">G</div>
-          <span id="topbarUserName" style="font-size:12px;">Gaurav</span>
-          <span id="topbarUserRole" style="font-size:10px; background:var(--primary-light); color:var(--primary); padding:2px 6px; border-radius:var(--radius-sm); font-weight:800;">Admin</span>
-          <i class="material-icons-round" style="font-size:14px; color:var(--text-muted);">logout</i>
+  <!-- ========================================== -->
+  <!-- MAIN VIEWPORT (Strict Zero-Scroll Fitted)  -->
+  <!-- ========================================== -->
+  <main class="main-content">
+
+    <!-- AUTHENTICATION VIEW -->
+    <section id="authSection" class="tab-pane active" style="margin-top: 5vh;">
+      <div class="container" style="max-width: 400px; padding: 20px 18px;">
+        <h2 style="text-align: center; margin: 0 0 16px 0; font-size: 18px; color: var(--primary);">Welcome Back</h2>
+
+        <div id="loginUserGroup" class="form-group" style="margin-bottom: 12px;">
+          <label>Select Your Name</label>
+          <select id="loginUserSelect" class="compact-input">
+            <option value="">Loading users...</option>
+          </select>
         </div>
+
+        <div id="loginAdminGroup" class="form-group hidden" style="margin-bottom: 12px;">
+          <label>Admin Username</label>
+          <input type="text" id="loginAdminUsername" class="compact-input" placeholder="e.g. gaurav">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 14px;">
+          <label>4-Digit Security PIN</label>
+          <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" id="loginPin" class="compact-input"
+                 placeholder="••••" style="letter-spacing: 6px; font-size: 18px; text-align: center;"
+                 oninput="OfficeApp.checkAutoLogin(event)">
+        </div>
+
+        <button class="btn-submit" id="btnLogin" onclick="OfficeApp.handleLogin()">Sign In</button>
+
+        <div style="text-align: center; margin-top: 14px; font-size: 12px; color: var(--text-muted);">
+          <span id="toggleAdminBtn" style="color:var(--primary); font-weight:700; cursor:pointer;" onclick="OfficeApp.toggleAdminMode()">Admin Login?</span>
+        </div>
+        <div id="authMsg" class="status-msg"></div>
       </div>
-    </header>
+    </section>
 
-    <!-- ========================================== -->
-    <!-- MAIN VIEWPORT CONTAINER                    -->
-    <!-- ========================================== -->
-    <div class="main-viewport" id="mainViewport">
+    <!-- DASHBOARD VIEW -->
+    <div id="dashboardSection" class="hidden" style="width: 100%;">
 
-      <!-- AUTHENTICATION VIEW -->
-      <section id="authSection" class="tab-pane active" style="max-width: 380px; margin-top: 8vh;">
-        <div class="cockpit-card" style="text-align: left; padding: 28px 24px;">
-          <div style="text-align: center; margin-bottom: 24px;">
-            <div class="brand-icon" style="margin: 0 auto 12px auto; width: 48px; height: 48px;">
-              <svg viewBox="0 0 24 24" style="width:28px; height:28px;"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+      <!-- ========================================== -->
+      <!-- TAB 1: RECORD ATTENDANCE                   -->
+      <!-- ========================================== -->
+      <section id="tab-record" class="tab-pane active">
+        <div class="container">
+          <div class="form-header-row">
+            <h3 id="formTitle">Record Attendance</h3>
+            <div id="shiftLiveBadge" class="shift-live-pill">
+              <span class="dot"></span>
+              <span id="shiftLiveText">Ready</span>
+              <span id="shiftLiveTimer" class="shift-live-timer hidden">00:00:00</span>
             </div>
-            <h2 style="font-size: 20px; font-weight: 800; color: var(--text-primary); margin-bottom: 4px;">Welcome Back</h2>
-            <p style="font-size: 12px; color: var(--text-muted);">Sign in to log your office attendance</p>
           </div>
 
-          <div id="loginUserGroup" class="form-group" style="margin-bottom: 14px;">
-            <label class="field-label">Select Employee</label>
-            <select id="loginUserSelect" class="form-select">
-              <option value="">Loading roster...</option>
-            </select>
+          <input type="hidden" id="entryId">
+          <input type="hidden" id="entryUsername">
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>From Date</label>
+              <input type="date" id="entryFromDate" class="compact-input">
+            </div>
+            <div class="form-group">
+              <label>To Date (Optional)</label>
+              <input type="date" id="entryToDate" class="compact-input">
+            </div>
           </div>
 
-          <div id="loginAdminGroup" class="form-group hidden" style="margin-bottom: 14px;">
-            <label class="field-label">Admin Username</label>
-            <input type="text" id="loginAdminUsername" class="form-input" placeholder="e.g. gaurav">
+          <div class="form-row">
+            <div class="form-group" style="width: 100%;">
+              <label>Status</label>
+              <select id="entryStatus" class="compact-input" onchange="OfficeUI.handleStatusChange()">
+                <option value="Present">Present</option>
+                <option value="Leave">Leave</option>
+                <option value="Exception">Exception</option>
+                <option value="No Show">No Show</option>
+                <option value="Weekend">Weekend</option>
+                <option value="Holiday">Holiday</option>
+              </select>
+            </div>
           </div>
 
-          <div class="form-group" style="margin-bottom: 18px;">
-            <label class="field-label">4-Digit Security PIN</label>
-            <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" id="loginPin" class="form-input"
-                   placeholder="••••" style="letter-spacing: 6px; font-size: 20px; text-align: center;"
-                   oninput="OfficeApp.checkAutoLogin(event)">
+          <div class="form-row">
+            <div class="form-group" style="width: 100%;">
+              <label>In Time</label>
+              <div class="time-input-group">
+                <input type="time" id="entryIn" class="compact-input time-input">
+                <button type="button" class="btn-time-action bg-green" onclick="OfficeUI.quickAction('in')">
+                  <i class="material-icons-round" style="font-size:14px;">login</i> In
+                </button>
+              </div>
+            </div>
           </div>
 
-          <button class="btn-primary" id="btnLogin" onclick="OfficeApp.handleLogin()">Sign In</button>
-
-          <div style="text-align: center; margin-top: 16px; font-size: 12px; color: var(--text-muted);">
-            <span id="toggleAdminBtn" style="color:var(--primary); font-weight:700; cursor:pointer;" onclick="OfficeApp.toggleAdminMode()">Admin Login?</span>
+          <div class="form-row">
+            <div class="form-group" style="width: 100%;">
+              <label>Out Time</label>
+              <div class="time-input-group">
+                <input type="time" id="entryOut" class="compact-input time-input">
+                <button type="button" class="btn-time-action bg-red" onclick="OfficeUI.quickAction('out')">
+                  <i class="material-icons-round" style="font-size:14px;">logout</i> Out
+                </button>
+              </div>
+            </div>
           </div>
-          <div id="authMsg" style="margin-top: 10px; font-size: 12px; text-align: center; font-weight: 700;"></div>
+
+          <div class="quick-actions-card">
+            <div class="quick-actions-header">
+              <span class="quick-actions-title">⚡ Quick Shortcuts</span>
+              <span class="quick-actions-date" id="quickDateDisplay">--</span>
+            </div>
+            <div class="quick-buttons-grid">
+              <button type="button" class="btn-quick bg-amber" onclick="OfficeUI.quickAction('leave')">Leave</button>
+              <button type="button" class="btn-quick bg-purple" onclick="OfficeUI.quickAction('exception')">Exception</button>
+              <button type="button" class="btn-quick bg-gray" onclick="OfficeUI.quickAction('noshow')">No Show</button>
+              <button type="button" class="btn-quick bg-blue" onclick="OfficeUI.quickAction('weekend')">Weekend</button>
+              <button type="button" class="btn-quick bg-cyan" onclick="OfficeUI.quickAction('holiday')">Holiday</button>
+            </div>
+          </div>
+
+          <button type="button" class="btn-submit" id="btnSubmitLog" onclick="OfficeUI.submitLog()">Save Entry</button>
+          <div id="logMsg" class="status-msg"></div>
         </div>
       </section>
 
-      <!-- DASHBOARD WRAPPER -->
-      <div id="dashboardSection" class="hidden">
-
-        <!-- ========================================== -->
-        <!-- TAB 1: RECORD ATTENDANCE                   -->
-        <!-- ========================================== -->
-        <section id="tab-record" class="tab-pane active">
-
-          <!-- Hero Punch Cockpit Card -->
-          <div class="cockpit-card">
-            <div class="cockpit-header">
-              <span id="heroLiveBadge" class="live-badge clocked-out">Clocked Out</span>
-              <span class="live-clock-text" id="heroCurrentDateDisplay">Today</span>
-            </div>
-
-            <!-- Big Elapsed Counter -->
-            <div class="elapsed-container">
-              <div class="elapsed-time" id="heroElapsedTime">00:00:00</div>
-              <div class="elapsed-label">Shift Duration Today</div>
-            </div>
-
-            <!-- Primary Interactive Punch Button -->
-            <div class="punch-btn-wrapper">
-              <div class="punch-pulse-ring" id="heroPulseRing" style="display:none;"></div>
-              <button class="punch-btn btn-punch-in" id="heroPunchBtn" onclick="OfficeUI.handleHeroPunch()">
-                <i class="material-icons-round punch-icon" id="heroPunchIcon">login</i>
-                <span class="punch-btn-text" id="heroPunchText">Clock In</span>
-                <span class="punch-btn-subtext" id="heroPunchSubtext">Ready for Shift</span>
-              </button>
-            </div>
-
-            <!-- Secondary Cockpit Actions -->
-            <div class="secondary-cockpit-actions">
-              <button class="action-pill-btn" id="heroBreakBtn" style="display:none;" onclick="OfficeUI.handleHeroBreak()">
-                <i class="material-icons-round" style="font-size:16px;">coffee</i> Take Break
-              </button>
-            </div>
-          </div>
-
-          <!-- Weekly Goals & Punch Strip -->
-          <div class="week-card">
-            <div class="week-header">
-              <span class="week-title">Weekly Work Target</span>
-              <span class="week-stats" id="weekStatsText">0.0h / 40.0h (0%)</span>
-            </div>
-            <div class="progress-track">
-              <div class="progress-fill" id="weekProgressFill" style="width: 0%;"></div>
-            </div>
-            <div class="week-days-strip" id="weekDaysStrip"></div>
-          </div>
-
-          <!-- Quick Manual / Range Adjustment Form -->
-          <div class="manual-card">
-            <div class="manual-header" onclick="document.getElementById('manualFormCollapse').classList.toggle('hidden')">
-              <span class="manual-title">
-                <i class="material-icons-round" style="font-size:18px; color:var(--primary);">edit_calendar</i>
-                Manual Entry / Range Logging
-              </span>
-              <i class="material-icons-round" style="font-size:18px; color:var(--text-muted);">expand_more</i>
-            </div>
-
-            <div id="manualFormCollapse" class="hidden">
-              <!-- Quick Shortcut Pills -->
-              <div class="quick-shortcuts-panel">
-                <button type="button" class="shortcut-btn bg-present" onclick="OfficeUI.applyQuickShortcut('in')">Set In (Now)</button>
-                <button type="button" class="shortcut-btn bg-present" onclick="OfficeUI.applyQuickShortcut('out')">Set Out (Now)</button>
-                <button type="button" class="shortcut-btn bg-leave" onclick="OfficeUI.applyQuickShortcut('Leave')">Leave</button>
-                <button type="button" class="shortcut-btn bg-exception" onclick="OfficeUI.applyQuickShortcut('Exception')">Exception</button>
-                <button type="button" class="shortcut-btn bg-noshow" onclick="OfficeUI.applyQuickShortcut('No Show')">No Show</button>
-                <button type="button" class="shortcut-btn bg-weekend" onclick="OfficeUI.applyQuickShortcut('Weekend')">Weekend</button>
-                <button type="button" class="shortcut-btn bg-holiday" onclick="OfficeUI.applyQuickShortcut('Holiday')">Holiday</button>
-              </div>
-
-              <form onsubmit="OfficeUI.submitManualLog(event)">
-                <div class="form-row">
-                  <div class="form-group">
-                    <label class="field-label">From Date *</label>
-                    <input type="date" id="manualFromDate" class="form-input" required>
-                  </div>
-                  <div class="form-group">
-                    <label class="field-label">To Date (For Leaves/Holidays)</label>
-                    <input type="date" id="manualToDate" class="form-input">
-                  </div>
-                </div>
-
-                <div class="form-row">
-                  <div class="form-group">
-                    <label class="field-label">Status *</label>
-                    <select id="manualStatus" class="form-select" onchange="OfficeUI.handleManualStatusChange()">
-                      <option value="Present">Present</option>
-                      <option value="Leave">Leave</option>
-                      <option value="Exception">Exception</option>
-                      <option value="No Show">No Show</option>
-                      <option value="Weekend">Weekend</option>
-                      <option value="Holiday">Holiday</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div class="form-row">
-                  <div class="form-group">
-                    <label class="field-label">In Time</label>
-                    <input type="time" id="manualInTime" class="form-input">
-                  </div>
-                  <div class="form-group">
-                    <label class="field-label">Out Time</label>
-                    <input type="time" id="manualOutTime" class="form-input">
-                  </div>
-                </div>
-
-                <button type="submit" class="btn-primary" style="margin-top:8px;">Save Attendance Record</button>
-              </form>
-            </div>
-          </div>
-        </section>
-
-        <!-- ========================================== -->
-        <!-- TAB 2: MY HISTORY                          -->
-        <!-- ========================================== -->
-        <section id="tab-history" class="tab-pane">
-          <div class="table-toolbar">
+      <!-- ========================================== -->
+      <!-- TAB 2: MY HISTORY                          -->
+      <!-- ========================================== -->
+      <section id="tab-history" class="tab-pane">
+        <div class="container" style="max-height: calc(100dvh - 120px); display:flex; flex-direction:column;">
+          <div class="table-header-bar">
             <div>
-              <h3 style="font-size:16px; font-weight:800; color:var(--text-primary); margin:0;">Attendance History</h3>
+              <h3 style="display:inline; margin-right:6px;">My History</h3>
               <span id="historyCountBadge" style="font-size:11px; font-weight:700; color:var(--primary);">134 records</span>
             </div>
-            <div style="display:flex; gap:8px;">
-              <button class="action-pill-btn" onclick="OfficeDB.exportCSVBackup()">
-                <i class="material-icons-round" style="font-size:15px;">download</i> CSV
-              </button>
-            </div>
+            <button class="action-btn" onclick="OfficeDB.exportCSVBackup()">
+              <i class="material-icons-round" style="font-size:13px; vertical-align:middle;">download</i> CSV
+            </button>
           </div>
 
-          <div class="table-card">
-            <div class="data-table-wrap">
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Status</th>
-                    <th>In</th>
-                    <th>Out</th>
-                    <th>Duration</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody id="historyTableBody"></tbody>
-              </table>
-            </div>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Status</th>
+                  <th>In</th>
+                  <th>Out</th>
+                  <th>Duration</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="historyTableBody"></tbody>
+            </table>
           </div>
-        </section>
+        </div>
+      </section>
 
-        <!-- ========================================== -->
-        <!-- TAB 3: INSIGHTS (FINANCIAL YEAR)           -->
-        <!-- ========================================== -->
-        <section id="tab-insights" class="tab-pane">
-          <div style="margin-bottom: 14px;">
-            <h3 style="font-size:16px; font-weight:800; color:var(--text-primary); margin-bottom:2px;">Financial Year Analytics</h3>
-            <p style="font-size:11px; color:var(--text-muted); margin:0;">
-              *Attendance calculated over net working days. Hover or tap a month for breakdown.
-            </p>
-          </div>
+      <!-- ========================================== -->
+      <!-- TAB 3: INSIGHTS                            -->
+      <!-- ========================================== -->
+      <section id="tab-insights" class="tab-pane">
+        <div class="container" style="max-height: calc(100dvh - 120px); overflow-y:auto;">
+          <h3 style="margin: 0 0 4px 0; font-size:15px; color:var(--primary);">Financial Year Analytics</h3>
+          <p style="font-size: 11px; color: var(--text-muted); margin: 0 0 12px 0;">*Attendance % calculated over net working days. Hover/Tap month for breakdown.</p>
           <div id="insightsContainer"></div>
-        </section>
+        </div>
+      </section>
 
-        <!-- ========================================== -->
-        <!-- TAB 4: ORGANIZATION ADMIN                  -->
-        <!-- ========================================== -->
-        <section id="tab-admin" class="tab-pane">
-          <div class="table-toolbar">
+      <!-- ========================================== -->
+      <!-- TAB 4: ADMIN ALL LOGS                      -->
+      <!-- ========================================== -->
+      <section id="tab-admin" class="tab-pane">
+        <div class="container" style="max-height: calc(100dvh - 120px); display:flex; flex-direction:column;">
+          <div class="table-header-bar">
             <div>
-              <h3 style="font-size:16px; font-weight:800; color:var(--text-primary); margin:0;">Organization Attendance Logs</h3>
-              <span style="font-size:11px; font-weight:700; color:var(--text-muted);">Admin Consolidated View</span>
+              <h3 style="display:inline; margin-right:6px;">Organization Logs</h3>
             </div>
-            <div style="display:flex; gap:8px; align-items:center;">
-              <select id="adminUserFilter" class="form-select" style="padding:6px 10px; font-size:12px; width:auto;" onchange="OfficeUI.renderActiveView()">
+            <div style="display:flex; gap:6px;">
+              <select id="adminUserFilter" class="compact-input" style="height:30px; font-size:11px; width:auto;" onchange="OfficeUI.renderActiveView()">
                 <option value="all">All Employees</option>
               </select>
-              <button class="action-pill-btn" onclick="OfficeDB.exportCSVBackup()">
-                <i class="material-icons-round" style="font-size:15px;">download</i> CSV
+              <button class="action-btn" onclick="OfficeDB.exportCSVBackup()">
+                <i class="material-icons-round" style="font-size:13px; vertical-align:middle;">download</i> CSV
               </button>
             </div>
           </div>
 
-          <div class="table-card">
-            <div class="data-table-wrap">
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th>User</th>
-                    <th>Date</th>
-                    <th>Status</th>
-                    <th>In</th>
-                    <th>Out</th>
-                    <th>Duration</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody id="adminTableBody"></tbody>
-              </table>
-            </div>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>Date</th>
+                  <th>Status</th>
+                  <th>In</th>
+                  <th>Out</th>
+                  <th>Duration</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="adminTableBody"></tbody>
+            </table>
           </div>
-        </section>
-
-      </div>
-    </div>
-
-    <!-- ========================================== -->
-    <!-- BOTTOM NAVIGATION BAR                      -->
-    <!-- ========================================== -->
-    <nav class="bottom-nav hidden" id="appBottomNav">
-      <button class="nav-tab-btn active" id="nav-record" onclick="OfficeUI.switchTab('record')">
-        <i class="material-icons-round">edit_calendar</i>
-        <span>Record</span>
-      </button>
-      <button class="nav-tab-btn" id="nav-history" onclick="OfficeUI.switchTab('history')">
-        <i class="material-icons-round">history</i>
-        <span>History</span>
-      </button>
-      <button class="nav-tab-btn" id="nav-insights" onclick="OfficeUI.switchTab('insights')">
-        <i class="material-icons-round">insights</i>
-        <span>Insights</span>
-      </button>
-      <button class="nav-tab-btn hidden" id="nav-admin" onclick="OfficeUI.switchTab('admin')">
-        <i class="material-icons-round">admin_panel_settings</i>
-        <span>Admin</span>
-      </button>
-    </nav>
-  </div>
-
-  <!-- ========================================== -->
-  <!-- SLIDE-OVER QUICK EDIT DRAWER               -->
-  <!-- ========================================== -->
-  <div class="drawer-backdrop" id="quickEditDrawerBackdrop" onclick="if(event.target===this) OfficeUI.closeQuickEditModal()">
-    <div class="drawer-sheet">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-        <h3 style="font-size:16px; font-weight:800; color:var(--text-primary); margin:0;">Edit Attendance Entry</h3>
-        <button class="icon-btn" onclick="OfficeUI.closeQuickEditModal()">
-          <i class="material-icons-round">close</i>
-        </button>
-      </div>
-
-      <input type="hidden" id="editLogId">
-      <input type="hidden" id="editUsername">
-
-      <div class="form-group" style="margin-bottom:12px;">
-        <label class="field-label">Date</label>
-        <input type="date" id="editDate" class="form-input" required>
-      </div>
-
-      <div class="form-group" style="margin-bottom:12px;">
-        <label class="field-label">Status</label>
-        <select id="editStatus" class="form-select">
-          <option value="Present">Present</option>
-          <option value="Leave">Leave</option>
-          <option value="Exception">Exception</option>
-          <option value="No Show">No Show</option>
-          <option value="Weekend">Weekend</option>
-          <option value="Holiday">Holiday</option>
-        </select>
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label class="field-label">In Time</label>
-          <input type="time" id="editInTime" class="form-input">
         </div>
-        <div class="form-group">
-          <label class="field-label">Out Time</label>
-          <input type="time" id="editOutTime" class="form-input">
-        </div>
-      </div>
+      </section>
 
-      <div style="display:flex; gap:10px; margin-top:20px;">
-        <button class="btn-primary" style="flex:2;" onclick="OfficeUI.saveQuickEdit()">Save Changes</button>
-        <button class="action-pill-btn" style="flex:1; justify-content:center;" onclick="OfficeUI.closeQuickEditModal()">Cancel</button>
-      </div>
     </div>
-  </div>
+  </main>
 
   <!-- ========================================== -->
-  <!-- SETTINGS & FIREBASE MIGRATION MODAL        -->
+  <!-- BOTTOM NAVIGATION BAR                      -->
+  <!-- ========================================== -->
+  <nav class="bottom-nav hidden" id="appBottomNav">
+    <button class="nav-item active" id="nav-record" onclick="OfficeUI.switchTab('record')">
+      <i class="material-icons-round">edit_square</i>
+      <span>Record</span>
+    </button>
+    <button class="nav-item" id="nav-history" onclick="OfficeUI.switchTab('history')">
+      <i class="material-icons-round">history</i>
+      <span>History</span>
+    </button>
+    <button class="nav-item" id="nav-insights" onclick="OfficeUI.switchTab('insights')">
+      <i class="material-icons-round">insights</i>
+      <span>Insights</span>
+    </button>
+    <button class="nav-item hidden" id="nav-admin" onclick="OfficeUI.switchTab('admin')">
+      <i class="material-icons-round">admin_panel_settings</i>
+      <span>Admin</span>
+    </button>
+  </nav>
+
+  <!-- ========================================== -->
+  <!-- CLOUD DATABASE & SETTINGS MODAL            -->
   <!-- ========================================== -->
   <div class="modal-backdrop" id="settingsModalBackdrop" onclick="if(event.target===this) OfficeUI.closeSettingsModal()">
     <div class="modal-dialog">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-        <h3 style="font-size:16px; font-weight:800; color:var(--text-primary); margin:0;">Cloud Database & Settings</h3>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+        <h3 style="font-size:15px; font-weight:800; color:var(--primary); margin:0;">Cloud Database & Settings</h3>
         <button class="icon-btn" onclick="OfficeUI.closeSettingsModal()">
           <i class="material-icons-round">close</i>
         </button>
       </div>
 
-      <div style="margin-bottom:14px; background:var(--surface-secondary); padding:12px; border-radius:var(--radius-md); border:1px solid var(--border);">
-        <div style="font-size:11px; font-weight:800; text-transform:uppercase; color:var(--text-muted); margin-bottom:4px;">Active Backend Engine</div>
+      <div style="background:var(--surface-secondary); padding:10px; border-radius:10px; border:1px solid var(--border); margin-bottom:12px;">
+        <div style="font-size:10px; font-weight:800; text-transform:uppercase; color:var(--text-muted); margin-bottom:4px;">Active Backend</div>
         <div style="display:flex; justify-content:space-between; align-items:center;">
-          <span id="settingsActiveBackendLabel" style="font-size:14px; font-weight:800; color:var(--primary);">FIREBASE</span>
+          <span id="settingsActiveBackendLabel" style="font-size:13px; font-weight:800; color:var(--primary);">FIREBASE</span>
           <div style="display:flex; gap:6px;">
-            <button class="action-row-btn" onclick="OfficeUI.handleSwitchBackend('sheets')">Sheets</button>
-            <button class="action-row-btn" onclick="OfficeUI.handleSwitchBackend('firebase')">Firebase</button>
+            <button class="action-btn" onclick="OfficeUI.handleSwitchBackend('sheets')">Sheets</button>
+            <button class="action-btn" onclick="OfficeUI.handleSwitchBackend('firebase')">Firebase</button>
           </div>
         </div>
       </div>
 
-      <!-- Firebase Configuration -->
-      <div style="margin-bottom:14px;">
-        <label class="field-label">Firebase Configuration (JSON)</label>
-        <textarea id="settingsFirebaseConfigInput" rows="5" class="form-input" style="font-family:monospace; font-size:11px;" placeholder="Paste Firebase config here..."></textarea>
-        <div style="display:flex; gap:8px; margin-top:8px;">
-          <button class="action-pill-btn" onclick="OfficeUI.handleSaveFirebaseConfig()">Save Config</button>
-          <button class="action-pill-btn" id="btnStartMigration" style="background:linear-gradient(135deg, #f97316, #ea580c); color:#ffffff; border:none;" onclick="OfficeUI.handleStartFirebaseMigration()">
-            🔥 Migrate 134 Records to Firestore
+      <div style="margin-bottom:12px;">
+        <label>Firebase Configuration (JSON)</label>
+        <textarea id="settingsFirebaseConfigInput" rows="4" class="compact-input" style="height:auto; font-family:monospace; font-size:11px; padding:8px;" placeholder="Paste Firebase config here..."></textarea>
+        <div style="display:flex; gap:6px; margin-top:8px;">
+          <button class="action-btn" onclick="OfficeUI.handleSaveFirebaseConfig()">Save Config</button>
+          <button class="action-btn" id="btnStartMigration" style="background:linear-gradient(135deg, #f97316, #ea580c); color:#ffffff; border:none;" onclick="OfficeUI.handleStartFirebaseMigration()">
+            🔥 Re-Sync 134 Records to Firestore
           </button>
         </div>
       </div>
 
-      <!-- Data Backup & Redundancy -->
-      <div style="border-top:1px solid var(--border); padding-top:14px; display:flex; flex-direction:column; gap:8px;">
-        <button class="btn-primary" style="background:#0284c7; padding:10px; font-size:13px;" onclick="OfficeDB.exportJSONBackup()">
+      <div style="border-top:1px solid var(--border); padding-top:12px; display:flex; flex-direction:column; gap:8px;">
+        <button class="btn-submit" style="background:#0284c7; height:36px; font-size:12px; margin:0;" onclick="OfficeDB.exportJSONBackup()">
           💾 Export Full JSON Database Backup
         </button>
-        <button class="action-pill-btn" style="justify-content:center; padding:10px;" onclick="OfficeDB.exportCSVBackup()">
+        <button class="action-btn" style="height:36px; text-align:center;" onclick="OfficeDB.exportCSVBackup()">
           📊 Export CSV Attendance Spreadsheet
         </button>
-        <button class="action-pill-btn" style="justify-content:center; padding:10px; color:var(--status-present);" onclick="OfficeDB.syncWithCloud(); OfficeUI.closeSettingsModal(); OfficeUI.showToast('Syncing with cloud...', 'info');">
+        <button class="action-btn" style="height:36px; text-align:center; color:var(--status-present);" onclick="OfficeDB.syncWithCloud(); OfficeUI.closeSettingsModal(); OfficeUI.showToast('Syncing with cloud...', 'info');">
           🔄 Force Cloud Sync Now
         </button>
       </div>
