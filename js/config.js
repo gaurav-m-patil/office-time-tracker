@@ -22,12 +22,12 @@ window.OfficeConfig = {
     appId: "1:62153353894:web:c4947660badbbb23d66267"
   },
 
-  // Firestore Collection Names
+  // Firestore Collection Names (Standardized GP_ Prefix)
   FIRESTORE_COLLECTIONS: {
-    LOGS: "office_attendance_logs",
-    USERS: "office_users",
-    SHIFTS: "office_active_shifts",
-    SUMMARIES: "office_monthly_summaries"
+    LOGS: "GP_OFC_attendance_logs",
+    USERS: "GP_OFC_users",
+    SHIFTS: "GP_OFC_active_shifts",
+    SUMMARIES: "GP_OFC_monthly_summaries"
   },
 
   // Shift & Target Settings

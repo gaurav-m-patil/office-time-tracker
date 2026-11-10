@@ -27,6 +27,23 @@
 </head>
 <body>
 
+  <!-- ========================================== -->
+  <!-- NATIVE APP SPLASH SCREEN (Top-Notch Boot)   -->
+  <!-- ========================================== -->
+  <div id="appSplashScreen" class="app-splash-screen">
+    <div class="splash-inner">
+      <div class="splash-icon-wrapper">
+        <div class="splash-icon-glow"></div>
+        <img src="assets/icons/icon.svg" class="splash-icon-img" alt="TimeTracker Icon">
+      </div>
+      <h2 class="splash-title">TimeTracker</h2>
+      <p class="splash-tagline">Enterprise Attendance & Shift Cockpit</p>
+      <div class="splash-loader-bar">
+        <div class="splash-loader-progress"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- Floating Toast Notifications -->
   <div id="toastContainer" class="toast-container"></div>
 
@@ -359,6 +376,64 @@
             <span class="drawer-tile-title">Sign Out</span>
             <span class="drawer-tile-desc">Switch Account</span>
           </div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- RECORD ACTION SHEET (Smart Touch Controls) -->
+  <!-- ========================================== -->
+  <div class="action-sheet-backdrop" id="recordActionSheetBackdrop" onclick="if(event.target===this) OfficeUI.closeActionSheet()">
+    <div class="action-sheet-dialog">
+      <div class="action-sheet-drag-handle"></div>
+      
+      <div class="action-sheet-header">
+        <div class="action-sheet-date-pill" id="actionSheetDatePill">10 Nov 2026</div>
+        <div class="action-sheet-title" id="actionSheetTitle">Attendance Record</div>
+        <div class="action-sheet-meta" id="actionSheetMeta">09:15 AM → 06:30 PM • 8h 15m</div>
+      </div>
+
+      <div class="action-sheet-buttons">
+        <!-- 1. Edit Record -->
+        <button class="sheet-action-item" onclick="OfficeUI.handleSheetEdit()">
+          <div class="sheet-icon bg-primary">
+            <i class="material-icons-round">edit</i>
+          </div>
+          <div class="sheet-label-box">
+            <span class="sheet-label-title">Edit Entry</span>
+            <span class="sheet-label-sub">Update in/out times, status, or date</span>
+          </div>
+          <i class="material-icons-round sheet-chevron">chevron_right</i>
+        </button>
+
+        <!-- 2. Copy Times to Today -->
+        <button class="sheet-action-item" onclick="OfficeUI.handleSheetCopyToday()">
+          <div class="sheet-icon bg-cyan">
+            <i class="material-icons-round">content_copy</i>
+          </div>
+          <div class="sheet-label-box">
+            <span class="sheet-label-title">Copy Hours to Today</span>
+            <span class="sheet-label-sub">Pre-fill today's entry with these times</span>
+          </div>
+          <i class="material-icons-round sheet-chevron">chevron_right</i>
+        </button>
+
+        <!-- 3. Delete Record -->
+        <button class="sheet-action-item item-danger" onclick="OfficeUI.handleSheetDelete()">
+          <div class="sheet-icon bg-rose">
+            <i class="material-icons-round">delete_forever</i>
+          </div>
+          <div class="sheet-label-box">
+            <span class="sheet-label-title">Delete Entry</span>
+            <span class="sheet-label-sub">Permanently remove this attendance record</span>
+          </div>
+          <i class="material-icons-round sheet-chevron">chevron_right</i>
+        </button>
+
+        <!-- 4. Cancel Button -->
+        <button class="sheet-cancel-btn" onclick="OfficeUI.closeActionSheet()">
+          Cancel
         </button>
       </div>
     </div>

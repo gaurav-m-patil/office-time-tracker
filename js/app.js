@@ -27,6 +27,9 @@ window.OfficeApp = (function() {
     } else {
       showAuthScreen();
     }
+
+    // 5. Smoothly reveal app and fade out splash screen
+    OfficeUI.hideSplashScreen();
   });
 
   function showDashboard(session) {

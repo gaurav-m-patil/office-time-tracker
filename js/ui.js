@@ -366,10 +366,91 @@ window.OfficeUI = (function() {
   }
 
   let activeComplianceMonth = null;
+  let activeActionLog = null;
 
   function setComplianceMonth(ym) {
     activeComplianceMonth = ym;
     renderInsightsView();
+  }
+
+  // Smart Record Action Sheet Controls
+  function openRecordActionSheet(logId) {
+    const user = OfficeAuth.getCurrentUser();
+    const logs = OfficeDB.getLogs(user);
+    const log = logs.find(l => l.logId === logId);
+    if (!log) return;
+
+    activeActionLog = log;
+    const sheet = document.getElementById('recordActionSheetBackdrop');
+    if (!sheet) return;
+
+    const datePill = document.getElementById('actionSheetDatePill');
+    const titleEl = document.getElementById('actionSheetTitle');
+    const metaEl = document.getElementById('actionSheetMeta');
+
+    if (datePill) datePill.innerText = OfficeShifts.formatDateDDMonYY(log.date);
+    if (titleEl) titleEl.innerText = `${log.status} Entry`;
+
+    let timeStr = 'No time logged';
+    if (log.inTime && log.outTime) {
+      timeStr = `${OfficeShifts.formatTimeDisplay(log.inTime)} → ${OfficeShifts.formatTimeDisplay(log.outTime)} (${OfficeShifts.formatDurationDisplay(log.hours)})`;
+    } else if (log.inTime) {
+      timeStr = `Clocked in at ${OfficeShifts.formatTimeDisplay(log.inTime)}`;
+    } else {
+      timeStr = `Status: ${log.status}`;
+    }
+    if (metaEl) metaEl.innerText = timeStr;
+
+    sheet.classList.add('active');
+  }
+
+  function closeActionSheet() {
+    const sheet = document.getElementById('recordActionSheetBackdrop');
+    if (sheet) sheet.classList.remove('active');
+    activeActionLog = null;
+  }
+
+  function handleSheetEdit() {
+    if (!activeActionLog) return;
+    const target = activeActionLog;
+    closeActionSheet();
+    editRecord(target);
+  }
+
+  function handleSheetCopyToday() {
+    if (!activeActionLog) return;
+    const target = activeActionLog;
+    closeActionSheet();
+
+    switchTab('record');
+    resetRecordForm();
+
+    const today = OfficeShifts.getLocalDateStr();
+    document.getElementById('entryFromDate').value = today;
+    document.getElementById('entryToDate').value = '';
+    document.getElementById('entryStatus').value = target.status;
+    document.getElementById('entryIn').value = target.inTime ? OfficeShifts.convertTo24Hour(target.inTime) : '';
+    document.getElementById('entryOut').value = target.outTime ? OfficeShifts.convertTo24Hour(target.outTime) : '';
+    document.getElementById('entryId').value = ''; // clean new entry for today
+
+    handleStatusChange();
+    showToast(`📋 Copied times to today's form!`, 'info');
+  }
+
+  function handleSheetDelete() {
+    if (!activeActionLog) return;
+    const logId = activeActionLog.logId;
+    closeActionSheet();
+    deleteRecord(logId);
+  }
+
+  function hideSplashScreen() {
+    const splash = document.getElementById('appSplashScreen');
+    if (!splash) return;
+    splash.classList.add('fade-out');
+    setTimeout(() => {
+      splash.style.display = 'none';
+    }, 400);
   }
 
   // History View (Zero Horizontal Scroll - Responsive Attendance Cards Feed)
@@ -423,7 +504,7 @@ window.OfficeUI = (function() {
         }
 
         return `
-          <div class="attendance-card">
+          <div class="attendance-card" onclick="OfficeUI.openRecordActionSheet('${log.logId}')">
             <div class="card-date-badge">
               <span class="card-date-day">${dayNum}</span>
               <span class="card-date-month">${monthStr}</span>
@@ -449,11 +530,11 @@ window.OfficeUI = (function() {
             </div>
 
             <div class="card-actions-col">
-              <button class="card-action-btn btn-edit" onclick='OfficeUI.editRecord(${safeLog})' title="Edit record">
+              <button class="card-touch-action-btn btn-quick-edit" onclick='event.stopPropagation(); OfficeUI.editRecord(${safeLog})' title="Edit entry">
                 <i class="material-icons-round">edit</i>
               </button>
-              <button class="card-action-btn btn-del" onclick="OfficeUI.deleteRecord('${log.logId}')" title="Delete record">
-                <i class="material-icons-round">delete_outline</i>
+              <button class="card-touch-action-btn btn-quick-more" onclick="event.stopPropagation(); OfficeUI.openRecordActionSheet('${log.logId}')" title="More options">
+                <i class="material-icons-round">more_vert</i>
               </button>
             </div>
           </div>
@@ -789,8 +870,14 @@ window.OfficeUI = (function() {
   return {
     init,
     toggleTheme,
+    hideSplashScreen,
     openControlDrawer,
     closeControlDrawer,
+    openRecordActionSheet,
+    closeActionSheet,
+    handleSheetEdit,
+    handleSheetCopyToday,
+    handleSheetDelete,
     setComplianceMonth,
     switchTab,
     renderActiveView,
