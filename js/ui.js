@@ -11,6 +11,7 @@ window.OfficeUI = (function() {
     OfficeDB.subscribe(handleDatabaseEvent);
     resetRecordForm();
     updateSmartPunchUI();
+    renderCompliantExitPredictor();
     setupSwipeNavigation();
 
     // Subscribe to shift ticker
@@ -22,6 +23,9 @@ window.OfficeUI = (function() {
         if (smartBtnTimer) smartBtnTimer.innerText = hms;
         const heroTimer = document.getElementById('heroTimerDisplay');
         if (heroTimer) heroTimer.innerText = hms;
+        if (sec % 10 === 0 && activeTab === 'record') {
+          renderCompliantExitPredictor();
+        }
       }
     });
   }
@@ -247,8 +251,9 @@ window.OfficeUI = (function() {
 
   function renderActiveView() {
     updateSmartPunchUI();
+    renderCompliantExitPredictor();
     if (activeTab === 'record') {
-      renderWeekRadar();
+      renderCompliantExitPredictor();
     } else if (activeTab === 'history') {
       renderHistoryTable();
     } else if (activeTab === 'insights') {
@@ -273,7 +278,7 @@ window.OfficeUI = (function() {
       
       const res = await OfficeShifts.clockOut(nowStr);
       updateSmartPunchUI();
-      renderWeekRadar();
+      renderCompliantExitPredictor();
       showToast(`🏁 Clocked Out! Duration: ${res.formattedDuration}`, 'success');
       
       // Auto-refresh tables
@@ -291,7 +296,7 @@ window.OfficeUI = (function() {
 
       await OfficeShifts.clockIn(today, nowStr);
       updateSmartPunchUI();
-      renderWeekRadar();
+      renderCompliantExitPredictor();
       showToast(`⚡ Clocked In at ${OfficeShifts.formatTimeDisplay(nowStr)}!`, 'success');
     }
   }
@@ -377,109 +382,161 @@ window.OfficeUI = (function() {
     }
   }
 
-  // Week-at-a-Glance Attendance Radar
-  function renderWeekRadar(logs = null, user = null) {
-    const radarContainer = document.getElementById('weekRadarContainer');
-    if (!radarContainer) return;
+  // Option 1: Compliant Exit Time Predictor Card
+  function renderCompliantExitPredictor() {
+    const container = document.getElementById('compliantExitContainer') || document.getElementById('weekRadarContainer');
+    if (!container) return;
 
-    const currentUser = user || OfficeAuth.getCurrentUser() || 'gaurav';
-    const allLogs = logs || OfficeDB.getLogs(currentUser);
+    const shift = OfficeShifts.getActiveShift();
+    const currentUser = OfficeAuth.getCurrentUser() || 'gaurav';
     const today = OfficeShifts.getLocalDateStr();
+    const logs = OfficeDB.getLogs(currentUser);
+    const todayLog = logs.find(l => l.date === today && l.username.toLowerCase() === currentUser.toLowerCase());
 
-    // 1. Calculate Monday date of current week
-    const now = new Date();
-    const dayOfWeek = now.getDay(); // 0 Sun, 1 Mon, ... 6 Sat
-    const diffToMon = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-    const monDate = new Date(now);
-    monDate.setDate(now.getDate() + diffToMon);
-
-    const weekDays = [];
-    const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
-    let totalWeekHours = 0;
-
-    for (let i = 0; i < 5; i++) {
-      const d = new Date(monDate);
-      d.setDate(monDate.getDate() + i);
-      const dStr = OfficeShifts.getLocalDateStr(d);
-      const isToday = dStr === today;
-      const isPast = dStr < today;
-
-      const log = allLogs.find(l => l.date === dStr && l.username.toLowerCase() === currentUser.toLowerCase());
-      let hoursNum = log && log.hours ? parseFloat(log.hours) : 0;
-      totalWeekHours += hoursNum;
-
-      let statusBadge = 'Sched';
-      let badgeClass = 'badge-sched';
-      let hoursDisplay = '—';
-
-      if (log) {
-        if (log.status === 'Present') {
-          hoursDisplay = OfficeShifts.formatDurationDisplay(hoursNum);
-          statusBadge = hoursNum >= 7.0 ? 'Done ✅' : 'Logged';
-          badgeClass = 'badge-done';
-        } else {
-          hoursDisplay = log.status;
-          statusBadge = log.status;
-          badgeClass = 'badge-sched';
-        }
-      } else if (isToday) {
-        const shift = OfficeShifts.getActiveShift();
-        if (shift && shift.status === 'CLOCKED_IN') {
-          hoursDisplay = 'Active';
-          statusBadge = 'Active 🟢';
-          badgeClass = 'badge-active';
-        } else {
-          hoursDisplay = 'Today';
-          statusBadge = 'Ready';
-          badgeClass = 'badge-sched';
-        }
-      } else if (isPast) {
-        hoursDisplay = 'Off';
-        statusBadge = 'No Log';
-        badgeClass = 'badge-sched';
+    if (shift && shift.status === 'CLOCKED_IN') {
+      // User is currently clocked in: compute projected exit times based on in-time
+      let inDate = null;
+      if (shift.clockInTimestamp) {
+        inDate = new Date(shift.clockInTimestamp);
+      } else if (shift.inTime) {
+        const time24 = OfficeShifts.convertTo24Hour(shift.inTime);
+        const [hh, mm] = time24.split(':').map(Number);
+        inDate = new Date();
+        inDate.setHours(hh, mm, 0, 0);
+      } else {
+        inDate = new Date();
       }
 
-      const mNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      const dateShort = `${d.getDate()} ${mNames[d.getMonth()]}`;
+      const breakMins = shift.breakMinutes || 0;
+      const minExitDate = new Date(inDate.getTime() + (7 * 60 + breakMins) * 60 * 1000);
+      const optExitDate = new Date(inDate.getTime() + (8 * 60 + breakMins) * 60 * 1000);
 
-      weekDays.push({
-        name: dayNames[i],
-        dateStr: dStr,
-        dateShort,
-        isToday,
-        hoursDisplay,
-        statusBadge,
-        badgeClass,
-        log
-      });
-    }
+      const minExitStr = OfficeShifts.formatTimeDisplay(`${String(minExitDate.getHours()).padStart(2, '0')}:${String(minExitDate.getMinutes()).padStart(2, '0')}`);
+      const optExitStr = OfficeShifts.formatTimeDisplay(`${String(optExitDate.getHours()).padStart(2, '0')}:${String(optExitDate.getMinutes()).padStart(2, '0')}`);
 
-    const TARGET_WEEK_HOURS = 35.0;
-    const weekPct = Math.min(100, Math.round((totalWeekHours / TARGET_WEEK_HOURS) * 100));
-    const weekHoursFormatted = OfficeShifts.formatDurationDisplay(totalWeekHours);
+      const elapsedSec = OfficeShifts.getElapsedSeconds();
+      const neededSec7h = Math.max(0, 7 * 3600 - elapsedSec);
+      const neededSec8h = Math.max(0, 8 * 3600 - elapsedSec);
 
-    radarContainer.innerHTML = `
-      <div class="week-radar-header">
-        <span class="radar-title">
-          <i class="material-icons-round" style="font-size:13px; color:var(--primary);">date_range</i>
-          Week-at-a-Glance Attendance Radar
-        </span>
-        <span class="radar-total">${weekHoursFormatted} / 35h (${weekPct}%)</span>
-      </div>
-      <div class="week-radar-track">
-        <div class="week-radar-fill" style="width: ${weekPct}%;"></div>
-      </div>
-      <div class="week-days-grid">
-        ${weekDays.map(wd => `
-          <div class="week-day-chip ${wd.isToday ? 'is-today' : ''}" onclick="OfficeUI.handleDayChipClick('${wd.dateStr}')" title="${wd.name} ${wd.dateShort}">
-            <span class="day-chip-name">${wd.name}</span>
-            <span class="day-chip-date">${wd.dateShort}</span>
-            <span class="day-chip-hours">${wd.hoursDisplay}</span>
-            <span class="day-chip-badge ${wd.badgeClass}">${wd.statusBadge}</span>
+      let paceMsg = '';
+      if (neededSec7h > 0) {
+        const remH = Math.floor(neededSec7h / 3600);
+        const remM = Math.floor((neededSec7h % 3600) / 60);
+        const remStr = `${remH > 0 ? remH + 'h ' : ''}${remM}m`;
+        paceMsg = `⏳ <strong>${remStr} remaining</strong> to reach 7.0h compliance (In: ${shift.inTime || 'Active'})`;
+      } else if (neededSec8h > 0) {
+        const remH = Math.floor(neededSec8h / 3600);
+        const remM = Math.floor((neededSec8h % 3600) / 60);
+        const remStr = `${remH > 0 ? remH + 'h ' : ''}${remM}m`;
+        paceMsg = `🎉 <strong>7.0h Compliant achieved!</strong> • ${remStr} left to 8.0h target`;
+      } else {
+        paceMsg = `🏆 <strong>8.0h Optimal Target exceeded!</strong> Excellent work today!`;
+      }
+
+      container.innerHTML = `
+        <div class="exit-card-header">
+          <div class="exit-card-title">
+            <i class="material-icons-round" style="font-size:14px; color:var(--primary);">timelapse</i>
+            Compliant Exit Time Predictor
           </div>
-        `).join('')}
-      </div>
-    `;
+          <span class="exit-status-pill active">
+            <span class="dot" style="width:5px; height:5px; border-radius:50%; background:#10b981; display:inline-block;"></span>
+            Shift Active
+          </span>
+        </div>
+        <div class="exit-tiles-grid">
+          <div class="exit-time-tile">
+            <span class="tile-target-lbl">7.0h Minimum Exit</span>
+            <span class="tile-time-val val-compliant">${minExitStr}</span>
+            <span class="tile-sub-pill">Company Minimum</span>
+          </div>
+          <div class="exit-time-tile">
+            <span class="tile-target-lbl">8.0h Optimal Target</span>
+            <span class="tile-time-val val-optimal">${optExitStr}</span>
+            <span class="tile-sub-pill">Full Day Goal</span>
+          </div>
+        </div>
+        <div class="exit-footer-banner">
+          ${paceMsg}
+        </div>
+      `;
+    } else {
+      // User is Clocked Out
+      const lastDur = (shift && shift.lastDuration != null) 
+        ? OfficeShifts.formatDurationDisplay(shift.lastDuration) 
+        : (todayLog && todayLog.hours ? OfficeShifts.formatDurationDisplay(todayLog.hours) : null);
+
+      if (lastDur) {
+        // Shift completed today
+        const inTimeStr = (todayLog && todayLog.inTime) ? todayLog.inTime : (shift.inTime || '--');
+        const outTimeStr = (todayLog && todayLog.outTime) ? todayLog.outTime : '--';
+        const hoursNum = todayLog && todayLog.hours ? parseFloat(todayLog.hours) : 0;
+        const isCompliant = hoursNum >= 7.0;
+
+        container.innerHTML = `
+          <div class="exit-card-header">
+            <div class="exit-card-title">
+              <i class="material-icons-round" style="font-size:14px; color:#10b981;">task_alt</i>
+              Today's Shift Completion
+            </div>
+            <span class="exit-status-pill done">Shift Finished</span>
+          </div>
+          <div class="exit-tiles-grid">
+            <div class="exit-time-tile">
+              <span class="tile-target-lbl">Total Time Logged</span>
+              <span class="tile-time-val ${isCompliant ? 'val-compliant' : 'val-optimal'}">${lastDur}</span>
+              <span class="tile-sub-pill">${isCompliant ? '✅ Compliant (≥ 7h)' : 'Logged Hours'}</span>
+            </div>
+            <div class="exit-time-tile">
+              <span class="tile-target-lbl">Shift Window</span>
+              <span class="tile-time-val" style="font-size:13px; color:var(--text-primary); margin-top:3px;">${inTimeStr} → ${outTimeStr}</span>
+              <span class="tile-sub-pill">Recorded in System</span>
+            </div>
+          </div>
+          <div class="exit-footer-banner">
+            ✅ <strong>Shift Complete:</strong> Today's attendance is safely recorded in history.
+          </div>
+        `;
+      } else {
+        // Not yet clocked in today: show dynamic departure preview if clocked in right now
+        const now = new Date();
+        const nowStr = OfficeShifts.getCurrentTimeStr();
+        const minDate = new Date(now.getTime() + 7 * 60 * 60 * 1000);
+        const optDate = new Date(now.getTime() + 8 * 60 * 60 * 1000);
+        const minExitStr = OfficeShifts.formatTimeDisplay(`${String(minDate.getHours()).padStart(2, '0')}:${String(minDate.getMinutes()).padStart(2, '0')}`);
+        const optExitStr = OfficeShifts.formatTimeDisplay(`${String(optDate.getHours()).padStart(2, '0')}:${String(optDate.getMinutes()).padStart(2, '0')}`);
+
+        container.innerHTML = `
+          <div class="exit-card-header">
+            <div class="exit-card-title">
+              <i class="material-icons-round" style="font-size:14px; color:var(--primary);">schedule</i>
+              Shift Departure Planner
+            </div>
+            <span class="exit-status-pill ready">Ready to Start</span>
+          </div>
+          <div class="exit-tiles-grid">
+            <div class="exit-time-tile">
+              <span class="tile-target-lbl">If In at ${nowStr} (7h)</span>
+              <span class="tile-time-val val-compliant">${minExitStr}</span>
+              <span class="tile-sub-pill">Minimum Departure</span>
+            </div>
+            <div class="exit-time-tile">
+              <span class="tile-target-lbl">If In at ${nowStr} (8h)</span>
+              <span class="tile-time-val val-optimal">${optExitStr}</span>
+              <span class="tile-sub-pill">Target Departure</span>
+            </div>
+          </div>
+          <div class="exit-footer-banner">
+            💡 Tap <strong>Clock In</strong> when you enter office to start live compliance countdown.
+          </div>
+        `;
+      }
+    }
+  }
+
+  // Alias for backward compatibility
+  function renderWeekRadar(logs, user) {
+    renderCompliantExitPredictor();
   }
 
   function handleDayChipClick(dateStr) {
@@ -525,6 +582,8 @@ window.OfficeUI = (function() {
 
     handleStatusChange();
     updateSmartPunchUI();
+    renderCompliantExitPredictor();
+    renderCompliantExitPredictor();
   }
 
   function handleStatusChange() {
@@ -588,6 +647,8 @@ window.OfficeUI = (function() {
 
     handleStatusChange();
     updateSmartPunchUI();
+    renderCompliantExitPredictor();
+    renderCompliantExitPredictor();
   }
 
   async function submitLog() {
@@ -665,6 +726,7 @@ window.OfficeUI = (function() {
     }
 
     updateSmartPunchUI();
+    renderCompliantExitPredictor();
 
     setTimeout(() => {
       if (msg) msg.innerText = '';
@@ -938,11 +1000,13 @@ window.OfficeUI = (function() {
           return `<option value="${ym}" ${ym === comp.yearMonth ? 'selected' : ''}>${label}</option>`;
         }).join('');
 
-        const statusClass = comp.isHoursOptimal ? 'badge-optimal' : (comp.isHoursCompliant ? 'badge-compliant' : 'badge-deficit');
-        const statusText = comp.isHoursOptimal ? 'Optimal (≥8.0h)' : (comp.isHoursCompliant ? 'Compliant (≥7.0h)' : 'Below 7.0h Min');
+        const hoursPillClass = comp.isHoursOptimal ? 'pill-optimal' : (comp.isHoursCompliant ? 'pill-safe' : 'pill-deficit');
+        const hoursPillText = comp.isHoursOptimal ? 'Optimal' : (comp.isHoursCompliant ? 'Compliant' : 'Deficit');
+
+        const salaryPillClass = comp.is86Safe ? 'pill-safe' : 'pill-risk';
+        const salaryPillText = comp.is86Safe ? 'Safe' : 'At Risk';
 
         const salarySafeClass = comp.is86Safe ? 'badge-salary-safe' : 'badge-salary-risk';
-        const salarySafeText = comp.is86Safe ? '86% Salary Safe' : 'Salary Risk (<86%)';
         const salarySafeIcon = comp.is86Safe ? 'verified_user' : 'warning';
 
         const meterAttnPct = Math.min(100, Math.max(0, comp.attendancePct));
@@ -955,6 +1019,37 @@ window.OfficeUI = (function() {
         const pExc = totalDistCount > 0 ? (comp.exceptionDays / totalDistCount * 100).toFixed(1) : 0;
         const pNoShow = totalDistCount > 0 ? (comp.noshowDays / totalDistCount * 100).toFixed(1) : 0;
         const pOff = totalDistCount > 0 ? (comp.offDays / totalDistCount * 100).toFixed(1) : 0;
+
+        let salaryActionHTML = '';
+        let hoursActionHTML = '';
+
+        if (comp.futureWorkingDays > 0) {
+          if (comp.daysNeededFor86 === 0) {
+            salaryActionHTML = `Salary quota reached! You can take up to <strong>${comp.maxAllowableNoShows} safe days off</strong> with zero salary impact.`;
+          } else if (comp.daysNeededFor86 <= comp.futureWorkingDays) {
+            salaryActionHTML = `Attend at least <strong>${comp.daysNeededFor86} of your ${comp.futureWorkingDays} remaining workdays</strong> to protect your salary (≥ 86%).`;
+          } else {
+            salaryActionHTML = `Attendance will finish below 86% due to past unexcused absences. Max achievable is <strong>${Math.round(((comp.attendedDaysLogged + comp.futureWorkingDays) / comp.totalExpectedWorkDays) * 100)}%</strong>.`;
+          }
+
+          if (comp.isHoursCompliant) {
+            hoursActionHTML = comp.surplusHours > 0
+              ? `Average is <strong>${comp.avgFormatted}</strong> with <strong>+${comp.surplusHours}h surplus</strong>. Maintain ~<strong>${comp.reqDailyFormatted7h}/day</strong> across ${comp.futureWorkingDays} days.`
+              : `Average meets company standard at <strong>${comp.avgFormatted}</strong>. Continue logging ~<strong>${comp.reqDailyFormatted7h}/day</strong>.`;
+          } else {
+            hoursActionHTML = `Current average is <strong>${comp.avgFormatted}</strong>. Log ~<strong>${comp.reqDailyFormatted7h} / day</strong> across ${comp.futureWorkingDays} remaining workdays to raise average to 7.0h.`;
+          }
+        } else {
+          salaryActionHTML = comp.is86Safe
+            ? `Finalized at <strong>${comp.attendancePct}%</strong> attendance (exceeds the 86% salary protection threshold).`
+            : `Finalized at <strong>${comp.attendancePct}%</strong> attendance (fell below the 86% salary threshold).`;
+
+          hoursActionHTML = comp.isHoursOptimal
+            ? `Finalized at <strong>${comp.avgFormatted}/day</strong> (exceeds 8.0h optimal company target).`
+            : (comp.isHoursCompliant
+              ? `Finalized at <strong>${comp.avgFormatted}/day</strong> (meets 7–8h company requirement).`
+              : `Finalized at <strong>${comp.avgFormatted}/day</strong> (below 7.0h company minimum).`);
+        }
 
         compContainer.innerHTML = `
           <div class="compliance-cockpit-compact">
@@ -975,14 +1070,17 @@ window.OfficeUI = (function() {
               </div>
             </div>
 
-            <!-- 2. Dual Bento Duo: Left = Salary Attendance (86% Min), Right = Monthly Average (7-8h) -->
+            <!-- 2. Harmonized Dual Bento Duo: Left = Salary Attendance (86% Min), Right = Monthly Average (7-8h) -->
             <div class="cockpit-bento-duo">
               <!-- Left Deck: 86% Salary Attendance -->
               <div class="bento-duo-card">
                 <div class="bento-card-top">
-                  <span class="bento-card-title">Salary Attendance</span>
-                  <span class="tile-pill ${salarySafeClass}">
-                    ${comp.is86Safe ? '≥ 86% Safe' : '< 86% Risk'}
+                  <span class="bento-card-title">
+                    <i class="material-icons-round" style="font-size:12px; color:#10b981;">verified_user</i>
+                    Salary Quota
+                  </span>
+                  <span class="pillar-status-pill ${salaryPillClass}">
+                    ${salaryPillText}
                   </span>
                 </div>
                 <div class="bento-card-metric-row">
@@ -1000,9 +1098,9 @@ window.OfficeUI = (function() {
                   </div>
                 </div>
                 <div class="bento-sub-tags">
-                  <span class="bento-tag tag-muted">${comp.attendedDaysLogged} of ${comp.totalExpectedWorkDays} Workdays</span>
+                  <span class="bento-tag tag-muted">${comp.attendedDaysLogged} of ${comp.totalExpectedWorkDays} Days</span>
                   <span class="bento-tag ${comp.maxAllowableNoShows > 0 ? 'tag-safe' : 'tag-neutral'}">
-                    ${comp.maxAllowableNoShows > 0 ? comp.maxAllowableNoShows + ' Safe Leaves Left' : '0 Safe Leaves Left'}
+                    ${comp.maxAllowableNoShows > 0 ? comp.maxAllowableNoShows + ' Safe Off Left' : '0 Safe Off Left'}
                   </span>
                 </div>
               </div>
@@ -1010,8 +1108,11 @@ window.OfficeUI = (function() {
               <!-- Right Deck: Monthly Average Hours (100% Matches Fiscal Performance) -->
               <div class="bento-duo-card">
                 <div class="bento-card-top">
-                  <span class="bento-card-title">Monthly Average</span>
-                  <span class="tile-pill ${statusClass}">${statusText}</span>
+                  <span class="bento-card-title">
+                    <i class="material-icons-round" style="font-size:12px; color:var(--primary);">schedule</i>
+                    Monthly Avg
+                  </span>
+                  <span class="pillar-status-pill ${hoursPillClass}">${hoursPillText}</span>
                 </div>
                 <div class="bento-card-metric-row">
                   <span class="bento-hero-metric" style="color:var(--primary);">${comp.avgFormatted}</span>
@@ -1028,7 +1129,7 @@ window.OfficeUI = (function() {
                   </div>
                 </div>
                 <div class="bento-sub-tags">
-                  <span class="bento-tag tag-muted">${comp.totalHours}h / ${comp.hoursDivisor} Workdays</span>
+                  <span class="bento-tag tag-muted">${comp.totalHours}h / ${comp.hoursDivisor} Logged</span>
                   <span class="bento-tag ${comp.isHoursCompliant ? 'tag-safe' : 'tag-risk'}">
                     ${comp.futureWorkingDays > 0 ? (comp.surplusHours > 0 ? '+' + comp.surplusHours + 'h Surplus' : '~' + comp.reqDailyFormatted7h + '/d Pace') : (comp.isHoursCompliant ? 'Standard Met' : 'Below 7.0h')}
                   </span>
@@ -1074,23 +1175,40 @@ window.OfficeUI = (function() {
               </div>
             </div>
 
-            <!-- 4. Unified AI Copilot Directive Card -->
-            <div class="ai-copilot-briefing-box">
-              <div class="copilot-header">
-                <div class="copilot-title-group">
-                  <span class="copilot-robot-icon">🤖</span>
-                  <span class="copilot-headline">AI Copilot Strategic Directive</span>
+            <!-- 4. Upgraded AI Strategic Action Plan (Executive 2-Card Layout) -->
+            <div class="ai-strategic-plan-card">
+              <div class="strategic-header">
+                <div class="strategic-title-wrap">
+                  <span class="strategic-robot-badge">🤖</span>
+                  <span class="strategic-heading">AI Strategic Action Plan</span>
                 </div>
-                <span class="copilot-badge">${comp.futureWorkingDays > 0 ? comp.futureWorkingDays + ' Days Left' : 'Finalized'}</span>
+                <span class="strategic-time-pill">${comp.futureWorkingDays > 0 ? comp.futureWorkingDays + ' Workdays Left' : 'Period Finalized'}</span>
               </div>
-              <div class="copilot-directives-list">
-                <div class="directive-bullet">
-                  <span class="bullet-icon">💼</span>
-                  <div class="bullet-text">${comp.salaryAdvice}</div>
+              <div class="strategic-actions-grid">
+                <!-- Action 1: Salary Protection -->
+                <div class="strategic-action-tile action-salary ${comp.is86Safe ? 'safe-border' : 'risk-border'}">
+                  <div class="action-tile-top">
+                    <span class="action-badge-pill">💼 Salary Protection (86% Min)</span>
+                    <span class="action-kpi-pill ${comp.is86Safe ? 'badge-salary-safe' : 'badge-salary-risk'}">
+                      ${comp.is86Safe ? '🛡️ Safe (+14% Buffer)' : '⚠️ Action Needed'}
+                    </span>
+                  </div>
+                  <div class="action-body-text">
+                    ${salaryActionHTML}
+                  </div>
                 </div>
-                <div class="directive-bullet">
-                  <span class="bullet-icon">⏱️</span>
-                  <div class="bullet-text">${comp.hoursAdvice}</div>
+
+                <!-- Action 2: Daily Hours Standard -->
+                <div class="strategic-action-tile action-hours ${comp.isHoursCompliant ? 'safe-border' : 'pace-border'}">
+                  <div class="action-tile-top">
+                    <span class="action-badge-pill">⏱️ Daily Hours Policy (7–8h)</span>
+                    <span class="action-kpi-pill ${comp.isHoursOptimal ? 'badge-optimal' : (comp.isHoursCompliant ? 'badge-compliant' : 'badge-deficit')}">
+                      ${comp.isHoursOptimal ? '🏆 Optimal' : (comp.isHoursCompliant ? '✅ Standard Met' : '⚠️ Deficit Action')}
+                    </span>
+                  </div>
+                  <div class="action-body-text">
+                    ${hoursActionHTML}
+                  </div>
                 </div>
               </div>
             </div>
@@ -1312,6 +1430,7 @@ window.OfficeUI = (function() {
     switchInsightsSubTab,
     switchTab,
     renderActiveView,
+    renderCompliantExitPredictor,
     renderWeekRadar,
     handleDayChipClick,
     handleSmartPunch,

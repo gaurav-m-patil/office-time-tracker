@@ -200,15 +200,33 @@
               </div>
             </div>
 
-            <!-- QUICK STATUS STAMPS -->
-            <div class="quick-stamps-strip">
-              <span class="stamps-lbl">⚡ Quick Stamps:</span>
+            <!-- QUICK STATUS STAMPS (Thumb-Friendly Ergonomic Grid) -->
+            <div class="quick-stamps-container">
+              <div class="stamps-header-row">
+                <span class="stamps-header-title"><i class="material-icons-round" style="font-size:13px; vertical-align:middle; color:var(--primary);">flash_on</i> Quick Shortcuts</span>
+                <span class="stamps-header-hint">1-tap auto mark</span>
+              </div>
               <div class="stamps-pill-grid">
-                <button type="button" class="btn-stamp-pill bg-amber" onclick="OfficeUI.quickAction('leave')" title="Mark Leave">🌴 Leave</button>
-                <button type="button" class="btn-stamp-pill bg-purple" onclick="OfficeUI.quickAction('exception')" title="Mark Exception">⚡ Exc</button>
-                <button type="button" class="btn-stamp-pill bg-gray" onclick="OfficeUI.quickAction('noshow')" title="Mark No Show">🚫 No-Show</button>
-                <button type="button" class="btn-stamp-pill bg-blue" onclick="OfficeUI.quickAction('weekend')" title="Mark Weekend">📅 Wknd</button>
-                <button type="button" class="btn-stamp-pill bg-cyan" onclick="OfficeUI.quickAction('holiday')" title="Mark Holiday">🏖️ Holiday</button>
+                <button type="button" class="btn-stamp-pill stamp-leave" onclick="OfficeUI.quickAction('leave')" title="Mark Leave">
+                  <span class="stamp-emoji">🌴</span>
+                  <span class="stamp-label">Leave</span>
+                </button>
+                <button type="button" class="btn-stamp-pill stamp-exception" onclick="OfficeUI.quickAction('exception')" title="Mark Exception">
+                  <span class="stamp-emoji">⚡</span>
+                  <span class="stamp-label">Exc</span>
+                </button>
+                <button type="button" class="btn-stamp-pill stamp-noshow" onclick="OfficeUI.quickAction('noshow')" title="Mark No Show">
+                  <span class="stamp-emoji">🚫</span>
+                  <span class="stamp-label">No-Show</span>
+                </button>
+                <button type="button" class="btn-stamp-pill stamp-weekend" onclick="OfficeUI.quickAction('weekend')" title="Mark Weekend">
+                  <span class="stamp-emoji">📅</span>
+                  <span class="stamp-label">Weekend</span>
+                </button>
+                <button type="button" class="btn-stamp-pill stamp-holiday" onclick="OfficeUI.quickAction('holiday')" title="Mark Holiday">
+                  <span class="stamp-emoji">🏖️</span>
+                  <span class="stamp-label">Holiday</span>
+                </button>
               </div>
             </div>
 
@@ -216,9 +234,9 @@
             <div id="logMsg" class="status-msg"></div>
           </div>
 
-          <!-- ZONE 3: WEEK-AT-A-GLANCE ATTENDANCE RADAR (BOTTOM) -->
-          <div class="week-radar-card" id="weekRadarContainer">
-            <!-- Dynamically populated by OfficeUI.renderWeekRadar() -->
+          <!-- ZONE 3: COMPLIANT EXIT TIME PREDICTOR (BOTTOM) -->
+          <div class="compliant-exit-card" id="compliantExitContainer">
+            <!-- Dynamically populated by OfficeUI.renderCompliantExitPredictor() -->
           </div>
 
         </div>

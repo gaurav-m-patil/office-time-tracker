@@ -191,13 +191,14 @@ html, body {
   flex: 1;
   width: 100%;
   height: calc(100dvh - 108px);
-  overflow: hidden;
-  padding: clamp(8px, 1.8vh, 16px) clamp(10px, 3vw, 16px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 6px clamp(10px, 3vw, 16px) 14px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
 }
 
 .tab-pane {
@@ -252,9 +253,9 @@ html, body {
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   box-sizing: border-box;
-  padding: 2px 0 16px 0;
+  padding: 0 0 12px 0;
 }
 
 /* Zone 1: Live Shift Chronometer Hero */
@@ -447,155 +448,260 @@ html, body {
   color: var(--primary);
 }
 
-.quick-stamps-strip {
+/* Zone 2: Quick Status Stamps (Thumb-Friendly Ergonomic Grid) */
+.quick-stamps-container {
   display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 10px;
+  flex-direction: column;
+  gap: 5px;
+  margin: 6px 0 10px 0;
 }
 
-.stamps-lbl {
-  font-size: 10px;
-  font-weight: 800;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-.stamps-pill-grid {
-  display: flex;
-  gap: 4px;
-  flex: 1;
-}
-
-.btn-stamp-pill {
-  flex: 1;
-  height: 28px;
-  padding: 0 4px;
-  border-radius: 7px;
-  border: 1px solid var(--border);
-  font-size: 10px;
-  font-weight: 700;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  white-space: nowrap;
-  transition: transform 0.1s ease;
-  color: var(--text-primary);
-  background: var(--surface-secondary);
-}
-.btn-stamp-pill:active { transform: scale(0.95); }
-
-/* Zone 3: Week-at-a-Glance Attendance Radar */
-.week-radar-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 10px 14px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
-}
-
-.week-radar-header {
+.stamps-header-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 6px;
+  padding: 0 2px;
 }
 
-.radar-title {
-  font-size: 10.5px;
+.stamps-header-title {
+  font-size: 10px;
   font-weight: 800;
-  color: var(--text-primary);
   text-transform: uppercase;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.4px;
+  color: var(--text-muted);
   display: flex;
   align-items: center;
   gap: 4px;
 }
 
-.radar-total {
-  font-size: 10.5px;
+.stamps-header-hint {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.stamps-pill-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 5px;
+}
+
+.btn-stamp-pill {
+  height: 38px;
+  padding: 0 4px;
+  border-radius: 9px;
+  border: 1px solid var(--border);
+  font-size: 11.5px;
   font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  white-space: nowrap;
+  transition: transform 0.1s ease, background 0.15s ease, border-color 0.15s ease;
+  user-select: none;
+  background: var(--surface-secondary);
+}
+
+.btn-stamp-pill:active {
+  transform: scale(0.95);
+}
+
+.stamp-emoji {
+  font-size: 12px;
+  line-height: 1;
+}
+
+.stamp-label {
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* Individual Quick Stamp Accent Themes */
+.stamp-leave {
+  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.3);
+  color: #d97706;
+}
+.dark-mode .stamp-leave {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.4);
+  color: #fbbf24;
+}
+
+.stamp-exception {
+  background: rgba(139, 92, 246, 0.08);
+  border-color: rgba(139, 92, 246, 0.3);
+  color: #7c3aed;
+}
+.dark-mode .stamp-exception {
+  background: rgba(139, 92, 246, 0.15);
+  border-color: rgba(139, 92, 246, 0.4);
+  color: #a78bfa;
+}
+
+.stamp-noshow {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #dc2626;
+}
+.dark-mode .stamp-noshow {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #f87171;
+}
+
+.stamp-weekend {
+  background: rgba(59, 130, 246, 0.08);
+  border-color: rgba(59, 130, 246, 0.3);
+  color: #2563eb;
+}
+.dark-mode .stamp-weekend {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: rgba(59, 130, 246, 0.4);
+  color: #60a5fa;
+}
+
+.stamp-holiday {
+  background: rgba(6, 182, 212, 0.08);
+  border-color: rgba(6, 182, 212, 0.3);
+  color: #0891b2;
+}
+.dark-mode .stamp-holiday {
+  background: rgba(6, 182, 212, 0.15);
+  border-color: rgba(6, 182, 212, 0.4);
+  color: #22d3ee;
+}
+
+/* Zone 3: Option 1 - Compliant Exit Time Predictor Card */
+.compliant-exit-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 8px 12px;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.exit-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+.exit-card-title {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.exit-status-pill {
+  font-size: 9px;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: var(--radius-full);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.2px;
+}
+.exit-status-pill.active {
+  background: rgba(16, 185, 129, 0.15);
+  color: #059669;
+}
+.dark-mode .exit-status-pill.active {
+  color: #34d399;
+}
+.exit-status-pill.ready {
+  background: var(--surface-secondary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+.exit-status-pill.done {
+  background: rgba(99, 102, 241, 0.12);
   color: var(--primary);
 }
 
-.week-radar-track {
-  width: 100%;
-  height: 5px;
-  background: var(--surface-secondary);
-  border-radius: 3px;
-  overflow: hidden;
-  margin-bottom: 8px;
-}
-
-.week-radar-fill {
-  height: 100%;
-  border-radius: 3px;
-  background: linear-gradient(90deg, var(--primary), #10b981);
-  transition: width 0.3s ease;
-}
-
-.week-days-grid {
+.exit-tiles-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 4px;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
 }
 
-.week-day-chip {
+.exit-time-tile {
   background: var(--surface-secondary);
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 5px 2px;
+  border-radius: 10px;
+  padding: 6px 10px;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   text-align: center;
-  cursor: pointer;
-  transition: border-color 0.15s ease;
 }
 
-.week-day-chip:hover {
-  border-color: var(--primary);
-}
-
-.week-day-chip.is-today {
-  border-color: var(--primary);
-  background: rgba(99, 102, 241, 0.08);
-}
-
-.day-chip-name {
-  font-size: 9px;
+.tile-target-lbl {
+  font-size: 8.5px;
   font-weight: 800;
-  color: var(--text-muted);
   text-transform: uppercase;
-}
-
-.day-chip-date {
-  font-size: 8px;
   color: var(--text-muted);
-  margin-bottom: 2px;
+  letter-spacing: 0.3px;
+  margin-bottom: 1px;
 }
 
-.day-chip-hours {
-  font-size: 9.5px;
+.tile-time-val {
+  font-size: 16px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+.tile-time-val.val-compliant {
+  color: #059669;
+}
+.dark-mode .tile-time-val.val-compliant {
+  color: #34d399;
+}
+.tile-time-val.val-optimal {
+  color: var(--primary);
+}
+
+.tile-sub-pill {
+  font-size: 8px;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.exit-footer-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: rgba(99, 102, 241, 0.05);
+  border: 1px dashed rgba(99, 102, 241, 0.2);
+  border-radius: 7px;
+  padding: 4px 8px;
+  text-align: center;
+}
+.exit-footer-banner strong {
   font-weight: 800;
   color: var(--text-primary);
 }
-
-.day-chip-badge {
-  font-size: 7.5px;
-  font-weight: 800;
-  border-radius: var(--radius-full);
-  padding: 1px 4px;
-  margin-top: 2px;
-  line-height: 1;
-}
-.badge-done { background: rgba(16, 185, 129, 0.15); color: #059669; }
-.dark-mode .badge-done { color: #34d399; }
-.badge-active { background: rgba(59, 130, 246, 0.15); color: #2563eb; }
-.dark-mode .badge-active { color: #60a5fa; }
-.badge-sched { background: var(--border); color: var(--text-muted); }
 
 .container {
   background: var(--surface);
@@ -1851,6 +1957,39 @@ tr:hover { background: var(--surface-secondary); }
   text-transform: uppercase;
   color: var(--text-muted);
   letter-spacing: 0.4px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.pillar-status-pill {
+  font-size: 8.5px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: var(--radius-full);
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+.pillar-status-pill.pill-safe {
+  background: rgba(16, 185, 129, 0.15);
+  color: #059669;
+}
+.dark-mode .pillar-status-pill.pill-safe {
+  color: #34d399;
+}
+.pillar-status-pill.pill-risk,
+.pillar-status-pill.pill-deficit {
+  background: rgba(239, 68, 68, 0.15);
+  color: #dc2626;
+}
+.dark-mode .pillar-status-pill.pill-risk,
+.dark-mode .pillar-status-pill.pill-deficit {
+  color: #f87171;
+}
+.pillar-status-pill.pill-optimal {
+  background: rgba(99, 102, 241, 0.15);
+  color: var(--primary);
 }
 
 .bento-card-metric-row {
@@ -2015,44 +2154,48 @@ tr:hover { background: var(--surface-secondary); }
   line-height: 1.2;
 }
 
-/* Unified AI Copilot Card */
-.ai-copilot-briefing-box {
+/* ========================================================
+   UPGRADED AI STRATEGIC ACTION PLAN (High-Impact Executive View)
+   ======================================================== */
+.ai-strategic-plan-card {
   background: var(--surface);
   border: 1px solid rgba(99, 102, 241, 0.25);
   border-radius: 14px;
-  padding: 10px 12px;
+  padding: 8px 12px;
   box-shadow: 0 3px 12px rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
-.copilot-header {
+.strategic-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 6px;
-  padding-bottom: 5px;
+  padding-bottom: 4px;
   border-bottom: 1px solid var(--border);
 }
 
-.copilot-title-group {
+.strategic-title-wrap {
   display: flex;
   align-items: center;
   gap: 5px;
 }
 
-.copilot-robot-icon {
+.strategic-robot-badge {
   font-size: 14px;
 }
 
-.copilot-headline {
-  font-size: 10.5px;
+.strategic-heading {
+  font-size: 10px;
   font-weight: 800;
   color: var(--primary);
   text-transform: uppercase;
   letter-spacing: 0.3px;
 }
 
-.copilot-badge {
-  font-size: 9px;
+.strategic-time-pill {
+  font-size: 8.5px;
   font-weight: 800;
   padding: 2px 6px;
   border-radius: var(--radius-full);
@@ -2060,28 +2203,64 @@ tr:hover { background: var(--surface-secondary); }
   color: var(--text-muted);
 }
 
-.copilot-directives-list {
+.strategic-actions-grid {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 6px;
 }
 
-.directive-bullet {
+.strategic-action-tile {
+  background: var(--surface-secondary);
+  border-radius: 10px;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-left: 3px solid transparent;
   display: flex;
-  align-items: flex-start;
-  gap: 6px;
-  font-size: 11px;
-  line-height: 1.35;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.strategic-action-tile.safe-border {
+  border-left-color: #10b981;
+}
+
+.strategic-action-tile.risk-border {
+  border-left-color: #ef4444;
+}
+
+.strategic-action-tile.pace-border {
+  border-left-color: #f59e0b;
+}
+
+.action-tile-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.action-badge-pill {
+  font-size: 8.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: var(--text-muted);
+}
+
+.action-kpi-pill {
+  font-size: 8.5px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: var(--radius-full);
+}
+
+.action-body-text {
+  font-size: 11.5px;
+  line-height: 1.4;
   color: var(--text-secondary);
 }
 
-.directive-bullet .bullet-icon {
-  font-size: 12px;
-  flex-shrink: 0;
-  margin-top: 1px;
-}
-
-.directive-bullet .bullet-text strong {
+.action-body-text strong {
+  font-weight: 800;
   color: var(--text-primary);
 }
 
