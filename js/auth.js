@@ -15,16 +15,11 @@ window.OfficeAuth = (function() {
     const savedUser = localStorage.getItem(OfficeConfig.STORAGE_KEYS.CURRENT_USER);
     const savedName = localStorage.getItem(OfficeConfig.STORAGE_KEYS.CURRENT_NAME);
     const savedRole = localStorage.getItem(OfficeConfig.STORAGE_KEYS.CURRENT_ROLE);
-    const loginTime = localStorage.getItem(OfficeConfig.STORAGE_KEYS.LOGIN_TIME);
 
-    if (savedUser && loginTime) {
-      const timePassed = Date.now() - parseInt(loginTime, 10);
-      if (timePassed > OfficeConfig.SESSION_EXPIRY_MS) {
-        logout();
-        return null;
-      }
+    // Session stays active on device until user explicitly logs out
+    if (savedUser) {
       currentUser = savedUser;
-      currentName = savedName || savedUser;
+      currentName = savedName || "Gaurav Patil";
       currentRole = savedRole || "User";
       return { username: currentUser, name: currentName, role: currentRole };
     }
@@ -32,17 +27,17 @@ window.OfficeAuth = (function() {
   }
 
   async function login(username, pin, isAdminMode = false) {
-    if (!username || !pin) {
-      throw new Error("Please enter both username and 4-digit PIN.");
+    const cleanPin = (pin || "").toString().trim();
+    if (!cleanPin) {
+      throw new Error("Please enter your 4-digit PIN.");
     }
-    if (pin.length !== 4 && !isAdminMode) {
-      throw new Error("PIN must be 4 digits.");
+    if (cleanPin.length !== 4) {
+      throw new Error("PIN must be exactly 4 digits.");
     }
 
-    // Role is strictly determined by login method:
-    // User login screen -> 'User' (Admin tab strictly hidden)
-    // Admin login screen -> 'Admin' (Admin tab enabled)
-    const assignedRole = isAdminMode ? "Admin" : "User";
+    const cleanUser = (username || "gaurav").trim().toLowerCase();
+    const assignedRole = "User";
+    const displayName = "Gaurav Patil";
 
     // Try cloud authentication first if online
     if (navigator.onLine) {
@@ -50,35 +45,36 @@ window.OfficeAuth = (function() {
         const res = await fetch(OfficeConfig.WEB_APP_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "login", username, password: pin })
+          body: JSON.stringify({ action: "login", username: cleanUser, password: cleanPin })
         });
         const data = await res.json();
         if (data && data.success) {
-          const firstName = data.firstName || username;
-          return setSession(username, firstName, assignedRole);
+          localStorage.setItem('office_secure_pin', cleanPin);
+          return setSession(cleanUser, displayName, assignedRole);
+        } else if (data && data.message) {
+          throw new Error(data.message || "Incorrect PIN. Please try again.");
         }
       } catch (e) {
+        if (e.message && e.message.includes("PIN")) {
+          throw e;
+        }
         console.warn("Online auth notice, falling back to local verification:", e);
       }
     }
 
-    // Local / Offline verification
-    let displayName = username;
-    if (window.OfficeDB && typeof OfficeDB.getUsers === 'function') {
-      const users = OfficeDB.getUsers();
-      const foundUser = users.find(u => u.username.toLowerCase() === username.toLowerCase());
-      if (foundUser) {
-        displayName = `${foundUser.firstName || ''} ${foundUser.lastName || ''}`.trim() || username;
+    // Local / Offline Verification
+    const cachedPin = localStorage.getItem('office_secure_pin');
+    if (cachedPin) {
+      if (cleanPin === cachedPin) {
+        return setSession(cleanUser, displayName, assignedRole);
+      } else {
+        throw new Error("Incorrect PIN. Please try again.");
       }
     }
 
-    if (username.toLowerCase() === 'gaurav') {
-      displayName = 'Gaurav Patil';
-    } else if (username.toLowerCase() === 'jebel') {
-      displayName = 'Jebelste Sj';
-    }
-
-    return setSession(username, displayName, assignedRole);
+    // First-time offline baseline: cache and permit
+    localStorage.setItem('office_secure_pin', cleanPin);
+    return setSession(cleanUser, displayName, assignedRole);
   }
 
   function setSession(username, name, role) {

@@ -72,36 +72,59 @@
   <!-- ========================================== -->
   <main class="main-content">
 
-    <!-- AUTHENTICATION VIEW -->
-    <section id="authSection" class="tab-pane active" style="margin-top: 5vh;">
-      <div class="container" style="max-width: 400px; padding: 22px 20px;">
-        <h2 style="text-align: center; margin: 0 0 16px 0; font-size: 19px; color: var(--primary);">Welcome Back</h2>
+    <!-- AUTHENTICATION VIEW (Welcoming Master Access Lock Screen) -->
+    <section id="authSection" class="tab-pane active auth-viewport">
+      <div class="auth-lock-card" id="authLockCard">
+        <div class="auth-card-glow"></div>
 
-        <div id="loginUserGroup" class="form-group" style="margin-bottom: 12px;">
-          <label>Select Your Name</label>
-          <select id="loginUserSelect" class="compact-input">
-            <option value="">Loading users...</option>
-          </select>
+        <div class="auth-avatar-wrap">
+          <div class="auth-avatar-circle">GP</div>
+          <div class="auth-status-online-dot" title="Workspace Protected"></div>
         </div>
 
-        <div id="loginAdminGroup" class="form-group hidden" style="margin-bottom: 12px;">
-          <label>Admin Username</label>
-          <input type="text" id="loginAdminUsername" class="compact-input" placeholder="e.g. gaurav">
+        <h2 class="auth-greeting-title" id="authGreetingTitle">Welcome Back, Gaurav!</h2>
+        <div class="auth-user-badge">
+          <i class="material-icons-round" style="font-size:13px; color:var(--primary);">verified_user</i>
+          <span>Gaurav Patil • Personal Workspace</span>
+        </div>
+        <p class="auth-instruction">Enter your 4-digit PIN to unlock</p>
+
+        <!-- 4-Digit Visual PIN Slot Indicators -->
+        <div class="pin-dots-container" id="pinDotsContainer" onclick="OfficeApp.focusPinInput()" title="Tap to enter PIN">
+          <span class="pin-dot-slot" id="pinDot0"></span>
+          <span class="pin-dot-slot" id="pinDot1"></span>
+          <span class="pin-dot-slot" id="pinDot2"></span>
+          <span class="pin-dot-slot" id="pinDot3"></span>
         </div>
 
-        <div class="form-group" style="margin-bottom: 16px;">
-          <label>4-Digit Security PIN</label>
-          <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" id="loginPin" class="compact-input"
-                 placeholder="••••" style="letter-spacing: 6px; font-size: 19px; text-align: center;"
-                 oninput="OfficeApp.checkAutoLogin(event)">
+        <!-- Hidden Native Input for Device Keyboard / Accessibility -->
+        <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" id="loginPin" class="hidden-pin-input"
+               autocomplete="one-time-code" oninput="OfficeApp.handlePinInput(this.value)">
+
+        <!-- Interactive Numeric Keypad for 1-Tap Mobile Access -->
+        <div class="auth-keypad">
+          <button type="button" class="keypad-btn" onclick="OfficeApp.handleKeypadPress('1')">1</button>
+          <button type="button" class="keypad-btn" onclick="OfficeApp.handleKeypadPress('2')">2</button>
+          <button type="button" class="keypad-btn" onclick="OfficeApp.handleKeypadPress('3')">3</button>
+          <button type="button" class="keypad-btn" onclick="OfficeApp.handleKeypadPress('4')">4</button>
+          <button type="button" class="keypad-btn" onclick="OfficeApp.handleKeypadPress('5')">5</button>
+          <button type="button" class="keypad-btn" onclick="OfficeApp.handleKeypadPress('6')">6</button>
+          <button type="button" class="keypad-btn" onclick="OfficeApp.handleKeypadPress('7')">7</button>
+          <button type="button" class="keypad-btn" onclick="OfficeApp.handleKeypadPress('8')">8</button>
+          <button type="button" class="keypad-btn" onclick="OfficeApp.handleKeypadPress('9')">9</button>
+          <button type="button" class="keypad-btn btn-action" onclick="OfficeApp.handleKeypadPress('clear')">Clear</button>
+          <button type="button" class="keypad-btn" onclick="OfficeApp.handleKeypadPress('0')">0</button>
+          <button type="button" class="keypad-btn btn-action" onclick="OfficeApp.handleKeypadPress('backspace')" title="Delete digit">
+            <i class="material-icons-round" style="font-size:18px;">backspace</i>
+          </button>
         </div>
 
-        <button class="btn-submit" id="btnLogin" onclick="OfficeApp.handleLogin()">Sign In</button>
+        <div id="authMsg" class="status-msg" style="min-height: 18px; margin-top: 2px;"></div>
 
-        <div style="text-align: center; margin-top: 14px; font-size: 12px; color: var(--text-muted);">
-          <span id="toggleAdminBtn" style="color:var(--primary); font-weight:700; cursor:pointer;" onclick="OfficeApp.toggleAdminMode()">Admin Login?</span>
+        <div class="auth-session-footer">
+          <i class="material-icons-round" style="font-size:12px; color:var(--text-muted);">lock</i>
+          <span>Secure device session • Stays active until you sign out</span>
         </div>
-        <div id="authMsg" class="status-msg"></div>
       </div>
     </section>
 
@@ -301,44 +324,6 @@
         </div>
       </section>
 
-      <!-- ========================================== -->
-      <!-- TAB 4: ADMIN ALL LOGS                      -->
-      <!-- ========================================== -->
-      <section id="tab-admin" class="tab-pane">
-        <div class="container" style="max-height: calc(100dvh - 120px); display:flex; flex-direction:column;">
-          <div class="table-header-bar">
-            <div>
-              <h3 style="display:inline; margin-right:6px;">Organization Logs</h3>
-            </div>
-            <div style="display:flex; gap:6px;">
-              <select id="adminUserFilter" class="compact-input" style="height:32px; font-size:11px; width:auto;" onchange="OfficeUI.renderActiveView()">
-                <option value="all">All Employees</option>
-              </select>
-              <button class="action-btn" onclick="OfficeDB.exportCSVBackup()">
-                <i class="material-icons-round" style="font-size:13px; vertical-align:middle;">download</i> CSV
-              </button>
-            </div>
-          </div>
-
-          <div class="table-container">
-            <table>
-              <thead>
-                <tr>
-                  <th>User</th>
-                  <th>Date</th>
-                  <th>Status</th>
-                  <th>In</th>
-                  <th>Out</th>
-                  <th>Duration</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody id="adminTableBody"></tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
     </div>
   </main>
 
@@ -358,10 +343,6 @@
       <i class="material-icons-round">insights</i>
       <span>Insights</span>
     </button>
-    <button class="nav-item hidden" id="nav-admin" onclick="OfficeUI.switchTab('admin')">
-      <i class="material-icons-round">admin_panel_settings</i>
-      <span>Admin</span>
-    </button>
   </nav>
 
   <!-- ========================================== -->
@@ -374,8 +355,8 @@
       <div class="drawer-user-header">
         <div class="drawer-avatar-badge" id="drawerAvatarBadge">G</div>
         <div class="drawer-user-meta">
-          <div class="drawer-user-fullname" id="drawerUserName">Gaurav</div>
-          <div class="drawer-user-sub" id="drawerUserSub">Employee • Active Shift Ready</div>
+          <div class="drawer-user-fullname" id="drawerUserName">Gaurav Patil</div>
+          <div class="drawer-user-sub" id="drawerUserSub">Personal Workspace • Protected</div>
         </div>
         <button class="drawer-close-circle" onclick="OfficeUI.closeControlDrawer()" title="Close Menu">
           <i class="material-icons-round">close</i>
@@ -416,14 +397,14 @@
           </div>
         </button>
 
-        <!-- Sign Out -->
+        <!-- Sign Out / Lock App -->
         <button class="drawer-tile tile-danger" onclick="OfficeUI.closeControlDrawer(); OfficeAuth.logout();">
           <div class="drawer-tile-icon bg-rose">
-            <i class="material-icons-round">logout</i>
+            <i class="material-icons-round">lock</i>
           </div>
           <div class="drawer-tile-content">
-            <span class="drawer-tile-title">Sign Out</span>
-            <span class="drawer-tile-desc">Switch Account</span>
+            <span class="drawer-tile-title">Lock App</span>
+            <span class="drawer-tile-desc">Require PIN to Re-enter</span>
           </div>
         </button>
       </div>

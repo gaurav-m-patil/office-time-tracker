@@ -1382,10 +1382,10 @@ window.OfficeUI = (function() {
     const themeDesc = document.getElementById('drawerThemeDesc');
     const themeIcon = document.getElementById('drawerThemeIcon');
 
-    const firstLetter = (session.name || session.username || 'U')[0].toUpperCase();
+    const firstLetter = (session.name || session.username || 'G')[0].toUpperCase();
     if (avatar) avatar.innerText = firstLetter;
-    if (nameEl) nameEl.innerText = session.name || session.username;
-    if (subEl) subEl.innerText = `${session.role === 'Admin' ? 'Administrator' : 'Employee'} • Cloud Connected`;
+    if (nameEl) nameEl.innerText = session.name || "Gaurav Patil";
+    if (subEl) subEl.innerText = `Personal Workspace • Cloud Protected`;
 
     const isDark = document.body.classList.contains('dark-mode');
     if (themeDesc) themeDesc.innerText = isDark ? 'Dark Mode (Active)' : 'Light Mode (Active)';

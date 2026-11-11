@@ -11,24 +11,6 @@
                      "hours":  0
                  },
                  {
-                     "logId":  "478fd666-86aa-4600-8838-e00bd5899771",
-                     "username":  "Jebel",
-                     "date":  "2026-09-09",
-                     "status":  "Exception",
-                     "inTime":  "",
-                     "outTime":  "",
-                     "hours":  0
-                 },
-                 {
-                     "logId":  "7aca281f-5da6-4e11-b75e-63afbab3e971",
-                     "username":  "Jebel",
-                     "date":  "2026-09-10",
-                     "status":  "Exception",
-                     "inTime":  "",
-                     "outTime":  "",
-                     "hours":  0
-                 },
-                 {
                      "logId":  "8e1476db-e479-4df2-85cd-ef720482fd81",
                      "username":  "gaurav",
                      "date":  "2026-07-01",

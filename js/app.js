@@ -32,46 +32,69 @@ window.OfficeApp = (function() {
     OfficeUI.hideSplashScreen();
   });
 
+  let currentPinStr = '';
+
   function showDashboard(session) {
     document.getElementById('authSection').classList.add('hidden');
     document.getElementById('dashboardSection').classList.remove('hidden');
     document.getElementById('appBottomNav').classList.remove('hidden');
 
     const nameEl = document.getElementById('topbarUserName');
-    if (nameEl) nameEl.innerText = session.name || session.username;
+    if (nameEl) nameEl.innerText = session.name || "Gaurav";
 
     const avatarLetter = document.getElementById('topbarAvatarLetter');
     if (avatarLetter) {
-      avatarLetter.innerText = (session.name || session.username || 'U')[0].toUpperCase();
+      avatarLetter.innerText = "G";
     }
 
     const roleBadge = document.getElementById('topbarUserRole');
     if (roleBadge) {
-      if (session.role === 'Admin') {
-        roleBadge.innerText = 'Admin';
-        roleBadge.classList.remove('hidden');
-      } else {
-        roleBadge.classList.add('hidden'); // Strictly hide in user mode
-      }
+      roleBadge.classList.add('hidden');
     }
 
     const adminNav = document.getElementById('nav-admin');
-    const historyNav = document.getElementById('nav-history');
-    const insightsNav = document.getElementById('nav-insights');
+    if (adminNav) adminNav.classList.add('hidden');
 
-    // Role-based Navigation enforcement
-    if (session.role === 'Admin') {
-      if (adminNav) adminNav.classList.remove('hidden');
-      if (historyNav) historyNav.classList.add('hidden');
-      if (insightsNav) insightsNav.classList.add('hidden');
-      OfficeUI.init();
-      OfficeUI.switchTab('admin');
-    } else {
-      if (adminNav) adminNav.classList.add('hidden'); // Strictly hidden for standard users
-      if (historyNav) historyNav.classList.remove('hidden');
-      if (insightsNav) insightsNav.classList.remove('hidden');
-      OfficeUI.init();
-      OfficeUI.switchTab('record');
+    const historyNav = document.getElementById('nav-history');
+    if (historyNav) historyNav.classList.remove('hidden');
+
+    const insightsNav = document.getElementById('nav-insights');
+    if (insightsNav) insightsNav.classList.remove('hidden');
+
+    OfficeUI.init();
+    OfficeUI.switchTab('record');
+  }
+
+  function updateAuthGreeting() {
+    const title = document.getElementById('authGreetingTitle');
+    if (!title) return;
+    const hour = new Date().getHours();
+    const greeting = hour < 12 ? 'Good Morning, Gaurav!' : (hour < 17 ? 'Good Afternoon, Gaurav!' : 'Good Evening, Gaurav!');
+    title.innerText = greeting;
+  }
+
+  function resetPinDisplay() {
+    currentPinStr = '';
+    for (let i = 0; i < 4; i++) {
+      const dot = document.getElementById(`pinDot${i}`);
+      if (dot) dot.classList.remove('filled');
+    }
+    const pinInput = document.getElementById('loginPin');
+    if (pinInput) pinInput.value = '';
+    const msg = document.getElementById('authMsg');
+    if (msg) {
+      msg.innerText = '';
+      msg.style.color = '';
+    }
+  }
+
+  function updateDotsUI() {
+    for (let i = 0; i < 4; i++) {
+      const dot = document.getElementById(`pinDot${i}`);
+      if (dot) {
+        if (i < currentPinStr.length) dot.classList.add('filled');
+        else dot.classList.remove('filled');
+      }
     }
   }
 
@@ -80,82 +103,94 @@ window.OfficeApp = (function() {
     document.getElementById('dashboardSection').classList.add('hidden');
     document.getElementById('appBottomNav').classList.add('hidden');
 
-    // Populate login users dropdown
-    const select = document.getElementById('loginUserSelect');
-    if (select) {
-      const users = OfficeDB.getUsers();
-      select.innerHTML = '<option value="">Select your name...</option>';
-      users.forEach(u => {
-        const opt = document.createElement('option');
-        opt.value = u.username;
-        opt.innerText = `${u.firstName || ''} ${u.lastName || ''}`.trim() || u.username;
-        select.appendChild(opt);
-      });
-    }
+    updateAuthGreeting();
+    resetPinDisplay();
   }
 
-  // Handle Login
-  async function handleLogin() {
-    const userSelect = document.getElementById('loginUserSelect');
-    const adminUserInput = document.getElementById('loginAdminUsername');
+  function focusPinInput() {
     const pinInput = document.getElementById('loginPin');
+    if (pinInput) pinInput.focus();
+  }
+
+  async function handleKeypadPress(action) {
+    if (window.OfficeShifts && typeof OfficeShifts.triggerHaptic === 'function') {
+      OfficeShifts.triggerHaptic();
+    }
     const msg = document.getElementById('authMsg');
+    if (msg) msg.innerText = '';
 
-    const isAdminMode = !document.getElementById('loginAdminGroup').classList.contains('hidden');
-    const username = isAdminMode ? adminUserInput.value.trim() : userSelect.value;
-    const pin = pinInput.value.trim();
+    if (action === 'clear') {
+      resetPinDisplay();
+      return;
+    }
 
-    if (!username || !pin) {
-      if (msg) {
-        msg.innerText = "Please select your name and enter 4-digit PIN.";
-        msg.style.color = "var(--status-noshow)";
+    if (action === 'backspace') {
+      if (currentPinStr.length > 0) {
+        currentPinStr = currentPinStr.slice(0, -1);
+        updateDotsUI();
       }
       return;
     }
 
-    try {
-      const btn = document.getElementById('btnLogin');
-      if (btn) { btn.innerText = "Verifying..."; btn.disabled = true; }
+    if (currentPinStr.length < 4 && /^[0-9]$/.test(action)) {
+      currentPinStr += action;
+      updateDotsUI();
 
-      const session = await OfficeAuth.login(username, pin, isAdminMode);
-      showDashboard(session);
-      OfficeUI.showToast(`Welcome back, ${session.name}!`, 'success');
-    } catch (err) {
-      if (msg) {
-        msg.innerText = err.message || "Invalid credentials.";
-        msg.style.color = "var(--status-noshow)";
+      if (currentPinStr.length === 4) {
+        await executePinLogin(currentPinStr);
       }
-      pinInput.value = "";
-    } finally {
-      const btn = document.getElementById('btnLogin');
-      if (btn) { btn.innerText = "Sign In"; btn.disabled = false; }
     }
   }
 
-  function checkAutoLogin(e) {
-    const pinField = document.getElementById('loginPin');
-    if (pinField && pinField.value.length === 4) {
-      handleLogin();
+  async function handlePinInput(val) {
+    const clean = (val || '').replace(/[^0-9]/g, '').substring(0, 4);
+    currentPinStr = clean;
+    updateDotsUI();
+
+    if (currentPinStr.length === 4) {
+      await executePinLogin(currentPinStr);
     }
   }
 
-  function toggleAdminMode() {
-    const userGroup = document.getElementById('loginUserGroup');
-    const adminGroup = document.getElementById('loginAdminGroup');
-    const toggleBtn = document.getElementById('toggleAdminBtn');
+  async function executePinLogin(pin) {
+    const msg = document.getElementById('authMsg');
+    const card = document.getElementById('authLockCard');
 
-    const isCurrentlyAdmin = !adminGroup.classList.contains('hidden');
-    if (isCurrentlyAdmin) {
-      adminGroup.classList.add('hidden');
-      userGroup.classList.remove('hidden');
-      toggleBtn.innerText = "Admin Login?";
-    } else {
-      adminGroup.classList.remove('hidden');
-      userGroup.classList.add('hidden');
-      toggleBtn.innerText = "Employee Login?";
+    if (msg) {
+      msg.innerText = 'Verifying security PIN...';
+      msg.style.color = 'var(--primary)';
     }
-    document.getElementById('loginPin').value = "";
+
+    try {
+      const session = await OfficeAuth.login('gaurav', pin);
+      showDashboard(session);
+      OfficeUI.showToast(`Welcome back, Gaurav!`, 'success');
+    } catch (err) {
+      if (card) {
+        card.classList.add('shake');
+        setTimeout(() => card.classList.remove('shake'), 400);
+      }
+      if (msg) {
+        msg.innerText = err.message || 'Incorrect PIN. Please try again.';
+        msg.style.color = 'var(--status-noshow)';
+      }
+      resetPinDisplay();
+    }
   }
+
+  // Keyboard shortcut listener for desktop / laptop entry
+  window.addEventListener('keydown', (e) => {
+    const authSec = document.getElementById('authSection');
+    if (!authSec || authSec.classList.contains('hidden')) return;
+
+    if (e.key >= '0' && e.key <= '9') {
+      handleKeypadPress(e.key);
+    } else if (e.key === 'Backspace') {
+      handleKeypadPress('backspace');
+    } else if (e.key === 'Escape') {
+      handleKeypadPress('clear');
+    }
+  });
 
   function hardRefresh() {
     if (confirm("Reload fresh version and clear local cache? Data is safely preserved.")) {
@@ -169,9 +204,11 @@ window.OfficeApp = (function() {
   }
 
   return {
-    handleLogin,
-    checkAutoLogin,
-    toggleAdminMode,
+    handleKeypadPress,
+    handlePinInput,
+    focusPinInput,
+    executePinLogin,
+    resetPinDisplay,
     hardRefresh
   };
 })();

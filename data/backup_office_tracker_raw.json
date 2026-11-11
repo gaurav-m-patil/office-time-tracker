@@ -4,11 +4,6 @@
                       "username":  "gaurav",
                       "firstName":  "Gaurav",
                       "lastName":  "Patil"
-                  },
-                  {
-                      "username":  "Jebel",
-                      "firstName":  "Jebelste",
-                      "lastName":  "Sj"
                   }
               ],
     "logs":  [
@@ -16,24 +11,6 @@
                      "logId":  "98e0fda3-4aee-46f2-b828-c0c93f6a68b6",
                      "username":  "gaurav",
                      "date":  "2026-09-01",
-                     "status":  "Exception",
-                     "inTime":  "",
-                     "outTime":  "",
-                     "hours":  0
-                 },
-                 {
-                     "logId":  "478fd666-86aa-4600-8838-e00bd5899771",
-                     "username":  "Jebel",
-                     "date":  "2026-09-09",
-                     "status":  "Exception",
-                     "inTime":  "",
-                     "outTime":  "",
-                     "hours":  0
-                 },
-                 {
-                     "logId":  "7aca281f-5da6-4e11-b75e-63afbab3e971",
-                     "username":  "Jebel",
-                     "date":  "2026-09-10",
                      "status":  "Exception",
                      "inTime":  "",
                      "outTime":  "",

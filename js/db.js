@@ -86,6 +86,17 @@ window.OfficeDB = (function() {
       }
       firestoreDb = firebase.firestore();
       firestoreDb.enablePersistence({ synchronizeTabs: true }).catch(() => {});
+
+      // Background purge of legacy Jebel records from Firestore
+      try {
+        const logsCol = firestoreDb.collection(OfficeConfig.FIRESTORE_COLLECTIONS.LOGS);
+        logsCol.doc("478fd666-86aa-4600-8838-e00bd5899771").delete().catch(() => {});
+        logsCol.doc("7aca281f-5da6-4e11-b75e-63afbab3e971").delete().catch(() => {});
+        const usersCol = firestoreDb.collection(OfficeConfig.FIRESTORE_COLLECTIONS.USERS);
+        usersCol.doc("Jebel").delete().catch(() => {});
+        usersCol.doc("jebel").delete().catch(() => {});
+      } catch (e) {}
+
       return true;
     } catch (err) {
       console.warn("Firestore init notice:", err.message);
@@ -138,14 +149,30 @@ window.OfficeDB = (function() {
       }
     }
 
-    // 4. Ensure default users exist
+    // 4. Ensure default user exists (Gaurav Patil only)
+    allUsers = allUsers.filter(u => u.username && u.username.toLowerCase() !== 'jebel' && u.username.toLowerCase() !== 'jebelste');
+    allLogs = allLogs.filter(l => l.username && l.username.toLowerCase() !== 'jebel' && l.username.toLowerCase() !== 'jebelste');
+
     if (allUsers.length === 0) {
       const defaultUsers = [
-        { username: "gaurav", firstName: "Gaurav", lastName: "Patil", role: "Admin" },
-        { username: "Jebel", firstName: "Jebelste", lastName: "Sj", role: "User" }
+        { username: "gaurav", firstName: "Gaurav", lastName: "Patil", role: "User" }
       ];
       await bulkInsertUsers(defaultUsers);
       allUsers = defaultUsers;
+    }
+
+    // Explicitly purge any legacy Jebel records from IndexedDB
+    try {
+      if (dbInstance) {
+        const delTx = dbInstance.transaction([STORE_USERS, STORE_LOGS], "readwrite");
+        delTx.objectStore(STORE_USERS).delete("Jebel");
+        delTx.objectStore(STORE_USERS).delete("jebel");
+        delTx.objectStore(STORE_USERS).delete("jebelste");
+        delTx.objectStore(STORE_LOGS).delete("478fd666-86aa-4600-8838-e00bd5899771");
+        delTx.objectStore(STORE_LOGS).delete("7aca281f-5da6-4e11-b75e-63afbab3e971");
+      }
+    } catch (e) {
+      console.warn("Legacy purge notice:", e);
     }
 
     inMemoryLogs = allLogs.sort((a, b) => new Date(b.date) - new Date(a.date));
