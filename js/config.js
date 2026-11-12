@@ -6,10 +6,11 @@ window.OfficeConfig = {
   APP_NAME: "Enterprise Time Tracker",
   APP_VERSION: "2.0.0",
 
-  // Live Google Apps Script Endpoint (Directly bound to live Google Sheet)
-  WEB_APP_URL: "https://script.google.com/macros/s/AKfycbwT77gaKXuTfG6sqef61rgXtZaDqUagDfRX9w4c6Hx-y7ldEKmveTZrwpVAtBXIS60vfw/exec",
+  // Pure Cloud Backend: Firebase Firestore (Exclusive Cloud Database)
+  ACTIVE_BACKEND: "firebase",
+  LEGACY_SHEETS_DEPRECATED: true,
 
-  // Local Seed Data Path (guarantees 0-latency instant bootstrap of all 134 historical records)
+  // Local Seed Data Path (guarantees 0-latency instant bootstrap of all 137 historical records)
   SEED_DATA_URL: "./data/seed-data.json",
 
   // Active Firebase Configuration (Spark Free-Tier Project)

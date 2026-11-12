@@ -8,9 +8,65 @@ window.OfficeShifts = (function() {
   let tickerTimer = null;
   let listeners = [];
 
+  let shiftListenerUnsub = null;
+
   function init() {
     loadActiveShift();
     startTicker();
+    setupShiftRealtimeListener();
+  }
+
+  // Cross-Device Real-Time Active Shift Listener
+  function setupShiftRealtimeListener() {
+    if (shiftListenerUnsub) return;
+    try {
+      const fb = window.OfficeDB && typeof OfficeDB.getFirestoreInstance === 'function' ? OfficeDB.getFirestoreInstance() : null;
+      if (!fb) return;
+      const currentUser = localStorage.getItem(OfficeConfig.STORAGE_KEYS.CURRENT_USER) || "gaurav";
+
+      shiftListenerUnsub = fb.collection(OfficeConfig.FIRESTORE_COLLECTIONS.SHIFTS).doc(currentUser)
+        .onSnapshot((doc) => {
+          if (!doc.exists) return;
+          const remoteShift = doc.data();
+          if (!remoteShift) return;
+
+          const today = getLocalDateStr();
+          if (remoteShift.todayDate === today) {
+            const hasChange = !activeShift || 
+              activeShift.status !== remoteShift.status ||
+              activeShift.clockInTimestamp !== remoteShift.clockInTimestamp ||
+              activeShift.breakMinutes !== remoteShift.breakMinutes;
+
+            if (hasChange) {
+              activeShift = { ...remoteShift };
+              if (activeShift.status === "CLOCKED_IN" || activeShift.status === "ON_BREAK") {
+                localStorage.setItem(OfficeConfig.STORAGE_KEYS.ACTIVE_SHIFT, JSON.stringify(activeShift));
+              } else {
+                localStorage.removeItem(OfficeConfig.STORAGE_KEYS.ACTIVE_SHIFT);
+              }
+              notify();
+            }
+          }
+        }, (err) => {
+          console.warn("Shift realtime sync notice:", err);
+        });
+    } catch (e) {
+      console.warn("Failed to attach shift realtime listener:", e);
+    }
+  }
+
+  async function syncShiftToCloud(shiftData) {
+    try {
+      const fb = window.OfficeDB && typeof OfficeDB.getFirestoreInstance === 'function' ? OfficeDB.getFirestoreInstance() : null;
+      if (!fb || !navigator.onLine) return;
+      const currentUser = localStorage.getItem(OfficeConfig.STORAGE_KEYS.CURRENT_USER) || "gaurav";
+      await fb.collection(OfficeConfig.FIRESTORE_COLLECTIONS.SHIFTS).doc(currentUser).set({
+        ...shiftData,
+        lastUpdated: Date.now()
+      }, { merge: true });
+    } catch (e) {
+      console.warn("Could not sync active shift to Firestore:", e);
+    }
   }
 
   function loadActiveShift() {
@@ -73,11 +129,12 @@ window.OfficeShifts = (function() {
   }
 
   function saveActiveShift() {
-    if (activeShift && activeShift.status === "CLOCKED_IN") {
+    if (activeShift && (activeShift.status === "CLOCKED_IN" || activeShift.status === "ON_BREAK")) {
       localStorage.setItem(OfficeConfig.STORAGE_KEYS.ACTIVE_SHIFT, JSON.stringify(activeShift));
     } else {
       localStorage.removeItem(OfficeConfig.STORAGE_KEYS.ACTIVE_SHIFT);
     }
+    syncShiftToCloud(activeShift);
     notify();
   }
 

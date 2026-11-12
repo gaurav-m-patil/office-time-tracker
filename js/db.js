@@ -76,6 +76,8 @@ window.OfficeDB = (function() {
     }
   }
 
+  let firestoreListenerUnsub = null;
+
   function initFirebase(config) {
     if (!config || !config.projectId || typeof firebase === 'undefined') {
       return false;
@@ -109,15 +111,61 @@ window.OfficeDB = (function() {
     }
   }
 
-  // Bootstrap Engine: Guarantees zero data loss and instant boot
+  // Real-time Firestore Multi-Device Sync Listener
+  function setupFirestoreRealtimeListener() {
+    if (!firestoreDb || firestoreListenerUnsub) return;
+    try {
+      firestoreListenerUnsub = firestoreDb.collection(OfficeConfig.FIRESTORE_COLLECTIONS.LOGS)
+        .onSnapshot((snapshot) => {
+          let hasModifications = false;
+          const logMap = new Map(inMemoryLogs.map(l => [l.logId, l]));
+
+          snapshot.docChanges().forEach((change) => {
+            const data = change.doc.data();
+            if (!data || !data.logId) return;
+
+            // Strict purge of legacy Jebel data
+            const uName = (data.username || "").toLowerCase();
+            if (uName === "jebel" || uName === "jebelste") return;
+
+            if (change.type === "added" || change.type === "modified") {
+              logMap.set(data.logId, data);
+              hasModifications = true;
+            } else if (change.type === "removed") {
+              logMap.delete(data.logId);
+              hasModifications = true;
+            }
+          });
+
+          if (hasModifications) {
+            inMemoryLogs = Array.from(logMap.values())
+              .sort((a, b) => new Date(b.date) - new Date(a.date));
+            bulkInsertLogs(inMemoryLogs).catch(() => {});
+            notifyListeners({ type: "cloud_sync", count: inMemoryLogs.length, source: "firestore_realtime" });
+          }
+        }, (err) => {
+          console.warn("Firestore real-time listener notice:", err);
+        });
+    } catch (e) {
+      console.warn("Failed to attach Firestore real-time listener:", e);
+    }
+  }
+
+  // Bootstrap Engine: Guarantees zero data loss, instant boot, and real-time cloud sync
   async function init() {
     await openDatabase();
 
-    // 1. Try to load existing records from IndexedDB
+    // 1. Initialize Firebase immediately
+    const fbConfig = getFirebaseConfig();
+    if (fbConfig && fbConfig.projectId) {
+      initFirebase(fbConfig);
+    }
+
+    // 2. Try to load existing records from IndexedDB
     let allLogs = await getAllLogsFromIDB();
     let allUsers = await getAllUsersFromIDB();
 
-    // 2. Check legacy localStorage for existing logs to migrate if empty
+    // 3. Check legacy localStorage for existing logs to migrate if empty
     if (allLogs.length === 0) {
       const legacyLogsStr = localStorage.getItem("tt_logs");
       if (legacyLogsStr) {
@@ -132,7 +180,7 @@ window.OfficeDB = (function() {
       }
     }
 
-    // 3. If still empty, load from seed-data.json (134 records)
+    // 4. If still empty, load from seed-data.json (137 records)
     if (allLogs.length === 0 && OfficeConfig.SEED_DATA_URL) {
       try {
         console.log("Hydrating initial database from seed-data.json...");
@@ -149,13 +197,13 @@ window.OfficeDB = (function() {
       }
     }
 
-    // 4. Ensure default user exists (Gaurav Patil only)
+    // 5. Ensure default user exists (Gaurav Patil only)
     allUsers = allUsers.filter(u => u.username && u.username.toLowerCase() !== 'jebel' && u.username.toLowerCase() !== 'jebelste');
     allLogs = allLogs.filter(l => l.username && l.username.toLowerCase() !== 'jebel' && l.username.toLowerCase() !== 'jebelste');
 
     if (allUsers.length === 0) {
       const defaultUsers = [
-        { username: "gaurav", firstName: "Gaurav", lastName: "Patil", role: "User" }
+        { username: "gaurav", firstName: "Gaurav", lastName: "Patil", role: "Admin" }
       ];
       await bulkInsertUsers(defaultUsers);
       allUsers = defaultUsers;
@@ -178,16 +226,23 @@ window.OfficeDB = (function() {
     inMemoryLogs = allLogs.sort((a, b) => new Date(b.date) - new Date(a.date));
     inMemoryUsers = allUsers;
 
-    // Initialize Firebase in background if configured
-    const fbConfig = getFirebaseConfig();
-    if (fbConfig && fbConfig.projectId) {
-      initFirebase(fbConfig);
-    }
+    // 6. Connect Real-time Firestore Listener
+    setupFirestoreRealtimeListener();
 
     notifyListeners({ type: "ready", count: inMemoryLogs.length });
 
-    // Process any pending offline mutations
-    processOfflineQueue();
+    // 7. Trigger initial cloud sync to fetch any records added from other devices
+    if (navigator.onLine) {
+      syncWithCloud().catch(() => {});
+      processOfflineQueue();
+    }
+
+    // 8. Auto-sync on network reconnect
+    window.addEventListener('online', () => {
+      console.log("[OfficeDB] Network reconnected - syncing with cloud...");
+      processOfflineQueue();
+      syncWithCloud();
+    });
 
     return inMemoryLogs;
   }
@@ -254,7 +309,7 @@ window.OfficeDB = (function() {
     return inMemoryLogs.find(l => l.logId === logId) || null;
   }
 
-  // Save / Update Attendance Log (Instant Local Optimistic UI)
+  // Save / Update Attendance Log (Instant Local Optimistic UI + Direct Firestore Push)
   async function saveLog(logData, skipSync = false) {
     if (!logData.logId) {
       logData.logId = 'log_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
@@ -278,12 +333,26 @@ window.OfficeDB = (function() {
 
     notifyListeners({ type: "save", log: logData });
 
-    // 3. Queue cloud sync
+    // 3. Immediate Cloud Push to Firestore
     if (!skipSync) {
-      queueMutation({
-        type: existingIdx >= 0 ? "updateLog" : "logTime",
-        payload: logData
-      });
+      if (navigator.onLine && firestoreDb) {
+        try {
+          await firestoreDb.collection(OfficeConfig.FIRESTORE_COLLECTIONS.LOGS)
+            .doc(logData.logId)
+            .set(logData, { merge: true });
+        } catch (err) {
+          console.warn("Direct Firestore write paused, queuing locally:", err);
+          queueMutation({
+            type: existingIdx >= 0 ? "updateLog" : "logTime",
+            payload: logData
+          });
+        }
+      } else {
+        queueMutation({
+          type: existingIdx >= 0 ? "updateLog" : "logTime",
+          payload: logData
+        });
+      }
     }
 
     return logData;
@@ -301,10 +370,21 @@ window.OfficeDB = (function() {
 
     notifyListeners({ type: "delete", logId });
 
-    queueMutation({
-      type: "deleteLog",
-      payload: { logId }
-    });
+    if (navigator.onLine && firestoreDb) {
+      try {
+        await firestoreDb.collection(OfficeConfig.FIRESTORE_COLLECTIONS.LOGS).doc(logId).delete();
+      } catch (err) {
+        queueMutation({
+          type: "deleteLog",
+          payload: { logId }
+        });
+      }
+    } else {
+      queueMutation({
+        type: "deleteLog",
+        payload: { logId }
+      });
+    }
 
     return true;
   }
@@ -324,7 +404,7 @@ window.OfficeDB = (function() {
 
   async function processOfflineQueue() {
     if (!navigator.onLine || isSyncing) return;
-    if (!dbInstance) return;
+    if (!dbInstance || !firestoreDb) return;
 
     const queueItems = await new Promise((resolve) => {
       const tx = dbInstance.transaction(STORE_QUEUE, "readonly");
@@ -338,15 +418,9 @@ window.OfficeDB = (function() {
     isSyncing = true;
     notifyListeners({ type: "sync_start", queueCount: queueItems.length });
 
-    const backend = getActiveBackend();
-
     for (const item of queueItems) {
       try {
-        if (backend === 'firebase' && firestoreDb) {
-          await syncItemToFirestore(item);
-        } else {
-          await syncItemToAppsScript(item);
-        }
+        await syncItemToFirestore(item);
 
         // Remove item from IndexedDB queue
         await new Promise((resolve) => {
@@ -364,18 +438,6 @@ window.OfficeDB = (function() {
     notifyListeners({ type: "sync_complete" });
   }
 
-  async function syncItemToAppsScript(item) {
-    let action = item.type;
-    let payload = { action, ...item.payload };
-
-    const res = await fetch(OfficeConfig.WEB_APP_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
-    return await res.json();
-  }
-
   async function syncItemToFirestore(item) {
     if (!firestoreDb) return;
     const col = firestoreDb.collection(OfficeConfig.FIRESTORE_COLLECTIONS.LOGS);
@@ -386,33 +448,34 @@ window.OfficeDB = (function() {
     }
   }
 
-  // Force Cloud Sync (Pulls latest from Apps Script or Firestore)
+  // Force Cloud Sync (Pulls latest from Firestore)
   async function syncWithCloud() {
-    if (!navigator.onLine) return;
+    if (!navigator.onLine || !firestoreDb) return;
     isSyncing = true;
     notifyListeners({ type: "sync_start" });
 
     try {
-      const backend = getActiveBackend();
-      if (backend === 'firebase' && firestoreDb) {
-        const snap = await firestoreDb.collection(OfficeConfig.FIRESTORE_COLLECTIONS.LOGS).get();
-        const firestoreLogs = [];
-        snap.forEach(doc => firestoreLogs.push(doc.data()));
-        if (firestoreLogs.length > 0) {
-          await bulkInsertLogs(firestoreLogs);
-          inMemoryLogs = firestoreLogs.sort((a, b) => new Date(b.date) - new Date(a.date));
+      const snap = await firestoreDb.collection(OfficeConfig.FIRESTORE_COLLECTIONS.LOGS).get();
+      const firestoreLogs = [];
+      snap.forEach(doc => {
+        const d = doc.data();
+        const u = (d.username || "").toLowerCase();
+        if (u !== "jebel" && u !== "jebelste") {
+          firestoreLogs.push(d);
         }
-      } else {
-        const res = await fetch(OfficeConfig.WEB_APP_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "getAllData" })
+      });
+
+      if (firestoreLogs.length > 0) {
+        // Merge with any in-memory records
+        const map = new Map(firestoreLogs.map(l => [l.logId, l]));
+        inMemoryLogs.forEach(l => {
+          if (!map.has(l.logId)) map.set(l.logId, l);
         });
-        const data = await res.json();
-        if (data && data.success && Array.isArray(data.logs) && data.logs.length > 0) {
-          await bulkInsertLogs(data.logs);
-          inMemoryLogs = data.logs.sort((a, b) => new Date(b.date) - new Date(a.date));
-        }
+
+        inMemoryLogs = Array.from(map.values())
+          .sort((a, b) => new Date(b.date) - new Date(a.date));
+        
+        await bulkInsertLogs(inMemoryLogs);
       }
     } catch (e) {
       console.warn("Cloud sync error:", e);
@@ -532,6 +595,7 @@ window.OfficeDB = (function() {
     setActiveBackend,
     getFirebaseConfig,
     initFirebase,
+    getFirestoreInstance: () => firestoreDb,
     subscribe
   };
 })();

@@ -24,6 +24,10 @@ window.OfficeApp = (function() {
     const session = OfficeAuth.init();
     if (session) {
       showDashboard(session);
+      // Immediately pull fresh cloud updates from other devices
+      if (window.OfficeDB && typeof OfficeDB.syncWithCloud === 'function') {
+        OfficeDB.syncWithCloud().catch(() => {});
+      }
     } else {
       showAuthScreen();
     }
