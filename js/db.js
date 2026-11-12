@@ -111,6 +111,40 @@ window.OfficeDB = (function() {
     }
   }
 
+  // Strict Business Rule: One user can ONLY have ONE attendance record per date
+  function deduplicateLogList(logs) {
+    if (!Array.isArray(logs)) return { uniqueLogs: [], duplicateIds: [] };
+    const dateMap = new Map();
+    const duplicateIds = [];
+
+    logs.forEach(log => {
+      if (!log || !log.date) return;
+      const cleanUser = (log.username || 'gaurav').toLowerCase();
+      if (cleanUser === 'jebel' || cleanUser === 'jebelste') return;
+
+      const key = `${cleanUser}_${log.date}`;
+      if (!dateMap.has(key)) {
+        dateMap.set(key, log);
+      } else {
+        const existing = dateMap.get(key);
+        const hasExistingHours = (parseFloat(existing.hours) || 0) > 0 || (existing.inTime && existing.inTime.trim() !== "");
+        const hasNewHours = (parseFloat(log.hours) || 0) > 0 || (log.inTime && log.inTime.trim() !== "");
+
+        if (!hasExistingHours && hasNewHours) {
+          if (existing.logId && !duplicateIds.includes(existing.logId)) duplicateIds.push(existing.logId);
+          dateMap.set(key, log);
+        } else {
+          if (log.logId && !duplicateIds.includes(log.logId)) duplicateIds.push(log.logId);
+        }
+      }
+    });
+
+    return {
+      uniqueLogs: Array.from(dateMap.values()).sort((a, b) => new Date(b.date) - new Date(a.date)),
+      duplicateIds
+    };
+  }
+
   // Real-time Firestore Multi-Device Sync Listener
   function setupFirestoreRealtimeListener() {
     if (!firestoreDb || firestoreListenerUnsub) return;
@@ -138,9 +172,21 @@ window.OfficeDB = (function() {
           });
 
           if (hasModifications) {
-            inMemoryLogs = Array.from(logMap.values())
-              .sort((a, b) => new Date(b.date) - new Date(a.date));
+            const dedup = deduplicateLogList(Array.from(logMap.values()));
+            inMemoryLogs = dedup.uniqueLogs;
             bulkInsertLogs(inMemoryLogs).catch(() => {});
+
+            if (dedup.duplicateIds.length > 0) {
+              if (dbInstance) {
+                const tx = dbInstance.transaction(STORE_LOGS, "readwrite");
+                dedup.duplicateIds.forEach(id => tx.objectStore(STORE_LOGS).delete(id));
+              }
+              if (navigator.onLine && firestoreDb) {
+                const col = firestoreDb.collection(OfficeConfig.FIRESTORE_COLLECTIONS.LOGS);
+                dedup.duplicateIds.forEach(id => col.doc(id).delete().catch(() => {}));
+              }
+            }
+
             notifyListeners({ type: "cloud_sync", count: inMemoryLogs.length, source: "firestore_realtime" });
           }
         }, (err) => {
@@ -180,7 +226,7 @@ window.OfficeDB = (function() {
       }
     }
 
-    // 4. If still empty, load from seed-data.json (137 records)
+    // 4. If still empty, load from seed-data.json (135 records)
     if (allLogs.length === 0 && OfficeConfig.SEED_DATA_URL) {
       try {
         console.log("Hydrating initial database from seed-data.json...");
@@ -201,6 +247,10 @@ window.OfficeDB = (function() {
     allUsers = allUsers.filter(u => u.username && u.username.toLowerCase() !== 'jebel' && u.username.toLowerCase() !== 'jebelste');
     allLogs = allLogs.filter(l => l.username && l.username.toLowerCase() !== 'jebel' && l.username.toLowerCase() !== 'jebelste');
 
+    // Strict Date-Level Deduplication Pass: Enforces 1 record per date
+    const dedup = deduplicateLogList(allLogs);
+    allLogs = dedup.uniqueLogs;
+
     if (allUsers.length === 0) {
       const defaultUsers = [
         { username: "gaurav", firstName: "Gaurav", lastName: "Patil", role: "Admin" }
@@ -209,7 +259,7 @@ window.OfficeDB = (function() {
       allUsers = defaultUsers;
     }
 
-    // Explicitly purge any legacy Jebel records from IndexedDB
+    // Explicitly purge any legacy Jebel records or duplicate IDs from IndexedDB
     try {
       if (dbInstance) {
         const delTx = dbInstance.transaction([STORE_USERS, STORE_LOGS], "readwrite");
@@ -218,6 +268,7 @@ window.OfficeDB = (function() {
         delTx.objectStore(STORE_USERS).delete("jebelste");
         delTx.objectStore(STORE_LOGS).delete("478fd666-86aa-4600-8838-e00bd5899771");
         delTx.objectStore(STORE_LOGS).delete("7aca281f-5da6-4e11-b75e-63afbab3e971");
+        dedup.duplicateIds.forEach(id => delTx.objectStore(STORE_LOGS).delete(id));
       }
     } catch (e) {
       console.warn("Legacy purge notice:", e);
@@ -309,10 +360,38 @@ window.OfficeDB = (function() {
     return inMemoryLogs.find(l => l.logId === logId) || null;
   }
 
-  // Save / Update Attendance Log (Instant Local Optimistic UI + Direct Firestore Push)
+  // Save / Update Attendance Log (Instant Local Optimistic UI + Date-Uniqueness Guarantee + Direct Firestore Push)
   async function saveLog(logData, skipSync = false) {
+    const cleanUser = (logData.username || 'gaurav').toLowerCase();
+    logData.username = cleanUser;
+
+    // Strict Date-Uniqueness Enforcement: A user can only have ONE entry per date
+    const existingDateMatches = inMemoryLogs.filter(l => 
+      (l.username || 'gaurav').toLowerCase() === cleanUser && l.date === logData.date
+    );
+
+    let oldDuplicateIds = [];
+    if (existingDateMatches.length > 0) {
+      const primaryLog = existingDateMatches[0];
+      if (!logData.logId || logData.logId !== primaryLog.logId) {
+        if (logData.logId) {
+          oldDuplicateIds.push(primaryLog.logId);
+        } else {
+          logData.logId = primaryLog.logId;
+        }
+      }
+      existingDateMatches.slice(1).forEach(dup => {
+        if (!oldDuplicateIds.includes(dup.logId)) oldDuplicateIds.push(dup.logId);
+      });
+    }
+
     if (!logData.logId) {
       logData.logId = 'log_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    }
+
+    // Purge old duplicate IDs from inMemoryLogs
+    if (oldDuplicateIds.length > 0) {
+      inMemoryLogs = inMemoryLogs.filter(l => !oldDuplicateIds.includes(l.logId));
     }
 
     // 1. Update in-memory state
@@ -324,22 +403,26 @@ window.OfficeDB = (function() {
     }
     inMemoryLogs.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-    // 2. Commit to IndexedDB
+    // 2. Commit to IndexedDB (and purge obsolete duplicate IDs)
     await new Promise((resolve) => {
       const tx = dbInstance.transaction(STORE_LOGS, "readwrite");
-      tx.objectStore(STORE_LOGS).put(logData);
+      const store = tx.objectStore(STORE_LOGS);
+      oldDuplicateIds.forEach(oldId => store.delete(oldId));
+      store.put(logData);
       tx.oncomplete = () => resolve();
     });
 
     notifyListeners({ type: "save", log: logData });
 
-    // 3. Immediate Cloud Push to Firestore
+    // 3. Immediate Cloud Push to Firestore & Cloud Purge of Duplicates
     if (!skipSync) {
       if (navigator.onLine && firestoreDb) {
         try {
-          await firestoreDb.collection(OfficeConfig.FIRESTORE_COLLECTIONS.LOGS)
-            .doc(logData.logId)
-            .set(logData, { merge: true });
+          const col = firestoreDb.collection(OfficeConfig.FIRESTORE_COLLECTIONS.LOGS);
+          for (const oldId of oldDuplicateIds) {
+            await col.doc(oldId).delete().catch(() => {});
+          }
+          await col.doc(logData.logId).set(logData, { merge: true });
         } catch (err) {
           console.warn("Direct Firestore write paused, queuing locally:", err);
           queueMutation({
@@ -466,16 +549,24 @@ window.OfficeDB = (function() {
       });
 
       if (firestoreLogs.length > 0) {
-        // Merge with any in-memory records
-        const map = new Map(firestoreLogs.map(l => [l.logId, l]));
-        inMemoryLogs.forEach(l => {
-          if (!map.has(l.logId)) map.set(l.logId, l);
-        });
-
-        inMemoryLogs = Array.from(map.values())
-          .sort((a, b) => new Date(b.date) - new Date(a.date));
+        // Merge with any in-memory records and deduplicate
+        const merged = [...firestoreLogs, ...inMemoryLogs];
+        const dedup = deduplicateLogList(merged);
+        inMemoryLogs = dedup.uniqueLogs;
         
         await bulkInsertLogs(inMemoryLogs);
+
+        // Delete any redundant duplicate document IDs from IDB and Firestore
+        if (dedup.duplicateIds.length > 0) {
+          if (dbInstance) {
+            const tx = dbInstance.transaction(STORE_LOGS, "readwrite");
+            dedup.duplicateIds.forEach(id => tx.objectStore(STORE_LOGS).delete(id));
+          }
+          if (navigator.onLine && firestoreDb) {
+            const col = firestoreDb.collection(OfficeConfig.FIRESTORE_COLLECTIONS.LOGS);
+            dedup.duplicateIds.forEach(id => col.doc(id).delete().catch(() => {}));
+          }
+        }
       }
     } catch (e) {
       console.warn("Cloud sync error:", e);

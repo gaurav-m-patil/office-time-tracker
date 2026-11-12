@@ -186,7 +186,7 @@ window.OfficeShifts = (function() {
     // Check if an entry for today already exists in OfficeDB
     if (window.OfficeDB) {
       const existingLogs = OfficeDB.getLogs(currentUser);
-      let todayLog = existingLogs.find(l => l.date === today && l.username === currentUser);
+      let todayLog = existingLogs.find(l => l.date === today && (l.username || '').toLowerCase() === currentUser.toLowerCase());
 
       if (todayLog) {
         todayLog.status = "Present";
@@ -229,7 +229,7 @@ window.OfficeShifts = (function() {
 
     if (window.OfficeDB) {
       const existingLogs = OfficeDB.getLogs(currentUser);
-      let todayLog = existingLogs.find(l => l.date === date && l.username === currentUser);
+      let todayLog = existingLogs.find(l => l.date === date && (l.username || '').toLowerCase() === currentUser.toLowerCase());
 
       if (todayLog) {
         todayLog.status = "Present";

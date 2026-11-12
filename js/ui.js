@@ -695,8 +695,10 @@ window.OfficeUI = (function() {
       let endD = new Date(toDate);
       while (curr <= endD) {
         let loopDate = OfficeShifts.getLocalDateStr(curr);
+        const existingOnDate = OfficeDB.getLogs(user).find(l => l.date === loopDate);
+        const rangeTargetId = existingOnDate ? existingOnDate.logId : ('log_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5));
         await OfficeDB.saveLog({
-          logId: 'log_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+          logId: rangeTargetId,
           username: user,
           date: loopDate,
           status: status,
@@ -707,8 +709,9 @@ window.OfficeUI = (function() {
         curr.setDate(curr.getDate() + 1);
       }
     } else {
-      const existing = OfficeDB.getLogs(user).find(l => (logId && l.logId === logId) || (!logId && l.date === fromDate));
-      const targetId = logId || (existing ? existing.logId : ('log_' + Date.now()));
+      const userLogs = OfficeDB.getLogs(user);
+      const existing = userLogs.find(l => (logId && l.logId === logId) || l.date === fromDate);
+      const targetId = (existing ? existing.logId : null) || logId || ('log_' + Date.now());
       await OfficeDB.saveLog({
         logId: targetId,
         username: user,

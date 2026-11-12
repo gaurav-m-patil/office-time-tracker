@@ -21,15 +21,6 @@
         "logId":  "log_1794331292033",
         "username":  "gaurav",
         "date":  "2026-11-10",
-        "status":  "Present",
-        "inTime":  "07:34 AM",
-        "outTime":  "08:34 PM",
-        "hours":  13
-    },
-    {
-        "logId":  "log_1794385039769",
-        "username":  "gaurav",
-        "date":  "2026-11-10",
         "status":  "No Show",
         "inTime":  "",
         "outTime":  "",
@@ -37,15 +28,6 @@
     },
     {
         "logId":  "4192a3b9-a06b-4e06-ac0f-67b57a0fe1a5",
-        "username":  "gaurav",
-        "date":  "2026-11-09",
-        "status":  "Exception",
-        "inTime":  "",
-        "outTime":  "",
-        "hours":  0
-    },
-    {
-        "logId":  "log_1794332946081",
         "username":  "gaurav",
         "date":  "2026-11-09",
         "status":  "Exception",
