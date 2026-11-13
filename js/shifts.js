@@ -114,13 +114,28 @@ window.OfficeShifts = (function() {
           }
         }
       } else {
-        activeShift = {
-          status: "CLOCKED_OUT",
-          clockInTimestamp: null,
-          todayDate: today,
-          breakMinutes: 0,
-          lastDuration: todayLog ? todayLog.hours : null
-        };
+        // No active shift in localStorage. Check if today's log indicates an in-progress shift
+        if (todayLog && todayLog.status === 'Present' && todayLog.inTime && (!todayLog.outTime || todayLog.outTime.trim() === "")) {
+          const parsedTs = parseTimeToTimestamp(todayLog.inTime, today);
+          activeShift = {
+            status: "CLOCKED_IN",
+            clockInTimestamp: parsedTs || Date.now(),
+            inTime: todayLog.inTime,
+            todayDate: today,
+            username: currentUser,
+            breakMinutes: 0,
+            currentBreakStart: null
+          };
+          localStorage.setItem(OfficeConfig.STORAGE_KEYS.ACTIVE_SHIFT, JSON.stringify(activeShift));
+        } else {
+          activeShift = {
+            status: "CLOCKED_OUT",
+            clockInTimestamp: null,
+            todayDate: today,
+            breakMinutes: 0,
+            lastDuration: todayLog ? todayLog.hours : null
+          };
+        }
       }
     } catch (e) {
       activeShift = { status: "CLOCKED_OUT", clockInTimestamp: null, todayDate: getLocalDateStr(), breakMinutes: 0 };
@@ -194,7 +209,7 @@ window.OfficeShifts = (function() {
         await OfficeDB.saveLog(todayLog);
       } else {
         const newLog = {
-          logId: 'log_' + Date.now(),
+          logId: `gaurav_${today}`,
           username: currentUser,
           date: today,
           status: "Present",
@@ -239,7 +254,7 @@ window.OfficeShifts = (function() {
         await OfficeDB.saveLog(todayLog);
       } else {
         const newLog = {
-          logId: 'log_' + Date.now(),
+          logId: `gaurav_${date}`,
           username: currentUser,
           date: date,
           status: "Present",
@@ -388,6 +403,19 @@ window.OfficeShifts = (function() {
       }
     }
     return clean;
+  }
+
+  function parseTimeToTimestamp(timeStr, dateStr) {
+    if (!timeStr) return null;
+    const time24 = convertTo24Hour(timeStr);
+    const dateParts = (dateStr || getLocalDateStr()).split('-');
+    if (dateParts.length !== 3) return null;
+    const timeParts = time24.split(':');
+    const h = parseInt(timeParts[0], 10) || 0;
+    const m = parseInt(timeParts[1], 10) || 0;
+    const d = new Date(parseInt(dateParts[0], 10), parseInt(dateParts[1], 10) - 1, parseInt(dateParts[2], 10), h, m, 0, 0);
+    const ts = d.getTime();
+    return isNaN(ts) ? null : ts;
   }
 
   function convertTo24Hour(timeStr) {

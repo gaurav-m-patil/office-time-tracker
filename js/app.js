@@ -67,6 +67,14 @@ window.OfficeApp = (function() {
 
     OfficeUI.init();
     OfficeUI.switchTab('record');
+
+    // Immediately pull fresh cloud updates from other devices and recheck shift
+    if (window.OfficeDB && typeof OfficeDB.syncWithCloud === 'function') {
+      OfficeDB.syncWithCloud().catch(() => {});
+    }
+    if (window.OfficeShifts && typeof OfficeShifts.recheckTodayLog === 'function') {
+      OfficeShifts.recheckTodayLog();
+    }
   }
 
   function updateAuthGreeting() {

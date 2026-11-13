@@ -1,6 +1,15 @@
 [
     {
-        "logId":  "log_1794448952573",
+        "logId":  "gaurav_2026-11-13",
+        "username":  "gaurav",
+        "date":  "2026-11-13",
+        "status":  "Present",
+        "inTime":  "06:34 AM",
+        "outTime":  "",
+        "hours":  0
+    },
+    {
+        "logId":  "gaurav_2026-11-12",
         "username":  "gaurav",
         "date":  "2026-11-12",
         "status":  "Present",
@@ -9,7 +18,7 @@
         "hours":  0
     },
     {
-        "logId":  "log_1794412380490",
+        "logId":  "gaurav_2026-11-11",
         "username":  "gaurav",
         "date":  "2026-11-11",
         "status":  "Leave",
@@ -18,7 +27,7 @@
         "hours":  0
     },
     {
-        "logId":  "log_1794331292033",
+        "logId":  "gaurav_2026-11-10",
         "username":  "gaurav",
         "date":  "2026-11-10",
         "status":  "No Show",
@@ -27,7 +36,7 @@
         "hours":  0
     },
     {
-        "logId":  "4192a3b9-a06b-4e06-ac0f-67b57a0fe1a5",
+        "logId":  "gaurav_2026-11-09",
         "username":  "gaurav",
         "date":  "2026-11-09",
         "status":  "Exception",
@@ -36,7 +45,7 @@
         "hours":  0
     },
     {
-        "logId":  "749cf7d8-b97a-4525-b975-ef79e979da80",
+        "logId":  "gaurav_2026-11-08",
         "username":  "gaurav",
         "date":  "2026-11-08",
         "status":  "Holiday",
@@ -45,7 +54,7 @@
         "hours":  0
     },
     {
-        "logId":  "00d67b1e-b7db-445d-bbb0-5605d03387cb",
+        "logId":  "gaurav_2026-11-07",
         "username":  "gaurav",
         "date":  "2026-11-07",
         "status":  "Holiday",
@@ -54,7 +63,7 @@
         "hours":  0
     },
     {
-        "logId":  "2fc285c0-c79f-46eb-aee0-b99bd5a465b5",
+        "logId":  "gaurav_2026-11-06",
         "username":  "gaurav",
         "date":  "2026-11-06",
         "status":  "Exception",
@@ -63,7 +72,7 @@
         "hours":  0
     },
     {
-        "logId":  "7a5a801b-5257-44c3-a26c-fa44c42d10a2",
+        "logId":  "gaurav_2026-11-05",
         "username":  "gaurav",
         "date":  "2026-11-05",
         "status":  "Exception",
@@ -72,7 +81,7 @@
         "hours":  0
     },
     {
-        "logId":  "cfcf0262-2ec1-4501-a700-594b7cdd78b2",
+        "logId":  "gaurav_2026-11-04",
         "username":  "gaurav",
         "date":  "2026-11-04",
         "status":  "Exception",
@@ -81,7 +90,7 @@
         "hours":  0
     },
     {
-        "logId":  "51c0c504-f3d2-4306-842a-6dd356b1377a",
+        "logId":  "gaurav_2026-11-03",
         "username":  "gaurav",
         "date":  "2026-11-03",
         "status":  "Exception",
@@ -90,7 +99,7 @@
         "hours":  0
     },
     {
-        "logId":  "8195bbe5-8d31-428c-8140-410d769e430f",
+        "logId":  "gaurav_2026-11-02",
         "username":  "gaurav",
         "date":  "2026-11-02",
         "status":  "Exception",
@@ -99,7 +108,7 @@
         "hours":  0
     },
     {
-        "logId":  "eed2c099-892f-4fd9-a74d-5337ef1d3cdc",
+        "logId":  "gaurav_2026-11-01",
         "username":  "gaurav",
         "date":  "2026-11-01",
         "status":  "Weekend",
@@ -108,7 +117,7 @@
         "hours":  0
     },
     {
-        "logId":  "bc77250d-601e-4f0d-aaaf-9d86b7268d41",
+        "logId":  "gaurav_2026-10-31",
         "username":  "gaurav",
         "date":  "2026-10-31",
         "status":  "Weekend",
@@ -117,7 +126,7 @@
         "hours":  0
     },
     {
-        "logId":  "de5df03d-4e8e-4af5-b27e-68617b82a889",
+        "logId":  "gaurav_2026-10-30",
         "username":  "gaurav",
         "date":  "2026-10-30",
         "status":  "Exception",
@@ -126,7 +135,7 @@
         "hours":  0
     },
     {
-        "logId":  "bf1e25db-fa2d-440b-becd-fe49fafe81b1",
+        "logId":  "gaurav_2026-10-29",
         "username":  "gaurav",
         "date":  "2026-10-29",
         "status":  "Exception",
@@ -135,7 +144,7 @@
         "hours":  0
     },
     {
-        "logId":  "79d0adc6-00aa-468d-b895-b076e8d59f21",
+        "logId":  "gaurav_2026-10-28",
         "username":  "gaurav",
         "date":  "2026-10-28",
         "status":  "Exception",
@@ -144,7 +153,7 @@
         "hours":  0
     },
     {
-        "logId":  "619bc4b8-4cd9-4785-9a09-f3ffcbb34d6d",
+        "logId":  "gaurav_2026-10-27",
         "username":  "gaurav",
         "date":  "2026-10-27",
         "status":  "Present",
@@ -153,7 +162,7 @@
         "hours":  12.88
     },
     {
-        "logId":  "1a6b8067-9d34-48a9-bcad-91c4f02b5b1e",
+        "logId":  "gaurav_2026-10-26",
         "username":  "gaurav",
         "date":  "2026-10-26",
         "status":  "Present",
@@ -162,7 +171,7 @@
         "hours":  13.67
     },
     {
-        "logId":  "490de278-c0bd-4c8a-8f25-6dc12f754fba",
+        "logId":  "gaurav_2026-10-25",
         "username":  "gaurav",
         "date":  "2026-10-25",
         "status":  "Weekend",
@@ -171,7 +180,7 @@
         "hours":  0
     },
     {
-        "logId":  "4c7654ba-04db-4193-8191-363a6b131ba4",
+        "logId":  "gaurav_2026-10-24",
         "username":  "gaurav",
         "date":  "2026-10-24",
         "status":  "Weekend",
@@ -180,7 +189,7 @@
         "hours":  0
     },
     {
-        "logId":  "67287d87-8a8d-4e0a-a97d-530e9b7daaa3",
+        "logId":  "gaurav_2026-10-23",
         "username":  "gaurav",
         "date":  "2026-10-23",
         "status":  "Exception",
@@ -189,7 +198,7 @@
         "hours":  0
     },
     {
-        "logId":  "78509bb9-b8dc-467f-bdd6-61f2a279893c",
+        "logId":  "gaurav_2026-10-22",
         "username":  "gaurav",
         "date":  "2026-10-22",
         "status":  "Present",
@@ -198,7 +207,7 @@
         "hours":  13.23
     },
     {
-        "logId":  "21032cef-8fb9-4bfb-be82-deceaf3231d5",
+        "logId":  "gaurav_2026-10-21",
         "username":  "gaurav",
         "date":  "2026-10-21",
         "status":  "Leave",
@@ -207,7 +216,7 @@
         "hours":  0
     },
     {
-        "logId":  "d829ec4d-888a-46cc-9c3e-51a0a669d61b",
+        "logId":  "gaurav_2026-10-20",
         "username":  "gaurav",
         "date":  "2026-10-20",
         "status":  "Holiday",
@@ -216,7 +225,7 @@
         "hours":  0
     },
     {
-        "logId":  "a8440775-1e89-4083-bbb3-d15919d154b1",
+        "logId":  "gaurav_2026-10-19",
         "username":  "gaurav",
         "date":  "2026-10-19",
         "status":  "Exception",
@@ -225,7 +234,7 @@
         "hours":  0
     },
     {
-        "logId":  "525f1301-078f-4e8d-b5fb-485cb92a63fb",
+        "logId":  "gaurav_2026-10-18",
         "username":  "gaurav",
         "date":  "2026-10-18",
         "status":  "Weekend",
@@ -234,7 +243,7 @@
         "hours":  0
     },
     {
-        "logId":  "6e1eee8f-1fe6-4e42-89f9-da5ca9d44e43",
+        "logId":  "gaurav_2026-10-17",
         "username":  "gaurav",
         "date":  "2026-10-17",
         "status":  "Weekend",
@@ -243,7 +252,7 @@
         "hours":  0
     },
     {
-        "logId":  "0fa9da50-7024-4a25-a35f-8304d383fba1",
+        "logId":  "gaurav_2026-10-16",
         "username":  "gaurav",
         "date":  "2026-10-16",
         "status":  "Leave",
@@ -252,7 +261,7 @@
         "hours":  0
     },
     {
-        "logId":  "fd2e959b-533c-452e-ad54-dd661b52373d",
+        "logId":  "gaurav_2026-10-15",
         "username":  "gaurav",
         "date":  "2026-10-15",
         "status":  "Leave",
@@ -261,7 +270,7 @@
         "hours":  0
     },
     {
-        "logId":  "587727a6-8bac-47fc-9bf8-42fb8b6ff1e0",
+        "logId":  "gaurav_2026-10-14",
         "username":  "gaurav",
         "date":  "2026-10-14",
         "status":  "Present",
@@ -270,7 +279,7 @@
         "hours":  0.08
     },
     {
-        "logId":  "f7536ffc-9f9e-4581-ad3f-803aec8b4240",
+        "logId":  "gaurav_2026-10-13",
         "username":  "gaurav",
         "date":  "2026-10-13",
         "status":  "Present",
@@ -279,7 +288,7 @@
         "hours":  0.05
     },
     {
-        "logId":  "bc96e967-de98-438a-b978-b6f96c016eb0",
+        "logId":  "gaurav_2026-10-12",
         "username":  "gaurav",
         "date":  "2026-10-12",
         "status":  "Present",
@@ -288,7 +297,7 @@
         "hours":  0.15
     },
     {
-        "logId":  "ee4509c6-73d0-453f-9485-7b2b1501e561",
+        "logId":  "gaurav_2026-10-11",
         "username":  "gaurav",
         "date":  "2026-10-11",
         "status":  "Weekend",
@@ -297,7 +306,7 @@
         "hours":  0
     },
     {
-        "logId":  "5164de2d-99aa-45a3-bd39-721081efc8c4",
+        "logId":  "gaurav_2026-10-10",
         "username":  "gaurav",
         "date":  "2026-10-10",
         "status":  "Weekend",
@@ -306,7 +315,7 @@
         "hours":  0
     },
     {
-        "logId":  "2790101d-62bf-42d2-a671-5004e458585e",
+        "logId":  "gaurav_2026-10-09",
         "username":  "gaurav",
         "date":  "2026-10-09",
         "status":  "Present",
@@ -315,7 +324,7 @@
         "hours":  12.87
     },
     {
-        "logId":  "0145bbe6-e6e2-4ff5-b7f0-667958df9d69",
+        "logId":  "gaurav_2026-10-08",
         "username":  "gaurav",
         "date":  "2026-10-08",
         "status":  "Present",
@@ -324,7 +333,7 @@
         "hours":  12.83
     },
     {
-        "logId":  "204f617b-f0bb-4c45-9c63-f23d1561d323",
+        "logId":  "gaurav_2026-10-07",
         "username":  "gaurav",
         "date":  "2026-10-07",
         "status":  "Present",
@@ -333,7 +342,7 @@
         "hours":  0.17
     },
     {
-        "logId":  "67bf54f6-79d5-4cb5-8d8c-8a3d8abc9c95",
+        "logId":  "gaurav_2026-10-06",
         "username":  "gaurav",
         "date":  "2026-10-06",
         "status":  "Exception",
@@ -342,7 +351,7 @@
         "hours":  0
     },
     {
-        "logId":  "5499d11e-e37d-4097-bbcd-ef100d583165",
+        "logId":  "gaurav_2026-10-05",
         "username":  "gaurav",
         "date":  "2026-10-05",
         "status":  "Exception",
@@ -351,7 +360,7 @@
         "hours":  0
     },
     {
-        "logId":  "45a025f1-72d2-4991-92ab-f06c18447002",
+        "logId":  "gaurav_2026-10-04",
         "username":  "gaurav",
         "date":  "2026-10-04",
         "status":  "Weekend",
@@ -360,7 +369,7 @@
         "hours":  0
     },
     {
-        "logId":  "769df747-f8d4-4f1d-be4e-dafcba685cca",
+        "logId":  "gaurav_2026-10-03",
         "username":  "gaurav",
         "date":  "2026-10-03",
         "status":  "Weekend",
@@ -369,7 +378,7 @@
         "hours":  0
     },
     {
-        "logId":  "2b92dae8-def7-4499-a5ca-67f6d044b39d",
+        "logId":  "gaurav_2026-10-02",
         "username":  "gaurav",
         "date":  "2026-10-02",
         "status":  "Holiday",
@@ -378,7 +387,7 @@
         "hours":  0
     },
     {
-        "logId":  "bec1a56c-da98-43f0-ae94-46e443f33aff",
+        "logId":  "gaurav_2026-10-01",
         "username":  "gaurav",
         "date":  "2026-10-01",
         "status":  "Exception",
@@ -387,7 +396,7 @@
         "hours":  0
     },
     {
-        "logId":  "2ee93756-54d5-4328-94b9-c3ae4eb6ee7c",
+        "logId":  "gaurav_2026-09-30",
         "username":  "gaurav",
         "date":  "2026-09-30",
         "status":  "Exception",
@@ -396,7 +405,7 @@
         "hours":  0
     },
     {
-        "logId":  "4575d2ba-8e5c-4ec5-b097-0afec8b2c8d7",
+        "logId":  "gaurav_2026-09-29",
         "username":  "gaurav",
         "date":  "2026-09-29",
         "status":  "Exception",
@@ -405,7 +414,7 @@
         "hours":  0
     },
     {
-        "logId":  "afed995b-2057-4004-8cd5-c80a9a0efb3c",
+        "logId":  "gaurav_2026-09-28",
         "username":  "gaurav",
         "date":  "2026-09-28",
         "status":  "Present",
@@ -414,7 +423,7 @@
         "hours":  0.07
     },
     {
-        "logId":  "c294eecf-caa3-49b2-884f-f40f33430cb2",
+        "logId":  "gaurav_2026-09-27",
         "username":  "gaurav",
         "date":  "2026-09-27",
         "status":  "Weekend",
@@ -423,7 +432,7 @@
         "hours":  0
     },
     {
-        "logId":  "4e5d3f6b-633a-4ecd-94a6-82361d4d383d",
+        "logId":  "gaurav_2026-09-26",
         "username":  "gaurav",
         "date":  "2026-09-26",
         "status":  "Weekend",
@@ -432,7 +441,7 @@
         "hours":  0
     },
     {
-        "logId":  "3340ae99-a5c9-4ed0-a3d1-7f8d1a2f8943",
+        "logId":  "gaurav_2026-09-25",
         "username":  "gaurav",
         "date":  "2026-09-25",
         "status":  "Exception",
@@ -441,7 +450,7 @@
         "hours":  0
     },
     {
-        "logId":  "c963bd58-1f45-4bdb-b75f-c8b6896e949a",
+        "logId":  "gaurav_2026-09-24",
         "username":  "gaurav",
         "date":  "2026-09-24",
         "status":  "Exception",
@@ -450,7 +459,7 @@
         "hours":  0
     },
     {
-        "logId":  "33cdd9da-f68c-47ef-af52-7ea4e5169213",
+        "logId":  "gaurav_2026-09-23",
         "username":  "gaurav",
         "date":  "2026-09-23",
         "status":  "Present",
@@ -459,7 +468,7 @@
         "hours":  14.73
     },
     {
-        "logId":  "ccdd95d8-1701-463f-a265-8a6ee50655f5",
+        "logId":  "gaurav_2026-09-22",
         "username":  "gaurav",
         "date":  "2026-09-22",
         "status":  "Present",
@@ -468,7 +477,7 @@
         "hours":  12.12
     },
     {
-        "logId":  "7e85e2fd-a3e0-4b9a-a44b-3b2246d8b401",
+        "logId":  "gaurav_2026-09-21",
         "username":  "gaurav",
         "date":  "2026-09-21",
         "status":  "Present",
@@ -477,7 +486,7 @@
         "hours":  13.37
     },
     {
-        "logId":  "9b2951cd-98b0-4289-a377-1591fa9e55f5",
+        "logId":  "gaurav_2026-09-20",
         "username":  "gaurav",
         "date":  "2026-09-20",
         "status":  "Weekend",
@@ -486,7 +495,7 @@
         "hours":  0
     },
     {
-        "logId":  "90cb25da-4ffb-46c8-912c-49bcf1e3fa3f",
+        "logId":  "gaurav_2026-09-19",
         "username":  "gaurav",
         "date":  "2026-09-19",
         "status":  "Weekend",
@@ -495,7 +504,7 @@
         "hours":  0
     },
     {
-        "logId":  "40562112-ce7e-4b1c-8ba4-398201092e6e",
+        "logId":  "gaurav_2026-09-18",
         "username":  "gaurav",
         "date":  "2026-09-18",
         "status":  "No Show",
@@ -504,7 +513,7 @@
         "hours":  0
     },
     {
-        "logId":  "11405290-2e72-4c10-aeb8-639afb4f5e1d",
+        "logId":  "gaurav_2026-09-17",
         "username":  "gaurav",
         "date":  "2026-09-17",
         "status":  "Present",
@@ -513,7 +522,7 @@
         "hours":  0.37
     },
     {
-        "logId":  "dd09428b-4fe0-462d-93e3-5ebb5932a92a",
+        "logId":  "gaurav_2026-09-16",
         "username":  "gaurav",
         "date":  "2026-09-16",
         "status":  "Present",
@@ -522,7 +531,7 @@
         "hours":  13
     },
     {
-        "logId":  "0476a6a5-3c33-4b01-865f-395d79762a0f",
+        "logId":  "gaurav_2026-09-15",
         "username":  "gaurav",
         "date":  "2026-09-15",
         "status":  "Present",
@@ -531,7 +540,7 @@
         "hours":  13
     },
     {
-        "logId":  "12aaf8ba-2ca0-43c8-ba03-3c018a3503c8",
+        "logId":  "gaurav_2026-09-14",
         "username":  "gaurav",
         "date":  "2026-09-14",
         "status":  "Holiday",
@@ -540,7 +549,7 @@
         "hours":  0
     },
     {
-        "logId":  "da85869b-ed34-4f70-8ec9-e34a64eea8b0",
+        "logId":  "gaurav_2026-09-13",
         "username":  "gaurav",
         "date":  "2026-09-13",
         "status":  "Weekend",
@@ -549,7 +558,7 @@
         "hours":  0
     },
     {
-        "logId":  "8922dbdc-5f49-45fa-bdd8-cb470cfcfac8",
+        "logId":  "gaurav_2026-09-12",
         "username":  "gaurav",
         "date":  "2026-09-12",
         "status":  "Weekend",
@@ -558,7 +567,7 @@
         "hours":  0
     },
     {
-        "logId":  "7a6a349f-9ba6-4548-92d0-7d318939745a",
+        "logId":  "gaurav_2026-09-11",
         "username":  "gaurav",
         "date":  "2026-09-11",
         "status":  "No Show",
@@ -567,7 +576,7 @@
         "hours":  0
     },
     {
-        "logId":  "d3143e7f-c238-4b76-9bbc-ec387a24adeb",
+        "logId":  "gaurav_2026-09-10",
         "username":  "gaurav",
         "date":  "2026-09-10",
         "status":  "No Show",
@@ -576,7 +585,7 @@
         "hours":  0
     },
     {
-        "logId":  "7bcc7677-0903-4c5d-afdf-3187696e424e",
+        "logId":  "gaurav_2026-09-09",
         "username":  "gaurav",
         "date":  "2026-09-09",
         "status":  "Exception",
@@ -585,7 +594,7 @@
         "hours":  0
     },
     {
-        "logId":  "3a046ae9-3625-4afd-a4e1-ba6f3d374d87",
+        "logId":  "gaurav_2026-09-08",
         "username":  "gaurav",
         "date":  "2026-09-08",
         "status":  "Exception",
@@ -594,7 +603,7 @@
         "hours":  0
     },
     {
-        "logId":  "fe487aa6-8e37-4491-a63c-05e2682295a4",
+        "logId":  "gaurav_2026-09-07",
         "username":  "gaurav",
         "date":  "2026-09-07",
         "status":  "Present",
@@ -603,7 +612,7 @@
         "hours":  0.85
     },
     {
-        "logId":  "cfbd8bde-b657-4264-b426-03932ec41a48",
+        "logId":  "gaurav_2026-09-06",
         "username":  "gaurav",
         "date":  "2026-09-06",
         "status":  "Weekend",
@@ -612,7 +621,7 @@
         "hours":  0
     },
     {
-        "logId":  "a235efd5-b036-4a1f-8358-d65103dab80d",
+        "logId":  "gaurav_2026-09-05",
         "username":  "gaurav",
         "date":  "2026-09-05",
         "status":  "Weekend",
@@ -621,7 +630,7 @@
         "hours":  0
     },
     {
-        "logId":  "ecc8da69-fd6a-4ba6-8c9c-acbf7476663c",
+        "logId":  "gaurav_2026-09-04",
         "username":  "gaurav",
         "date":  "2026-09-04",
         "status":  "Exception",
@@ -630,7 +639,7 @@
         "hours":  0
     },
     {
-        "logId":  "4dca2036-3c91-485c-a1ad-a58cf49a69d8",
+        "logId":  "gaurav_2026-09-03",
         "username":  "gaurav",
         "date":  "2026-09-03",
         "status":  "Exception",
@@ -639,7 +648,7 @@
         "hours":  0
     },
     {
-        "logId":  "aa445b96-bd1e-4bf6-867c-6594fc43fc63",
+        "logId":  "gaurav_2026-09-02",
         "username":  "gaurav",
         "date":  "2026-09-02",
         "status":  "Present",
@@ -648,7 +657,7 @@
         "hours":  0.08
     },
     {
-        "logId":  "98e0fda3-4aee-46f2-b828-c0c93f6a68b6",
+        "logId":  "gaurav_2026-09-01",
         "username":  "gaurav",
         "date":  "2026-09-01",
         "status":  "Exception",
@@ -657,7 +666,7 @@
         "hours":  0
     },
     {
-        "logId":  "17a4a732-2b12-46d1-91b7-e09d84bd526a",
+        "logId":  "gaurav_2026-08-31",
         "username":  "gaurav",
         "date":  "2026-08-31",
         "status":  "Exception",
@@ -666,7 +675,7 @@
         "hours":  0
     },
     {
-        "logId":  "c4cc8b10-81b8-473d-85cf-57ae2899c730",
+        "logId":  "gaurav_2026-08-30",
         "username":  "gaurav",
         "date":  "2026-08-30",
         "status":  "Weekend",
@@ -675,7 +684,7 @@
         "hours":  0
     },
     {
-        "logId":  "ceb191c6-7f39-4255-9c68-a83575de69a3",
+        "logId":  "gaurav_2026-08-29",
         "username":  "gaurav",
         "date":  "2026-08-29",
         "status":  "Weekend",
@@ -684,7 +693,7 @@
         "hours":  0
     },
     {
-        "logId":  "2c354097-56d8-4e96-aa7d-fdf9ddfabcf6",
+        "logId":  "gaurav_2026-08-28",
         "username":  "gaurav",
         "date":  "2026-08-28",
         "status":  "Exception",
@@ -693,7 +702,7 @@
         "hours":  0
     },
     {
-        "logId":  "440c9ae9-950a-4d90-ae45-442b7ccdbbbc",
+        "logId":  "gaurav_2026-08-27",
         "username":  "gaurav",
         "date":  "2026-08-27",
         "status":  "Present",
@@ -702,7 +711,7 @@
         "hours":  0.07
     },
     {
-        "logId":  "5c1113f7-af41-4b0d-96d8-0b099a5618b5",
+        "logId":  "gaurav_2026-08-26",
         "username":  "gaurav",
         "date":  "2026-08-26",
         "status":  "Present",
@@ -711,7 +720,7 @@
         "hours":  20.92
     },
     {
-        "logId":  "b82b2799-834f-4892-a6d7-f75320e91e05",
+        "logId":  "gaurav_2026-08-25",
         "username":  "gaurav",
         "date":  "2026-08-25",
         "status":  "Present",
@@ -720,7 +729,7 @@
         "hours":  23.9
     },
     {
-        "logId":  "8d5811e5-4886-4e4f-a422-edddb3a7f9f1",
+        "logId":  "gaurav_2026-08-24",
         "username":  "gaurav",
         "date":  "2026-08-24",
         "status":  "Present",
@@ -729,7 +738,7 @@
         "hours":  16.3
     },
     {
-        "logId":  "f1baafad-07f7-446d-aa8f-e9aae8f16baf",
+        "logId":  "gaurav_2026-08-23",
         "username":  "gaurav",
         "date":  "2026-08-23",
         "status":  "Weekend",
@@ -738,7 +747,7 @@
         "hours":  0
     },
     {
-        "logId":  "267e9a66-7eec-49cf-a89d-74aed9647016",
+        "logId":  "gaurav_2026-08-22",
         "username":  "gaurav",
         "date":  "2026-08-22",
         "status":  "Weekend",
@@ -747,7 +756,7 @@
         "hours":  0
     },
     {
-        "logId":  "1de0a4ff-71ca-4589-8107-a5fd62488ecf",
+        "logId":  "gaurav_2026-08-21",
         "username":  "gaurav",
         "date":  "2026-08-21",
         "status":  "Exception",
@@ -756,7 +765,7 @@
         "hours":  0
     },
     {
-        "logId":  "8a2a0fab-03aa-46d6-88f8-ac4a40365027",
+        "logId":  "gaurav_2026-08-20",
         "username":  "gaurav",
         "date":  "2026-08-20",
         "status":  "No Show",
@@ -765,7 +774,7 @@
         "hours":  0
     },
     {
-        "logId":  "6ce38337-dce9-4db5-9252-cc524f9839c1",
+        "logId":  "gaurav_2026-08-19",
         "username":  "gaurav",
         "date":  "2026-08-19",
         "status":  "Present",
@@ -774,7 +783,7 @@
         "hours":  16.22
     },
     {
-        "logId":  "49a562eb-5ead-423d-a540-314701c7f6ee",
+        "logId":  "gaurav_2026-08-18",
         "username":  "gaurav",
         "date":  "2026-08-18",
         "status":  "Present",
@@ -783,7 +792,7 @@
         "hours":  0.05
     },
     {
-        "logId":  "9570b782-0627-4080-a8c1-3dbffbc0787a",
+        "logId":  "gaurav_2026-08-17",
         "username":  "gaurav",
         "date":  "2026-08-17",
         "status":  "Present",
@@ -792,7 +801,7 @@
         "hours":  0.12
     },
     {
-        "logId":  "35725dbc-d7c5-4cd7-b5f8-70a08e792fb2",
+        "logId":  "gaurav_2026-08-16",
         "username":  "gaurav",
         "date":  "2026-08-16",
         "status":  "Weekend",
@@ -801,7 +810,7 @@
         "hours":  0
     },
     {
-        "logId":  "69edc496-028c-49a5-b515-2dc931855286",
+        "logId":  "gaurav_2026-08-15",
         "username":  "gaurav",
         "date":  "2026-08-15",
         "status":  "Weekend",
@@ -810,7 +819,7 @@
         "hours":  0
     },
     {
-        "logId":  "ffcafae3-5e1f-4fec-9c99-1593f06806be",
+        "logId":  "gaurav_2026-08-14",
         "username":  "gaurav",
         "date":  "2026-08-14",
         "status":  "Exception",
@@ -819,7 +828,7 @@
         "hours":  0
     },
     {
-        "logId":  "8124371d-ba75-4191-bd35-ff6e39d1a43c",
+        "logId":  "gaurav_2026-08-13",
         "username":  "gaurav",
         "date":  "2026-08-13",
         "status":  "Present",
@@ -828,7 +837,7 @@
         "hours":  0.12
     },
     {
-        "logId":  "eaad43ec-aa45-4961-84d0-81b31c7fd6a1",
+        "logId":  "gaurav_2026-08-12",
         "username":  "gaurav",
         "date":  "2026-08-12",
         "status":  "Present",
@@ -837,7 +846,7 @@
         "hours":  0.13
     },
     {
-        "logId":  "5b315590-b253-45d0-a426-37f2b0a3efd4",
+        "logId":  "gaurav_2026-08-11",
         "username":  "gaurav",
         "date":  "2026-08-11",
         "status":  "Exception",
@@ -846,7 +855,7 @@
         "hours":  0
     },
     {
-        "logId":  "748cd73e-4912-4c44-8016-7a05517ced26",
+        "logId":  "gaurav_2026-08-10",
         "username":  "gaurav",
         "date":  "2026-08-10",
         "status":  "Exception",
@@ -855,7 +864,7 @@
         "hours":  0
     },
     {
-        "logId":  "3b67605b-4f81-41da-8fcd-b4a179d4ba0b",
+        "logId":  "gaurav_2026-08-09",
         "username":  "gaurav",
         "date":  "2026-08-09",
         "status":  "Weekend",
@@ -864,7 +873,7 @@
         "hours":  0
     },
     {
-        "logId":  "07f816dc-4740-4f3f-a3f6-c0aad740f70e",
+        "logId":  "gaurav_2026-08-08",
         "username":  "gaurav",
         "date":  "2026-08-08",
         "status":  "Weekend",
@@ -873,7 +882,7 @@
         "hours":  0
     },
     {
-        "logId":  "9508f3f1-f1dd-4fa4-848f-72365ba39c8e",
+        "logId":  "gaurav_2026-08-07",
         "username":  "gaurav",
         "date":  "2026-08-07",
         "status":  "Present",
@@ -882,7 +891,7 @@
         "hours":  13.07
     },
     {
-        "logId":  "c56267af-37ca-4d39-af70-5128fbc117ad",
+        "logId":  "gaurav_2026-08-06",
         "username":  "gaurav",
         "date":  "2026-08-06",
         "status":  "Present",
@@ -891,7 +900,7 @@
         "hours":  13.37
     },
     {
-        "logId":  "e3743a44-e236-433b-b1b9-d4d4194e1059",
+        "logId":  "gaurav_2026-08-05",
         "username":  "gaurav",
         "date":  "2026-08-05",
         "status":  "Exception",
@@ -900,7 +909,7 @@
         "hours":  0
     },
     {
-        "logId":  "4b2b9a8a-0fb0-43bb-b02d-2c4c8a7b77cd",
+        "logId":  "gaurav_2026-08-04",
         "username":  "gaurav",
         "date":  "2026-08-04",
         "status":  "Exception",
@@ -909,7 +918,7 @@
         "hours":  0
     },
     {
-        "logId":  "84ab81be-89b8-4a60-9245-db0b2ff1293e",
+        "logId":  "gaurav_2026-08-03",
         "username":  "gaurav",
         "date":  "2026-08-03",
         "status":  "Present",
@@ -918,7 +927,7 @@
         "hours":  0.07
     },
     {
-        "logId":  "917f3b4c-5a7c-467f-89ae-e575a74ac613",
+        "logId":  "gaurav_2026-08-02",
         "username":  "gaurav",
         "date":  "2026-08-02",
         "status":  "Weekend",
@@ -927,7 +936,7 @@
         "hours":  0
     },
     {
-        "logId":  "1d0897b3-1e88-4499-82f7-5a8c6ed0a8aa",
+        "logId":  "gaurav_2026-08-01",
         "username":  "gaurav",
         "date":  "2026-08-01",
         "status":  "Weekend",
@@ -936,7 +945,7 @@
         "hours":  0
     },
     {
-        "logId":  "2d4631f1-4170-4e3f-82b4-b298820a25c2",
+        "logId":  "gaurav_2026-07-31",
         "username":  "gaurav",
         "date":  "2026-07-31",
         "status":  "Present",
@@ -945,7 +954,7 @@
         "hours":  12.92
     },
     {
-        "logId":  "8ae587ef-b786-4514-87e6-d893684b1a38",
+        "logId":  "gaurav_2026-07-30",
         "username":  "gaurav",
         "date":  "2026-07-30",
         "status":  "Present",
@@ -954,7 +963,7 @@
         "hours":  13.27
     },
     {
-        "logId":  "52223ec8-3a1e-462c-8cb2-e8b0b614b202",
+        "logId":  "gaurav_2026-07-29",
         "username":  "gaurav",
         "date":  "2026-07-29",
         "status":  "Present",
@@ -963,7 +972,7 @@
         "hours":  13.1
     },
     {
-        "logId":  "05d94827-ffe7-4b1c-8d78-83100f4a4e4e",
+        "logId":  "gaurav_2026-07-28",
         "username":  "gaurav",
         "date":  "2026-07-28",
         "status":  "Present",
@@ -972,7 +981,7 @@
         "hours":  13.18
     },
     {
-        "logId":  "8607d55a-2401-4f31-b586-8bcf1face495",
+        "logId":  "gaurav_2026-07-27",
         "username":  "gaurav",
         "date":  "2026-07-27",
         "status":  "Present",
@@ -981,7 +990,7 @@
         "hours":  0.03
     },
     {
-        "logId":  "9d460f9f-c1ff-41c2-b3d2-ee86c6dbb402",
+        "logId":  "gaurav_2026-07-26",
         "username":  "gaurav",
         "date":  "2026-07-26",
         "status":  "Weekend",
@@ -990,7 +999,7 @@
         "hours":  0
     },
     {
-        "logId":  "491c4295-dd52-45d7-8d73-38b18541b403",
+        "logId":  "gaurav_2026-07-25",
         "username":  "gaurav",
         "date":  "2026-07-25",
         "status":  "Present",
@@ -999,7 +1008,7 @@
         "hours":  0.03
     },
     {
-        "logId":  "21aac8af-7d01-49c4-987e-cfc13af20170",
+        "logId":  "gaurav_2026-07-24",
         "username":  "gaurav",
         "date":  "2026-07-24",
         "status":  "Present",
@@ -1008,7 +1017,7 @@
         "hours":  15.32
     },
     {
-        "logId":  "b046f574-d009-4dd5-952b-d98b6bd9cc8e",
+        "logId":  "gaurav_2026-07-23",
         "username":  "gaurav",
         "date":  "2026-07-23",
         "status":  "Exception",
@@ -1017,7 +1026,7 @@
         "hours":  0
     },
     {
-        "logId":  "f208606d-040f-413c-ab6b-16d4994682b7",
+        "logId":  "gaurav_2026-07-22",
         "username":  "gaurav",
         "date":  "2026-07-22",
         "status":  "Exception",
@@ -1026,7 +1035,7 @@
         "hours":  0
     },
     {
-        "logId":  "96106980-6211-4b48-ac94-63b1dbac044c",
+        "logId":  "gaurav_2026-07-21",
         "username":  "gaurav",
         "date":  "2026-07-21",
         "status":  "Exception",
@@ -1035,7 +1044,7 @@
         "hours":  0
     },
     {
-        "logId":  "83a567d0-c137-4338-a6a5-23ddb96bb468",
+        "logId":  "gaurav_2026-07-20",
         "username":  "gaurav",
         "date":  "2026-07-20",
         "status":  "Exception",
@@ -1044,7 +1053,7 @@
         "hours":  0
     },
     {
-        "logId":  "4f752a81-67e7-438c-893d-0ad9e17a1665",
+        "logId":  "gaurav_2026-07-19",
         "username":  "gaurav",
         "date":  "2026-07-19",
         "status":  "Weekend",
@@ -1053,7 +1062,7 @@
         "hours":  0
     },
     {
-        "logId":  "6f0cd794-fa11-4fcd-a451-cbfa2cdc33c5",
+        "logId":  "gaurav_2026-07-18",
         "username":  "gaurav",
         "date":  "2026-07-18",
         "status":  "Weekend",
@@ -1062,7 +1071,7 @@
         "hours":  0
     },
     {
-        "logId":  "a620d5f5-2b41-47d1-80f4-b6eb3639d002",
+        "logId":  "gaurav_2026-07-17",
         "username":  "gaurav",
         "date":  "2026-07-17",
         "status":  "Exception",
@@ -1071,7 +1080,7 @@
         "hours":  0
     },
     {
-        "logId":  "cd4133d5-55d2-413e-b7c0-f474df0a2fa0",
+        "logId":  "gaurav_2026-07-16",
         "username":  "gaurav",
         "date":  "2026-07-16",
         "status":  "Exception",
@@ -1080,7 +1089,7 @@
         "hours":  0
     },
     {
-        "logId":  "89702943-2e51-4477-94cc-78f0afbc4f34",
+        "logId":  "gaurav_2026-07-15",
         "username":  "gaurav",
         "date":  "2026-07-15",
         "status":  "Present",
@@ -1089,7 +1098,7 @@
         "hours":  0.08
     },
     {
-        "logId":  "0c8b8dda-9196-47c3-8df0-e1f666caf523",
+        "logId":  "gaurav_2026-07-14",
         "username":  "gaurav",
         "date":  "2026-07-14",
         "status":  "Exception",
@@ -1098,7 +1107,7 @@
         "hours":  0
     },
     {
-        "logId":  "cd9ee471-ac0f-4360-b439-642550e17968",
+        "logId":  "gaurav_2026-07-13",
         "username":  "gaurav",
         "date":  "2026-07-13",
         "status":  "Present",
@@ -1107,7 +1116,7 @@
         "hours":  0.07
     },
     {
-        "logId":  "33e4a1ec-ba30-43b7-82af-2aef536a126a",
+        "logId":  "gaurav_2026-07-12",
         "username":  "gaurav",
         "date":  "2026-07-12",
         "status":  "Weekend",
@@ -1116,7 +1125,7 @@
         "hours":  0
     },
     {
-        "logId":  "7d70fc33-21b4-4560-99c7-e3ab129cbed5",
+        "logId":  "gaurav_2026-07-11",
         "username":  "gaurav",
         "date":  "2026-07-11",
         "status":  "Weekend",
@@ -1125,7 +1134,7 @@
         "hours":  0
     },
     {
-        "logId":  "5200427e-968c-4314-8c59-1fb0e597ed69",
+        "logId":  "gaurav_2026-07-10",
         "username":  "gaurav",
         "date":  "2026-07-10",
         "status":  "Exception",
@@ -1134,7 +1143,7 @@
         "hours":  0
     },
     {
-        "logId":  "6f42de23-d20f-4de5-b0ad-4e4187044a9d",
+        "logId":  "gaurav_2026-07-09",
         "username":  "gaurav",
         "date":  "2026-07-09",
         "status":  "Leave",
@@ -1143,7 +1152,7 @@
         "hours":  0
     },
     {
-        "logId":  "46f5ce4b-1f61-4284-88df-4e1522a9f115",
+        "logId":  "gaurav_2026-07-08",
         "username":  "gaurav",
         "date":  "2026-07-08",
         "status":  "Leave",
@@ -1152,7 +1161,7 @@
         "hours":  0
     },
     {
-        "logId":  "7b860981-16e5-4fd0-931b-5c9ce1ae5f0d",
+        "logId":  "gaurav_2026-07-07",
         "username":  "gaurav",
         "date":  "2026-07-07",
         "status":  "Exception",
@@ -1161,7 +1170,7 @@
         "hours":  0
     },
     {
-        "logId":  "f990b50d-5bd1-416f-b2d5-36ef68d64380",
+        "logId":  "gaurav_2026-07-06",
         "username":  "gaurav",
         "date":  "2026-07-06",
         "status":  "Exception",
@@ -1170,7 +1179,7 @@
         "hours":  0
     },
     {
-        "logId":  "b47f7513-1867-4918-9522-786422a87675",
+        "logId":  "gaurav_2026-07-05",
         "username":  "gaurav",
         "date":  "2026-07-05",
         "status":  "Weekend",
@@ -1179,7 +1188,7 @@
         "hours":  0
     },
     {
-        "logId":  "01dae733-5a62-40cd-830a-2393fcbf2235",
+        "logId":  "gaurav_2026-07-04",
         "username":  "gaurav",
         "date":  "2026-07-04",
         "status":  "Weekend",
@@ -1188,7 +1197,7 @@
         "hours":  0
     },
     {
-        "logId":  "56c77dc6-3b86-4199-99da-580e188e3fbe",
+        "logId":  "gaurav_2026-07-03",
         "username":  "gaurav",
         "date":  "2026-07-03",
         "status":  "Exception",
@@ -1197,7 +1206,7 @@
         "hours":  0
     },
     {
-        "logId":  "077bfd2f-ecaa-4964-9fa2-af34383978a4",
+        "logId":  "gaurav_2026-07-02",
         "username":  "gaurav",
         "date":  "2026-07-02",
         "status":  "Exception",
@@ -1206,7 +1215,7 @@
         "hours":  0
     },
     {
-        "logId":  "8e1476db-e479-4df2-85cd-ef720482fd81",
+        "logId":  "gaurav_2026-07-01",
         "username":  "gaurav",
         "date":  "2026-07-01",
         "status":  "Exception",

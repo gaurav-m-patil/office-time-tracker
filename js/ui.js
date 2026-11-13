@@ -685,8 +685,12 @@ window.OfficeUI = (function() {
       calcHours = calc.hoursDecimal;
     }
 
-    // CRITICAL: Close the active shift timer so it stops ticking!
-    OfficeShifts.closeShift(calcHours);
+    // Only close active shift if saving/editing TODAY and an Out Time is completed
+    const todayStr = OfficeShifts.getLocalDateStr();
+    const isTodayAffected = (fromDate === todayStr) || (isRange && fromDate <= todayStr && toDate >= todayStr);
+    if (isTodayAffected && cleanOut) {
+      OfficeShifts.closeShift(calcHours);
+    }
 
     const isRange = toDate && toDate !== fromDate;
 
@@ -695,8 +699,7 @@ window.OfficeUI = (function() {
       let endD = new Date(toDate);
       while (curr <= endD) {
         let loopDate = OfficeShifts.getLocalDateStr(curr);
-        const existingOnDate = OfficeDB.getLogs(user).find(l => l.date === loopDate);
-        const rangeTargetId = existingOnDate ? existingOnDate.logId : ('log_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5));
+        const rangeTargetId = `gaurav_${loopDate}`;
         await OfficeDB.saveLog({
           logId: rangeTargetId,
           username: user,
@@ -709,9 +712,7 @@ window.OfficeUI = (function() {
         curr.setDate(curr.getDate() + 1);
       }
     } else {
-      const userLogs = OfficeDB.getLogs(user);
-      const existing = userLogs.find(l => (logId && l.logId === logId) || l.date === fromDate);
-      const targetId = (existing ? existing.logId : null) || logId || ('log_' + Date.now());
+      const targetId = `gaurav_${fromDate}`;
       await OfficeDB.saveLog({
         logId: targetId,
         username: user,
