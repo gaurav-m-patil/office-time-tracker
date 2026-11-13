@@ -25,7 +25,7 @@ window.OfficeConfig = {
 
   // Firestore Collection Names (Standardized GP_ Prefix)
   FIRESTORE_COLLECTIONS: {
-    LOGS: "GP_OFC_attendance_logs",
+    LOGS: "GP_OFC_attendance_v2",
     USERS: "GP_OFC_users",
     SHIFTS: "GP_OFC_active_shifts",
     SUMMARIES: "GP_OFC_monthly_summaries"
