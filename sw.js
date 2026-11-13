@@ -1,4 +1,4 @@
-const CACHE_NAME = 'time-tracker-v2.8.3';
+const CACHE_NAME = 'time-tracker-v2.8.4';
 
 const STATIC_ASSETS = [
   './',

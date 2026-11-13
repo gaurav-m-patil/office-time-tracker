@@ -685,14 +685,14 @@ window.OfficeUI = (function() {
       calcHours = calc.hoursDecimal;
     }
 
-    // Only close active shift if saving/editing TODAY and an Out Time is completed
+    const isRange = Boolean(toDate && toDate !== fromDate);
     const todayStr = OfficeShifts.getLocalDateStr();
     const isTodayAffected = (fromDate === todayStr) || (isRange && fromDate <= todayStr && toDate >= todayStr);
+
+    // Only close active shift if saving/editing TODAY and an Out Time is completed
     if (isTodayAffected && cleanOut) {
       OfficeShifts.closeShift(calcHours);
     }
-
-    const isRange = toDate && toDate !== fromDate;
 
     if (isRange) {
       let curr = new Date(fromDate);
